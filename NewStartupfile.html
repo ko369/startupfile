@@ -2785,15 +2785,15 @@ const mockPayload = {
 
 
 
-const COMPANIES = [];
+var COMPANIES = []; // [Scope Fix] const→var でwindowグローバルに登録し別scriptブロックから参照可能にする
 // mockPayload は上部 const で定義済み
 
-const EVENTS = {};
-let currentCompanyIndex = 0;
+var EVENTS = {}; // [Scope Fix] const→var
+var currentCompanyIndex = 0; // [Scope Fix]
 let currentRange = 'all';
 let showFunding = true;
 let mainChart = null;
-const sparkCharts = [];
+var sparkCharts = []; // [Scope Fix]
 
 
 // 連動スクロール — グローバルで1度だけ登録
@@ -4639,8 +4639,8 @@ function renderTopics(id,topicsArr){ const el=document.getElementById(id); if(!e
 function renderTopicsDynamic(){ const all=buildTopicPool(); const biz=all.filter(t=>/prd|biz|product|service|プロダクト|事業|調達|funding|award|受賞|partner|パートナー|turning|海外|founder/i.test(t.type)); const org=all.filter(t=>/org|workstyle|culture|hiring|採用|組織|カルチャー|環境|評価|制度/i.test(t.type)); const uncat=all.filter(t=>!biz.includes(t)&&!org.includes(t)); renderTopics('biz-topics',[...biz,...uncat].slice(0,10)); renderTopics('org-topics',org.slice(0,10)); }
 
 // ── 検索 ──
-let activeFilter='すべて';
-let activeFoundingFilter='すべて'; // [Fix G] 設立年フィルター状態
+var activeFilter='すべて'; // [Scope Fix]
+var activeFoundingFilter='すべて'; // [Scope Fix] // [Fix G] 設立年フィルター状態
 
 // [Fix G] 設立年フィルターのクリックイベントをバインド
 function bindFoundingYearFilter() {
@@ -4737,9 +4737,9 @@ if(searchInput)searchInput.addEventListener('input',function(){renderSearch(this
 //  注目一覧ページ — 完全動的版 (COMPANIES / EVENTS から生成)
 // ══════════════════════════════════════════════════════════════
 
-const chSeriesOrder=['Pre-Seed','Seed','Series A','Series B','Series C','Series D','Series E','Series F','上場','非公開'];
-const chSeriesColors={'Pre-Seed':'#6A7A8C','Seed':'#4A7A6A','Series A':'#3A7A6A','Series B':'#3A5A8C','Series C':'#5A4A8C','Series D':'#7A4A6A','Series E':'#E8A020','Series F':'#C04040','上場':'#C04040','非公開':'#7A7A7A'};
-let chGlobalMetric='funding',chActiveAreaGroup='',chActiveSeriesGroup='';
+var chSeriesOrder=['Pre-Seed','Seed','Series A','Series B','Series C','Series D','Series E','Series F','上場','非公開']; // [Scope Fix]
+var chSeriesColors={'Pre-Seed':'#6A7A8C','Seed':'#4A7A6A','Series A':'#3A7A6A','Series B':'#3A5A8C','Series C':'#5A4A8C','Series D':'#7A4A6A','Series E':'#E8A020','Series F':'#C04040','上場':'#C04040','非公開':'#7A7A7A'};
+var chGlobalMetric='funding',chActiveAreaGroup='',chActiveSeriesGroup=''; // [Scope Fix]
 
 function buildChPool(){ if(!Array.isArray(window.COMPANIES)||!COMPANIES.length)return []; return COMPANIES.map(co=>{ const api=co.api||{},data=Array.isArray(co.data)?co.data:[],funding=Array.isArray(co.funding)?co.funding:[]; const totalFunding=(()=>{const f=api.totalFunding;if(f==null)return 0;const n=Number(f);return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n;})(); const headcount=data.length?data[data.length-1].count:0; const hcGrowth=data.length>=2?data[data.length-1].count-data[0].count:0; const smList=Array.isArray(co.serviceMetrics)?co.serviceMetrics:[]; const smItem=smList.find(m=>/導入|契約|顧客|社数/i.test(m.label)); const svcScores=Array.isArray(co.serviceScores)?co.serviceScores:[]; const topScore=svcScores.length?svcScores[0]:null; return {id:co.id,name:co.name,color:co.color||'#888780',sector:co.sector||'その他',series:String(api.totalRounds||'—').trim()||'—',funding:totalFunding,hcGrowth,founded:co.founding_year||0,headcount,desc:api.mission||'',hc5y:data.slice(-7).map(d=>d.count),f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),smVal:smItem?(smItem.value+(smItem.unit||'')):null,svcVal:topScore?topScore.total+'/'+(topScore.maxScore||5):null}; }); }
 
