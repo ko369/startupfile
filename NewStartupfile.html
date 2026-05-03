@@ -235,7 +235,7 @@ body.sidebar-collapsed .sidebar-body {
 .sidebar-divider { height: 1px; background: var(--line); margin: 16px 0; }
 
 /* Main */
-.main { overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; min-width: 0; scroll-behavior: smooth; }
+.main { overflow-y: visible; overflow-x: hidden; display: flex; flex-direction: column; min-width: 0; }
 
 /* Main header strip */
 .main-header {
@@ -965,7 +965,7 @@ canvas { transition: opacity 0.3s; }
 .pgs{font-size:10px;color:var(--text3);margin-top:2px}
 .content{padding:16px 20px;display:flex;flex-direction:column;gap:20px;align-items:stretch}
 
-.pb{font-size:10px;padding:2px 8px;border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--text3);cursor:pointer}
+/* .pb は下部で統合定義 */
 
 .search-box{background:#fff;border:1px solid var(--line2);border-radius: var(--r-md);padding:14px 16px}
 .search-inner{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -975,6 +975,8 @@ canvas { transition: opacity 0.3s; }
 .search-input{border:none;outline:none;font-size:11px;color:var(--text);background:transparent;flex:1;font-family:inherit}
 .search-input::placeholder{color:var(--text3)}
 .search-btn{font-size:10px;padding:7px 16px;background:var(--sd);color:#fff;border:none;border-radius: var(--r-sm);cursor:pointer;font-family:inherit}
+.search-clear-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:2px 4px;line-height:1;flex-shrink:0}
+.search-clear-btn:hover{color:var(--text)}
 .search-filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .filter-label{font-size:9px;color:var(--text3)}
 .ftag{font-size:9px;padding:2px 10px;border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--text2);cursor:pointer}
@@ -1030,6 +1032,7 @@ canvas { transition: opacity 0.3s; }
 .co-graph-val{font-size:10px;font-weight:500;color:var(--sd)}
 .co-graph-delta{font-size:9px;color:var(--teal)}
 .nc-row{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;width:100%;margin-bottom:6px}
+.nc-row:hover{background:var(--bg3)}
 .nc-row:last-child{margin-bottom:0}
 .nc-row:hover{border-color:var(--slate-mid)}
 .nc-date{font-size:9px;color:var(--text3);flex-shrink:0;width:36px;padding-top:2px;line-height:1.3;text-align:center}
@@ -1115,7 +1118,7 @@ canvas { transition: opacity 0.3s; }
 .sbsec{padding:0 12px 8px}
 .sbsl{font-size:9px;color:var(--text3);margin-bottom:6px;letter-spacing:.06em}
 .pbtns{display:flex;flex-wrap:wrap;gap:3px}
-.pb{font-size:9px;padding:3px 10px;border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--text3);cursor:pointer}
+.pb{font-size:9px;padding:6px 12px;border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--text3);cursor:pointer;min-height:32px;display:inline-flex;align-items:center}
 .pb.active{background:var(--sd);color:#fff;border-color:var(--sd)}
 .ch-main{overflow:visible;scroll-behavior:smooth}
 .pghdr{padding:14px 20px 12px;border-bottom:1px solid var(--line);background:var(--bg2);display:flex;align-items:flex-end;justify-content:space-between}
@@ -1132,7 +1135,8 @@ canvas { transition: opacity 0.3s; }
 .rb{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
 .rbt{font-size:10px;color:var(--text2);margin-bottom:8px}
 .rbt strong{color:var(--sd)}
-.rrow{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--bg3)}
+.rrow{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--bg3);transition:background .12s}
+.rrow:hover{background:var(--bg3)}
 .rrow:last-child{border:none}
 .rn{font-size:9px;color:var(--text3);width:14px;text-align:right;flex-shrink:0}
 .rd{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -1218,6 +1222,7 @@ canvas { transition: opacity 0.3s; }
 .fc[data-name] { cursor: pointer; }
 .fc[data-name]:hover { border-color: var(--slate-mid); }
 .sr-row[data-name] { cursor: pointer; }
+.sr-row:hover { background: var(--bg3); }
 
 /* ── パンくずリスト ── */
 .breadcrumb {
@@ -2178,9 +2183,9 @@ button:focus-visible,
         <div class="header-meta" id="shared-header-meta">データを読込中…</div>
         <div class="header-right">
           <nav class="page-nav">
-            <button class="page-nav-btn active" id="nav-top"     onclick="showPage('top')" aria-label="トップページへ">トップ</button>
-            <button class="page-nav-btn"        id="nav-company" onclick="showPage('company')" aria-label="個別企業ページへ">個別企業</button>
-            <button class="page-nav-btn"        id="nav-chumoku" onclick="showPage('chumoku')" aria-label="注目一覧ページへ">注目一覧</button>
+            <button class="page-nav-btn active" id="nav-top" type="button"     onclick="showPage('top')" aria-label="トップページへ">トップ</button>
+            <button class="page-nav-btn" id="nav-company" type="button" onclick="showPage('company')" aria-label="個別企業ページへ（検索から選択）">個別企業</button>
+            <button class="page-nav-btn" id="nav-chumoku" type="button" onclick="showPage('chumoku')" aria-label="注目一覧ページへ">注目一覧</button>
           </nav>
           <div class="live-dot" id="shared-live-dot" title="データは定期的に更新されます" aria-label="データ更新情報"></div>
         </div>
@@ -2230,7 +2235,7 @@ button:focus-visible,
 
       <div>
         <div class="sec-hdr-row">
-          <div class="sechdr" style="flex:1;margin-bottom:0">注目企業</div>
+          <div class="sechdr" style="flex:1;margin-bottom:0">企業ランキング</div>
           <div class="chumoku-tabs">
             <div class="ctab active" data-ct="funding">調達額順</div>
             <div class="ctab" data-ct="growth">社員数増加順</div>
@@ -2259,6 +2264,7 @@ button:focus-visible,
             <div class="search-input-wrap">
               <div class="search-icon"></div>
               <input class="search-input" id="search-input" placeholder="企業名・業種で検索…" autocomplete="off"/>
+              <button class="search-clear-btn" id="search-clear" type="button" aria-label="検索をクリア" style="display:none">✕</button>
             </div>
             <button class="search-btn" id="search-btn" type="button" aria-label="検索実行">検索</button>
           </div>
@@ -2330,8 +2336,8 @@ button:focus-visible,
 
     <!-- タブナビゲーション -->
     <div class="tab-nav">
-      <button class="tab-nav-btn active" onclick="switchMainTab('headcount', this)" aria-label="成長データタブ">成長データ</button>
-      <button class="tab-nav-btn" onclick="switchMainTab('charm', this)" aria-label="はたらく環境タブ">はたらく環境</button>
+      <button class="tab-nav-btn active" type="button" onclick="switchMainTab('headcount', this)" aria-label="成長データタブ">成長データ</button>
+      <button class="tab-nav-btn" type="button" onclick="switchMainTab('charm', this)" aria-label="はたらく環境タブ">はたらく環境</button>
     </div>
 
     <!-- 社員数・資金調達タブ -->
@@ -2345,8 +2351,8 @@ button:focus-visible,
     </div>
 
     <div class="range-bar" style="margin-top:10px">
-      <button class="range-btn active" onclick="setRange('all',this)" aria-label="全期間">全期間</button>
-      <button class="range-btn" onclick="setRange('5y',this)" aria-label="直近5年">5年</button>
+      <button class="range-btn active" type="button" onclick="setRange('all',this)" aria-label="全期間">全期間</button>
+      <button class="range-btn" type="button" onclick="setRange('5y',this)" aria-label="直近5年">5年</button>
       <!-- 3年/1年ボタンはデータ準備後に追加予定 -->
     </div>
 
@@ -2405,7 +2411,7 @@ button:focus-visible,
     </div>
     <div class="topics-cards-wrap">
       <div class="topics-cards-inner sync-inner" id="strip-biz">
-        <div class="events-empty">記事・トピックデータを読み込み中...</div>
+        <div class="events-empty">記事・トピックデータを準備しています…</div>
       </div>
     </div>
 
@@ -2422,7 +2428,7 @@ button:focus-visible,
     </div>
     <div class="topics-cards-wrap">
       <div class="topics-cards-inner sync-inner" id="strip-org">
-        <div class="events-empty">記事・トピックデータを読み込み中...</div>
+        <div class="events-empty">記事・トピックデータを準備しています…</div>
       </div>
     </div>
 
@@ -2530,11 +2536,11 @@ button:focus-visible,
     <div class="tp active" id="panel-companies">
       <div class="sechdr">トップ15 ランキング</div>
       <div class="t15g">
-        <div class="rb"><div class="rbt"><strong>資金調達額</strong> トップ15 <span class="meta-hint">（直近3年）</span></div><div id="rfunding"></div></div>
-        <div class="rb"><div class="rbt"><strong>社員数増加</strong> トップ15 <span class="meta-hint">（直近3年）</span></div><div id="rheadcount"></div></div>
+        <div class="rb"><div class="rbt"><strong>資金調達額</strong> トップ15 <span class="meta-hint">（直近3年分）</span></div><div id="rfunding"></div></div>
+        <div class="rb"><div class="rbt"><strong>社員数増加</strong> トップ15 <span class="meta-hint">（直近3年分）</span></div><div id="rheadcount"></div></div>
       </div>
       <div class="sechdr" style="display:flex;align-items:center">
-        TOP15 企業情報
+        トップ15 企業情報
         <div class="cocard-view-toggle" style="margin-left:auto">
           <button class="cocard-view-btn active" id="co-view-list" onclick="setCoCardView('list')" title="リスト表示" aria-label="リスト表示に切り替え">☰ リスト</button>
           <button class="cocard-view-btn" id="co-view-grid" onclick="setCoCardView('grid')" title="グリッド表示" aria-label="グリッド表示に切り替え">⊞ グリッド</button>
@@ -2559,7 +2565,7 @@ button:focus-visible,
         </div>
         <div class="treemap" id="treemap"></div>
       </div>
-      <div class="sechdr">各領域トップ5</div>
+      <div class="sechdr">領域別トップ5</div>
       <div class="group-grid" id="sector-tops"></div>
       <div id="area-selected-cards"></div>
     </div>
@@ -3253,7 +3259,7 @@ function updateMetrics(company) {
 
   if (!company) {
     titleEl.textContent = apiState.status === 'error' ? 'データ取得エラー' : 'データ読込中…';
-    subEl.textContent = apiState.status === 'error' ? (apiState.error || '企業データを取得できませんでした') : '企業データを読み込んでいます';
+    subEl.textContent = apiState.status === 'error' ? (apiState.error || '企業データの取得に失敗しました') : '企業データを読み込んでいます';
     if (missionEl) {
       missionEl.textContent = '';
       missionEl.style.display = 'none';
@@ -3487,7 +3493,7 @@ async function loadSiteData() {
   apiState.payload = null;
 
   try {
-    showLoadingState('JSON APIからデータを読み込み中...');
+    showLoadingState('JSON APIからデータを準備しています…');
 
     const res = await fetch(`${API_URL}?t=${Date.now()}`, {
       cache: 'no-store',
@@ -3548,8 +3554,8 @@ async function loadSiteData() {
     apiState.loaded = false;
     apiState.payload = null;
     showLoadingState('');
-    ['strip-biz','strip-org'].forEach(id=>{const el=document.getElementById(id);if(el){const e2=el.querySelector('.events-empty');if(e2)e2.textContent='データを取得できませんでした';}});
-    ['biz-topics','org-topics'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.innerHTML.trim())el.innerHTML='<div class="events-empty">データを取得できませんでした</div>';});
+    ['strip-biz','strip-org'].forEach(id=>{const el=document.getElementById(id);if(el){const e2=el.querySelector('.events-empty');if(e2)e2.textContent='データの取得に失敗しました';}});
+    ['biz-topics','org-topics'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.innerHTML.trim())el.innerHTML='<div class="events-empty">データの取得に失敗しました</div>';});
     throw e;
   }
 }
@@ -3747,8 +3753,8 @@ function showLoadingState(msg) {
         <div class="data-error-title">⚠ データの取得に失敗しました</div>
         <div class="data-error-msg">${escapeHtml(msg)}</div>
         <div class="data-error-actions">
-          <button class="data-error-btn primary" onclick="location.reload()" aria-label="ページを再読み込み">再読み込み</button>
-          <button class="data-error-btn" onclick="useMockData()" aria-label="仮データで表示">仮データで表示</button>
+          <button class="data-error-btn primary" type="button" onclick="location.reload()" aria-label="ページを再読み込み">再読み込み</button>
+          <button class="data-error-btn" type="button" onclick="useMockData()" aria-label="仮データで表示">仮データで表示</button>
         </div>
       </div>`;
       if (stripBiz) stripBiz.innerHTML = errorHtml;
@@ -3819,7 +3825,7 @@ function renderSidebarCards(query, limit) {
     const idx = all.indexOf(c);
     const rows = Array.isArray(c.data) ? c.data : [];
     const latest = rows.length ? rows[rows.length-1] : null;
-    const latestStr = latest ? latest.count.toLocaleString()+'名' : '—';
+    const latestStr = latest ? latest.count.toLocaleString()+'人' : '—';
     const accent = c.color || '#5A6A80';
     const accentBg = c.colorDim || makeColorDim(accent);
     const founded = c.founding_year ? `設立 ${escapeHtml(String(c.founding_year))}` : '';
@@ -3838,6 +3844,33 @@ function renderSidebarCards(query, limit) {
 
   body.querySelectorAll('.company-card[data-idx]').forEach(card => {
     card.addEventListener('click', () => selectCompany(Number(card.dataset.idx)));
+  });
+  // 表示中のカードのスパークラインを描画
+  requestAnimationFrame(() => {
+    body.querySelectorAll('.spark[id]').forEach(canvas => {
+      const idx = parseInt(canvas.id.replace('spark',''), 10);
+      const co = COMPANIES[idx];
+      if (!co || !Array.isArray(co.data) || !co.data.length) return;
+      if (canvas._sparkDrawn) return;
+      canvas._sparkDrawn = true;
+      const data = co.data.map(d => d.count);
+      const color = co.color || '#5A6A80';
+      try {
+        const ctx = canvas.getContext('2d');
+        const w = canvas.offsetWidth || 100; const h = canvas.offsetHeight || 16;
+        canvas.width = w; canvas.height = h;
+        const mx = Math.max(...data, 1);
+        ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath();
+        data.forEach((v, i) => {
+          const x = (i / Math.max(data.length-1,1)) * w;
+          const y = h - (v / mx) * h * 0.9;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        if (!sparkCharts._virt) sparkCharts._virt = [];
+        sparkCharts._virt.push(canvas);
+      } catch(e) {}
+    });
   });
   body.querySelectorAll('.sb-more-btn').forEach(btn => {
     btn.addEventListener('click', () => renderSidebarCards(btn.dataset.query, Number(btn.dataset.limit)));
@@ -3860,7 +3893,7 @@ function renderSidebar() {
       </div>
       <div class="sidebar-body">
         <div class="company-card active">
-          <div class="company-name">読み込み待機中</div>
+          <div class="company-name">データを準備中</div>
           <div class="company-summary-line">${emptyLabel}</div>
         </div>
       </div>`;
@@ -4530,6 +4563,12 @@ function showPage(page, companyId) {
     history.pushState({page:'top'}, '', '#top');
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.title = 'StartupFile — 日本のスタートアップ企業情報';
+    // [Fix③] ページ遷移時にフィルター状態をリセット
+    activeFilter = 'すべて'; activeSeriesFilter = 'すべて'; activeFoundingFilter = 'すべて';
+    const si = document.getElementById('search-input'); if(si) si.value = '';
+    const sr = document.getElementById('search-results'); if(sr) sr.innerHTML = '';
+    document.querySelectorAll('.sb-tag, .ftag').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sb-tag:first-child, .ftag:first-child').forEach(t => t.classList.add('active'));
 
   } else if (page === 'company') {
     const el = document.getElementById('page-company');
@@ -4610,6 +4649,12 @@ window.addEventListener('popstate', function(e) {
   }
 });
 
+// FABボタン: スクロール量に応じて表示/非表示
+window.addEventListener('scroll', function() {
+  const fab = document.getElementById('fab-top');
+  if (fab) fab.classList.toggle('visible', window.scrollY > 300);
+}, { passive: true });
+
 // 初期ページ判定（#company/layerx 形式にも対応）
 (function(){
   const h = location.hash;
@@ -4685,7 +4730,7 @@ function renderCoCards(metric,limit){
   const sorted=[...pool].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);
   const el=document.getElementById('co-cards-list');
   if(!el)return;
-  if(!sorted.length){el.innerHTML='<div style="padding:16px;color:var(--text3);font-size:11px">データを読み込み中...</div>';return;}
+  if(!sorted.length){el.innerHTML='<div style="padding:16px;color:var(--text3);font-size:11px">データを準備しています…</div>';return;}
   const show=limit||_coCardLimit;
   const visible=sorted.slice(0,show);
   const remaining=sorted.length-show;
@@ -4798,7 +4843,20 @@ function refreshTopPage(){
 
 // ── 検索入力イベント ──
 const searchInput=document.getElementById('search-input');
-if(searchInput)searchInput.addEventListener('input',function(){renderSearch(this.value,activeFilter);});
+const searchClear=document.getElementById('search-clear');
+if(searchInput){
+  searchInput.addEventListener('input',function(){
+    renderSearch(this.value,activeFilter);
+    if(searchClear) searchClear.style.display=this.value?'block':'none';
+  });
+}
+if(searchClear){
+  searchClear.addEventListener('click',function(){
+    if(searchInput){searchInput.value='';searchInput.focus();}
+    renderSearch('',activeFilter);
+    this.style.display='none';
+  });
+}
 // 検索ボタンクリック
 const searchBtn=document.getElementById('search-btn');
 if(searchBtn)searchBtn.addEventListener('click',function(){renderSearch(searchInput?searchInput.value:'',activeFilter);});
@@ -4811,7 +4869,7 @@ if(searchInput)searchInput.addEventListener('keydown',function(e){if(e.key==='En
 
 <!-- フローティングアクションボタン -->
 <div class="fab-wrap" id="fab-wrap">
-  <button class="fab-btn" id="fab-top" title="ページトップへ" aria-label="ページトップへ戻る">↑</button>
+  <button class="fab-btn" id="fab-top" type="button" title="ページトップへ" aria-label="ページトップへ戻る" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 </div>
 
 <script>
@@ -4834,18 +4892,18 @@ function chMiniBarHtml(vals,color){if(!vals||!vals.length)return '<span style="c
 
 function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding+'億円':'—'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${chMiniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${chMiniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding+'億円':'—'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div></div>`;}
 
-function renderRankList(id,key){const el=document.getElementById(id);if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを読み込み中...</div>';return;}el.innerHTML=sorted.slice(0,15).map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?val+'億円':'+'+val+'人';return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
+function renderRankList(id,key){const el=document.getElementById(id);if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを準備しています…</div>';return;}el.innerHTML=sorted.slice(0,15).map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?val+'億円':'+'+val+'人';return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
 
 function renderCoCardsDynamic(metric,limit){
   const el=document.getElementById('co-cards');if(!el)return;
   const pool=buildChPool();const sorted=[...pool].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);
-  if(!sorted.length){el.innerHTML='<div style="padding:24px;color:var(--text3);font-size:12px;text-align:center">データを読み込み中...</div>';return;}
+  if(!sorted.length){el.innerHTML='<div style="padding:24px;color:var(--text3);font-size:12px;text-align:center">データを準備しています…</div>';return;}
   const show=limit||15;
   const remaining=sorted.length-show;
   el.innerHTML=sorted.slice(0,show).map((c,i)=>chCoCardHtml(c,i)).join('');
   if(remaining>0){
     const btn=document.createElement('button');
-    btn.className='co-more-btn';btn.style.margin='10px 0';
+    btn.className='co-more-btn';btn.type='button';btn.style.margin='10px 0';
     btn.textContent='さらに'+remaining+'社を表示';
     btn.addEventListener('click',()=>renderCoCardsDynamic(metric,show+15));
     el.appendChild(btn);
