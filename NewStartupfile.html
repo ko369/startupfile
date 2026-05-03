@@ -1051,9 +1051,8 @@ canvas { transition: opacity 0.3s; }
 .co-graph-val{font-size:10px;font-weight:500;color:var(--sd)}
 .co-graph-delta{font-size:9px;color:var(--teal)}
 .nc-row{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;width:100%;margin-bottom:6px}
-.nc-row:hover{background:var(--bg3)}
+.nc-row:hover{background:var(--bg3);border-color:var(--slate-mid)}
 .nc-row:last-child{margin-bottom:0}
-.nc-row:hover{border-color:var(--slate-mid)}
 .nc-date{font-size:9px;color:var(--text3);flex-shrink:0;width:36px;padding-top:2px;line-height:1.3;text-align:center}
 .nc-date-m{font-size:9px;display:block}
 .nc-date-d{font-size:12px;font-weight:500;color:var(--text2);display:block}
@@ -1324,9 +1323,7 @@ button:focus-visible,
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.page-fade-in {
-  animation: fadeInPage 0.15s ease-out forwards;
-}
+
 
 /* ════ 仮データバナー ════ */
 .mock-banner {
@@ -1738,302 +1735,8 @@ button:focus-visible,
 }
 
 
-/* ════ チャート最新値ラベル ════ */
-.chart-latest-label {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 6px 32px 0;
-  font-family: var(--font-mono);
-}
-.chart-latest-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-}
-.chart-latest-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
-.chart-latest-val {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--slate-dark);
-  line-height: 1;
-}
-.chart-latest-year {
-  font-size: 9px;
-  color: var(--text3);
-}
-
-/* ════ 準備中ツールチップ ════ */
-.pb-coming { position: relative; }
-.pb-coming::after {
-  content: '準備中';
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9px;
-  background: var(--slate-dark);
-  color: #fff;
-  padding: 3px 7px;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .15s;
-}
-.pb-coming:hover::after { opacity: 1; }
-
-/* ════ 数値強調色の統一 ════ */
-/* 社員数: teal */
-.metric-val { color: var(--slate-dark); }
-#metric-current { color: var(--teal) !important; }
-#metric-peak    { color: var(--slate-dark) !important; }
-/* 調達額: purple */
-
-/* 増減: green */
-.metric-change  { color: var(--teal); }
-/* スコア: amber */
-/* ランキング値: slate-dark 統一 */
-.rv, .co-graph-val, .cogv { color: var(--slate-dark); }
-/* 増加数: teal */
-.co-graph-delta, .cogd { color: var(--teal); }
-
-/* ════ エラー・空状態 アクションカード ════ */
-.data-error-card {
-  margin: 24px 32px;
-  padding: 20px 24px;
-  background: #fff;
-  border: 1px solid #E8C8C8;
-  border-radius: var(--r-lg);
-  border-left: 3px solid var(--error-text,#B85050);
-}
-.data-error-title {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--error-text,#B85050);
-  margin-bottom: 6px;
-  font-family: var(--font-sans);
-}
-.data-error-msg {
-  font-size: 10px;
-  color: var(--text3);
-  font-family: var(--font-mono);
-  margin-bottom: 14px;
-  line-height: 1.6;
-}
-.data-error-actions {
-  display: flex;
-  gap: 8px;
-}
-.data-error-btn {
-  font-size: 10px;
-  padding: 6px 14px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--text2);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  transition: background .15s, border-color .15s;
-}
-.data-error-btn:hover { background: var(--bg3); border-color: var(--line2); }
-.data-error-btn.primary {
-  background: var(--slate-dark);
-  color: #fff;
-  border-color: var(--slate-dark);
-}
-.data-error-btn.primary:hover { background: var(--slate); }
-
-/* ════ サイドバー: 現在表示中インジケーター ════ */
-.company-card { position: relative; }
-.company-card.active::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  background: var(--company-accent, var(--teal));
-  border-radius: 0 2px 2px 0;
-}
-.company-card.active .company-name {
-  color: var(--company-accent, var(--teal));
-}
-.company-now-badge {
-  font-size: 9px;
-  padding: 1px 5px;
-  background: var(--company-accent, var;
-  margin-left: auto;
-}
-
-/* ════ ヒートマップ操作ヒント ════ */
-.hm-hint {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text3);
-  font-family: var(--font-mono);
-  margin-bottom: 10px;
-  padding: 6px 10px;
-  background: var(--bg2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-}
-.hm-hint-icon { font-size: 11px; flex-shrink: 0; }
-
-/* ════ 検索ボックス フォーカス ════ */
-.search-input-wrap:focus-within {
-  border-color: var(--slate-dark);
-  box-shadow: 0 0 0 2px rgba(58,74,92,0.12);
-}
-.search-box:focus-within .search-icon {
-  border-color: var(--slate-dark);
-}
-.search-box:focus-within .search-icon::after {
-  background: var(--slate-dark);
-}
-
-/* ════ 注目一覧 企業カード レイアウト切り替え ════ */
-.cocards { display: flex; flex-direction: column; gap: 10px; }
-.cocards.grid-mode {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 10px;
-}
-.cocards.grid-mode .cocard { height: 100%; }
-.cocard-view-toggle {
-  display: flex;
-  gap: 4px;
-  margin-left: auto;
-}
-.cocard-view-btn {
-  font-size: 10px;
-  padding: 3px 10px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background: #fff;
-  color: var(--text3);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  transition: background .15s, color .15s, border-color .15s;
-}
-.cocard-view-btn.active {
-  background: var(--slate-dark);
-  color: #fff;
-  border-color: var(--slate-dark);
-}
-
-/* ════ 推算行のスタイル ════ */
-.data-table tr.est-row td {
-  background: #FEF3CD;
-}
-.data-table tr.est-row td:first-child {
-  border-left: 3px solid var(--tag-est-c);
-  padding-left: calc(0px + 3px);
-}
-.data-table tr.est-row td.year::after {
-  content: ' 推';
-  font-size: 9px;
-  color: var(--tag-est-c);
-  font-family: var(--font-mono);
-  margin-left: 4px;
-  opacity: 0.8;
-}
-
-/* ════ サービス指標の出典ラベル ════ */
-.svc-ms {
-  font-size: 9px;
-  color: var(--text3);
-  font-family: var(--font-mono);
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.svc-ms::before {
-  content: '📅';
-  font-size: 9px;
-  opacity: 0.6;
-}
-
-/* ════ サイドバーフィルタ件数バッジ ════ */
-.sb-tag { position: relative; display: inline-flex; align-items: center; gap: 4px; }
-.sb-count {
-  font-size: 9px;
-  background: rgba(58,74,92,0.15);
-  color: var(--slate-dark);
-  padding: 0 4px;
-  border-radius: 20px;
-  line-height: 1.4;
-  font-family: var(--font-mono);
-}
-.sb-tag.active .sb-count {
-  background: rgba(255,255,255,0.25);
-  color: #fff;
-}
-
-/* ════ フローティングアクションボタン ════ */
-.fab-wrap {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 50;
-  pointer-events: none;
-}
-.fab-btn {
-  pointer-events: all;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--line2);
-  background: #fff;
-  color: var(--slate-dark);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  transition: background .15s, box-shadow .15s, transform .15s, opacity .15s;
-  opacity: 0;
-  transform: translateY(8px);
-}
-.fab-btn.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-.fab-btn:hover {
-  background: var(--slate-dark);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-}
-.fab-btn[title]:hover::before {
-  content: attr(title);
-  position: absolute;
-  right: 48px;
-  background: var(--slate-dark);
-  color: #fff;
-  font-size: 10px;
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
-  white-space: nowrap;
-  font-family: var(--font-mono);
-}
 @media (max-width: 768px) {
-.breadcrumb {
-    padding: 8px 14px 0;
-    font-size: 9px;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  .breadcrumb .bc-action {
-    display: none; /* モバイルでは「注目一覧で比較」ボタン非表示 */
-  }
+
 .cocards.grid-mode { grid-template-columns: 1fr; }
 .app {
     grid-template-columns: 1fr;
@@ -2041,18 +1744,6 @@ button:focus-visible,
   }
 
   /* ヘッダー */
-  .header {
-    padding: 0 16px;
-    height: auto;
-    min-height: 56px;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-  .header-divider { display: none; }
-  .header-meta { font-size: 9px; }
-  .header-right { margin-left: auto; gap: 8px; }
 
   /* サイドバー：横スクロールバーに変換 */
   .sidebar {
@@ -2074,14 +1765,6 @@ button:focus-visible,
   
   
 
-  .company-card {
-    flex-shrink: 0;
-    padding: 8px 14px;
-    border-left: none;
-    border-bottom: 2px solid transparent;
-    min-width: 120px;
-    white-space: nowrap;
-  }
   .company-card.active {
     background: var(--company-accent-bg, var(--bg2));
     border-left-color: transparent;
@@ -2104,7 +1787,7 @@ button:focus-visible,
     align-items: flex-start;
     width: 100%;
   }
-  .metric-block { text-align: left; }
+
   .metric-val { font-size: 20px; }
 
   /* タブナビ */
@@ -2126,14 +1809,12 @@ button:focus-visible,
   .range-bar { padding: 6px 16px; }
 
   /* イベントストリップ */
-  .events-strip { padding: 0 16px; height: 150px; }
-  .event-cards-col { min-width: 180px; max-width: 220px; }
 
   /* データテーブル */
-  .data-table-wrap { padding: 0 16px; }
+
   .data-table { font-size: 10px; }
   .data-table th { font-size: 9px; padding: 8px 4px 6px; }
-  .data-table td { padding: 6px 4px; }
+
   .data-table td.count { font-size: 11px; }
 
   /* ボトムバー */
@@ -2171,8 +1852,7 @@ button:focus-visible,
   div[style*="padding:14px 32px 0"] {
     padding: 12px 16px 0 !important;
   }
-.header { align-items: center; }
-  .header-meta { width: 100%; order: 3; font-size: 9px; }
+
   .header-right { order: 2; margin-left: auto; }
   .sidebar-head { padding: 0 12px 8px; min-width: max-content; }
   .sidebar-body { display: flex; gap: 0; min-width: max-content; }
@@ -2219,12 +1899,7 @@ button:focus-visible,
   #page-top .funding-cards {
     grid-template-columns: 1fr 1fr;
   }
-  #page-top .pghdr {
-    padding: 12px 14px 10px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
+  #page-top
 
   /* 注目一覧 */
   #page-chumoku.visible {
@@ -2291,7 +1966,7 @@ button:focus-visible,
   .breadcrumb .bc-action {
     display: none; /* モバイルでは「注目一覧で比較」ボタン非表示 */
   }
-.cocards.grid-mode { grid-template-columns: 1fr; }
+
 .fab-wrap { bottom: 16px; right: 16px; }
   .fab-btn  { width: 36px; height: 36px; font-size: 12px; }
 }
