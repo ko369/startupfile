@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="robots" content="noindex, nofollow">
+<meta name="robots" content="index, follow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StartupFile — 日本のスタートアップ企業情報</title>
 <meta name="description" content="日本のスタートアップ企業の社員数推移・資金調達・給与・採用情報を横断的に確認できるデータベース。LayerX、SmartHR、Ubieなど200社以上を収録。">
@@ -10,6 +10,7 @@
 <meta property="og:description" content="社員数推移・資金調達・給与・採用情報を横断的に確認できるスタートアップデータベース">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://ko369.github.io/startupfile/NewStartupfile.html">
 <meta name="twitter:title" content="StartupFile — 日本のスタートアップ企業情報">
 <meta name="theme-color" content="#3A4A5C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +21,6 @@
 
 :root {
   /* ─ ベース ─ */
-  --bg:   #ffffff;
   --bg2:  #F8F9FA;
   --bg3:  #EEF1F5;
   --line: #E8E8E8;
@@ -37,19 +37,15 @@
 
   /* ─ タグカラー ─ */
   --tag-ok-bg:    #EAF5F0; --tag-ok-c:    #1A7A50; --tag-ok-b:    #A8D8C0;
-  --tag-est-bg:   #FEF8EC; --tag-est-c:   #9A6800; --tag-est-b:   #F0D590;
+ --tag-est-c:   #9A6800;
   --tag-press-bg: #FDF0F0; --tag-press-c: #9A3030; --tag-press-b: #E8B8B8;
   --tag-note-bg:  #EFF6FF; --tag-note-c:  #2A5CA8; --tag-note-b:  #B8D0F0;
-  --tag-web-bg:   #F5F0FF; --tag-web-c:   #6040A0; --tag-web-b:   #C8B0E8;
 
   /* ─ 後方互換（旧カラー参照を置き換え） ─ */
   --amber:      #E8A020;
   --amber2:     #B87010;
-  --amber-dim:  rgba(232,160,32,0.08);
   --teal:       #3BAA90;
-  --rose:       #C04040;
   --blue:       #5B8FCC;
-  --font-serif: 'Newsreader', 'Noto Serif JP', serif;
   --font-mono:  'JetBrains Mono', monospace;
   /* ─ 角丸 ─ */
   --r-sm:   6px;
@@ -63,15 +59,8 @@
   /* ─ 色エイリアス ─ */
   --sd: #3A4A5C;
   --sl: #EEF1F5;
-  --bg: #ffffff;
   /* ── 仮データバナー色 ── */
-  --banner-bg:   #FEF8EC;
-  --banner-line: #F0D590;
-  --banner-text: #9A6800;
   /* ── エラーカード色 ── */
-  --error-line:  #E8C8C8;
-  --error-border:#B85050;
-  --error-text:  #B85050;
 }
 
 html, body { height: 100%; }
@@ -943,16 +932,7 @@ canvas { transition: opacity 0.3s; }
 /* ── スマートフォン（480px以下） ── */
 
 /* ════ border-radius 設計トークン ════ */
-:root {
-  --r-sm:  6px;    /* 小要素（バッジ・インジケーター） */
-  --r-md:  8px;    /* カード・パネル */
-  --r-lg:  10px;   /* 大きめカード */
-  --r-pill: 20px;  /* ピル型ボタン・タグ */
-}
-:root {
-  --funding-accent: #7a3fb5;
-  --page-pad-x: 32px;  /* 個別企業ページの左右余白 */
-}
+
 
 .metric-block { min-width: 92px; }
 .metric-note, .metric-change { white-space: nowrap; }
@@ -1154,7 +1134,6 @@ canvas { transition: opacity 0.3s; }
 .rbw{width:50px;height:3px;background:var(--bg3);border-radius:2px;flex-shrink:0}
 .rbar{height:3px;border-radius:2px}
 .rv{font-size:10px;font-weight:500;color:var(--sd);width:48px;text-align:right;flex-shrink:0}
-.cocards{display:flex;flex-direction:column;gap:10px}
 .cocard{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px}
 .coch{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .cork{width:22px;height:22px;border-radius: var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;flex-shrink:0}
@@ -2184,7 +2163,7 @@ button:focus-visible,
           <nav class="page-nav">
             <button class="page-nav-btn active" id="nav-top"     onclick="showPage('top')" aria-label="トップページへ">トップ</button>
             <button class="page-nav-btn"        id="nav-company" onclick="showPage('company')" aria-label="個別企業ページへ">個別企業</button>
-        <button class="page-nav-btn"        id="nav-chumoku" onclick="showPage('chumoku')" aria-label="注目一覧ページへ">注目一覧</button>
+            <button class="page-nav-btn"        id="nav-chumoku" onclick="showPage('chumoku')" aria-label="注目一覧ページへ">注目一覧</button>
           </nav>
           <div class="live-dot" id="shared-live-dot" title="定期更新中のデータ" aria-label="データ定期更新中"></div>
         </div>
@@ -2262,7 +2241,7 @@ button:focus-visible,
           <div class="search-inner">
             <div class="search-input-wrap">
               <div class="search-icon"></div>
-              <input class="search-input" id="search-input" placeholder="企業名・業種で検索…"/>
+              <input class="search-input" id="search-input" placeholder="企業名・業種で検索…" autocomplete="off"/>
             </div>
             <div class="search-btn">検索</div>
           </div>
@@ -3607,6 +3586,7 @@ function normalizeEnvScores(items) {
 
 
 function applyApiData(payload) {
+  invalidatePoolCache(); // データ更新時にメモ化キャッシュを無効化
   const rawCompanies = Array.isArray(payload?.companies) ? payload.companies.slice() : [];
   const normalized = rawCompanies.map((api, idx) => ({
     ...api,
@@ -3878,15 +3858,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       useMockData();
     }
   }
-
-  // [Diag] API接続状況をコンソールに出力
-  console.group('StartupFile 初期化診断');
-  console.log('API URL:', typeof API_URL !== 'undefined' ? API_URL : '未定義');
-  console.log('APIステータス:', typeof apiState !== 'undefined' ? apiState.status : '不明');
-  console.log('APIエラー:', typeof apiState !== 'undefined' ? (apiState.error || 'なし') : '不明');
-  console.log('COMPANIES 件数:', Array.isArray(COMPANIES) ? COMPANIES.length : '未ロード');
-  console.log('データソース:', (Array.isArray(COMPANIES) && COMPANIES.length > 3) ? '✅ GAS API' : '⚠️ mockPayload（仮データ3社）');
-  console.groupEnd();
 
   if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) return;
 
@@ -4221,7 +4192,7 @@ function buildSalarySection(company, api) {
       '<span class="info-source-lbl">参照元</span>' +
       '<div class="info-source-links">' +
       sources.map(source => source.url
-        ? `<a class="info-source-link" href="${escapeHtml(source.url)}" target="_blank">${escapeHtml(source.label)}↗</a>`
+        ? `<a class="info-source-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}↗</a>`
         : `<span class="info-source-link">${escapeHtml(source.label)}</span>`
       ).join('') +
       '</div>';
@@ -4259,7 +4230,7 @@ function buildInfoCardsSection(company) {
     c.innerHTML =
       '<div class="info-card-meta">' +
         `<span class="info-card-tag">${escapeHtml(tag)}</span>` +
-        (t.url ? `<a class="info-card-link" href="${escapeHtml(t.url)}" target="_blank">${escapeHtml(linkLabel)}</a>` : '') +
+        (t.url ? `<a class="info-card-link" href="${escapeHtml(t.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(linkLabel)}</a>` : '') +
       '</div>' +
       `<div class="info-card-title">${escapeHtml(t.title || '')}</div>` +
       `<div class="info-card-body">${escapeHtml(t.desc || '')}</div>`;
@@ -4322,7 +4293,7 @@ function buildJobsSection(api) {
           : '—';
         const refLabel = getSiteLabelFromUrl(jobUrl);
         const ref = jobUrl
-          ? `<a href="${escapeHtml(jobUrl)}" target="_blank" style="color:var(--blue);text-decoration:none">${escapeHtml(refLabel)}↗</a>`
+          ? `<a href="${escapeHtml(jobUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none">${escapeHtml(refLabel)}↗</a>`
           : '<span style="color:var(--text3)">—</span>';
         return `
           <tr style="border-bottom:1px solid var(--line)">
@@ -4578,8 +4549,9 @@ function showPage(page, companyId) {
 // ══════════════════════════════════════════════════════════════
 
 function buildTopPool() {
+  if (_topPoolCache) return _topPoolCache;
   if (!Array.isArray(window.COMPANIES) || !COMPANIES.length) return [];
-  return COMPANIES.map(co => {
+  return (_topPoolCache = COMPANIES.map(co => {
     const api=co.api||{}, data=Array.isArray(co.data)?co.data:[], funding=Array.isArray(co.funding)?co.funding:[];
     const totalFunding=(()=>{ const f=api.totalFunding; if(f==null)return 0; const n=Number(f); return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n; })();
     const headcount=data.length?data[data.length-1].count:0;
@@ -4742,8 +4714,10 @@ if(searchInput)searchInput.addEventListener('input',function(){renderSearch(this
 var chSeriesOrder=['Pre-Seed','Seed','Series A','Series B','Series C','Series D','Series E','Series F','上場','非公開']; // [Scope Fix]
 var chSeriesColors={'Pre-Seed':'#6A7A8C','Seed':'#4A7A6A','Series A':'#3A7A6A','Series B':'#3A5A8C','Series C':'#5A4A8C','Series D':'#7A4A6A','Series E':'#E8A020','Series F':'#C04040','上場':'#C04040','非公開':'#7A7A7A'};
 var chGlobalMetric='funding',chActiveAreaGroup='',chActiveSeriesGroup=''; // [Scope Fix]
+var _chPoolCache=null,_topPoolCache=null; // メモ化キャッシュ
 
-function buildChPool(){ if(!Array.isArray(window.COMPANIES)||!COMPANIES.length)return []; return COMPANIES.map(co=>{ const api=co.api||{},data=Array.isArray(co.data)?co.data:[],funding=Array.isArray(co.funding)?co.funding:[]; const totalFunding=(()=>{const f=api.totalFunding;if(f==null)return 0;const n=Number(f);return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n;})(); const headcount=data.length?data[data.length-1].count:0; const hcGrowth=data.length>=2?data[data.length-1].count-data[0].count:0; const smList=Array.isArray(co.serviceMetrics)?co.serviceMetrics:[]; const smItem=smList.find(m=>/導入|契約|顧客|社数/i.test(m.label)); const svcScores=Array.isArray(co.serviceScores)?co.serviceScores:[]; const topScore=svcScores.length?svcScores[0]:null; return {id:co.id,name:co.name,color:co.color||'#888780',sector:co.sector||'その他',series:String(api.totalRounds||'—').trim()||'—',funding:totalFunding,hcGrowth,founded:co.founding_year||0,headcount,desc:api.mission||'',hc5y:data.slice(-7).map(d=>d.count),f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),smVal:smItem?(smItem.value+(smItem.unit||'')):null,svcVal:topScore?topScore.total+'/'+(topScore.maxScore||5):null}; }); }
+function invalidatePoolCache(){_chPoolCache=null;_topPoolCache=null;}
+function buildChPool(){ if(_chPoolCache)return _chPoolCache; if(!Array.isArray(window.COMPANIES)||!COMPANIES.length)return []; return (_chPoolCache = COMPANIES.map(co=>{ const api=co.api||{},data=Array.isArray(co.data)?co.data:[],funding=Array.isArray(co.funding)?co.funding:[]; const totalFunding=(()=>{const f=api.totalFunding;if(f==null)return 0;const n=Number(f);return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n;})(); const headcount=data.length?data[data.length-1].count:0; const hcGrowth=data.length>=2?data[data.length-1].count-data[0].count:0; const smList=Array.isArray(co.serviceMetrics)?co.serviceMetrics:[]; const smItem=smList.find(m=>/導入|契約|顧客|社数/i.test(m.label)); const svcScores=Array.isArray(co.serviceScores)?co.serviceScores:[]; const topScore=svcScores.length?svcScores[0]:null; return {id:co.id,name:co.name,color:co.color||'#888780',sector:co.sector||'その他',series:String(api.totalRounds||'—').trim()||'—',funding:totalFunding,hcGrowth,founded:co.founding_year||0,headcount,desc:api.mission||'',hc5y:data.slice(-7).map(d=>d.count),f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),smVal:smItem?(smItem.value+(smItem.unit||'')):null,svcVal:topScore?topScore.total+'/'+(topScore.maxScore||5):null}; }); }
 
 function buildSectorDefs(pool){ const map={}; pool.forEach(c=>{const sec=c.sector||'その他';if(!map[sec])map[sec]={name:sec,funding:0,growth:0,count:0};map[sec].funding+=c.funding||0;map[sec].growth+=c.hcGrowth||0;map[sec].count+=1;}); const palette=['#3A5A8C','#3A7A6A','#5A4A8C','#7A4A6A','#3A6A7A','#7A5A3A','#4A7A4A','#6A4A5A','#4A5A7A','#6A6A3A','#5A7A5A','#7A7A7A']; let pi=0; return Object.values(map).sort((a,b)=>b.funding-a.funding).map(s=>({...s,color:palette[pi++%palette.length]})); }
 
