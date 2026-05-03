@@ -259,7 +259,7 @@ body.sidebar-collapsed .sidebar-body {
   flex-shrink: 0;
   border-bottom: 1px solid var(--line);
 }
-.company-title {
+h1.company-title, .company-title {
   font-family: var(--font-sans);
   font-size: 24px;
   font-weight: 500;
@@ -372,6 +372,11 @@ body.sidebar-collapsed .sidebar-body {
   font-family: var(--font-sans);
   font-size: 11px;
 }
+.sortable-th { cursor: pointer; user-select: none; }
+.sortable-th:hover { background: var(--bg3); }
+.sort-icon { font-size: 9px; opacity: 0.5; }
+.sortable-th.asc .sort-icon::after { content: "↑"; }
+.sortable-th.desc .sort-icon::after { content: "↓"; }
 .data-table th {
   font-size: 9px;
   letter-spacing: 0.06em;
@@ -731,7 +736,11 @@ canvas { transition: opacity 0.3s; }
   padding: 0 32px;
   flex-shrink: 0;
   gap: 0;
+  position: sticky;
+  top: 56px;
+  z-index: 40;
 }
+
 .tab-nav-btn {
   font-family: var(--font-sans);
   font-size: 12px;
@@ -963,7 +972,7 @@ canvas { transition: opacity 0.3s; }
 .sbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:0 12px 6px}
 
 .sbsl{font-size:9px;color:var(--text3);margin-bottom:5px;letter-spacing:.06em}
-.sb-tag{font-size:9px;padding:2px 7px;border:1px solid var(--line);border-radius:20px;background:var(--bg2);color:var(--text3);margin:2px 2px 0 0;display:inline-block;cursor:pointer}
+.sb-tag{font-size:9px;padding:5px 10px;border:1px solid var(--line);border-radius:20px;background:var(--bg2);color:var(--text3);margin:2px 2px 0 0;display:inline-block;cursor:pointer}
 .sb-tag.active{background:var(--sd);color:#fff;border-color:var(--sd)}
 .tp-main{overflow:visible;background:var(--bg2);scroll-behavior:smooth}
 .pghdr{padding:14px 20px 12px;border-bottom:1px solid var(--line);background:var(--bg2)}
@@ -1011,7 +1020,7 @@ canvas { transition: opacity 0.3s; }
 .fc-note{font-size:9px;color:var(--text3);line-height:1.4}
 .chumoku-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .chumoku-tabs{display:flex;gap:3px}
-.ctab{font-size:9px;padding:3px 12px;border:1px solid var(--line2);border-radius:20px;background:#fff;color:var(--text2);cursor:pointer}
+.ctab{font-size:9px;padding:5px 14px;border:1px solid var(--line2);border-radius:20px;background:#fff;color:var(--text2);cursor:pointer;min-height:32px}
 .ctab.active{background:var(--sd);color:#fff;border-color:var(--sd)}
 .co-cards-list{display:flex;flex-direction:column;gap:10px}
 .skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--r-sm)}
@@ -1191,7 +1200,7 @@ canvas { transition: opacity 0.3s; }
 .htab{font-size:9px;padding:3px 10px;border:1px solid var(--line2);border-radius:20px;background:#fff;color:var(--text2);cursor:pointer}
 .htab.active{background:var(--sd);color:#fff;border-color:var(--sd)}
 .treemap{display:flex;flex-wrap:wrap;gap:3px;width:100%}
-.tmc{border-radius:4px;padding:7px 9px;cursor:pointer;overflow:hidden;min-height:56px;display:flex;flex-direction:column;justify-content:space-between;border:1.5px solid transparent;transition:border-color .15s;min-width:60px}
+.tmc{border-radius:4px;padding:7px 9px;cursor:pointer;overflow:hidden;min-height:56px;display:flex;flex-direction:column;justify-content:space-between;border:1.5px solid transparent;transition:border-color .15s;min-width:60px;position:relative}
 .tmc:hover{opacity:.88}
 .tmc.sel{
   border-color: rgba(255,255,255,0.95) !important;
@@ -1278,7 +1287,6 @@ canvas { transition: opacity 0.3s; }
 /* ════ フォーカス（キーボード操作）対応 ════ */
 /* フォーカスは :focus-visible でのみ非表示にし、キーボード操作時は必ず表示 */
 :focus:not(:focus-visible) { outline: none; }
-:focus-visible { outline: 2px solid var(--slate-mid); outline-offset: 2px; }
 :focus-visible {
   outline: 2px solid var(--slate-dark);
   outline-offset: 2px;
@@ -1498,8 +1506,8 @@ button:focus-visible,
 /* ════ 数値強調色の統一 ════ */
 /* 社員数: teal */
 .metric-val { color: var(--slate-dark); }
-#metric-current { color: var(--teal) !important; }
-#metric-peak    { color: var(--slate-dark) !important; }
+#metric-current { color: var(--teal); }
+#metric-peak    { color: var(--slate-dark); }
 /* 調達額: purple */
 
 /* 増減: green */
@@ -1572,8 +1580,11 @@ button:focus-visible,
 .company-now-badge {
   font-size: 9px;
   padding: 1px 5px;
-  background: var(--company-accent, var;
+  background: var(--company-accent-bg, rgba(240,167,50,0.15));
+  color: var(--company-accent, var(--amber2));
+  border-radius: 20px;
   margin-left: auto;
+  white-space: nowrap;
 }
 
 /* ════ ヒートマップ操作ヒント ════ */
@@ -2121,9 +2132,10 @@ button:focus-visible,
 
 
 .sec-hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo h1 { margin: 0; padding: 0; font-size: 14px; font-weight: 500; letter-spacing: 0.02em; }
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-ZnR2wlLbSbr8/c9AgWg0la4qOf95p54eBGEFMhIJSBgFha4govwhIfceKiRBTCuJ5FLDo7xnVGsVkHNGCvMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 </head>
 
@@ -2135,7 +2147,7 @@ button:focus-visible,
       <header class="header" id="shared-header">
         <div class="logo-icon"><span>SF</span></div>
         <div class="logo">
-          StartupFile
+          <h1 class="logo-wordmark">StartupFile</h1>
           <span>日本のスタートアップ企業情報</span>
         </div>
         <div class="header-divider"></div>
@@ -2154,7 +2166,7 @@ button:focus-visible,
   <div class="mock-banner" id="mock-banner">
     <span class="mock-banner-icon" aria-hidden="true">⚠</span>
     現在は仮データを表示しています。実際のデータはAPIと接続後に反映されます。
-    <span class="mock-banner-close" onclick="this.parentElement.style.display='none'" title="閉じる">✕</span>
+    <button class="mock-banner-close" type="button" aria-label="バナーを閉じる" title="閉じる" id="mock-banner-close-btn">✕</span>
   </div>
 
   <!-- ═══ トップページ ═══ -->
@@ -2222,7 +2234,7 @@ button:focus-visible,
           <div class="search-inner">
             <div class="search-input-wrap">
               <div class="search-icon"></div>
-              <input class="search-input" id="search-input" placeholder="企業名・業種で検索…" autocomplete="off"/>
+              <input class="search-input" id="search-input" placeholder="企業名・業種で検索… (1056社)" autocomplete="off"/>
               <button class="search-clear-btn" id="search-clear" type="button" aria-label="検索をクリア" style="display:none">✕</button>
             </div>
             <button class="search-btn" id="search-btn" type="button" aria-label="検索実行">検索</button>
@@ -2270,7 +2282,7 @@ button:focus-visible,
     </div>
     <div class="main-header">
       <div style="flex:1;min-width:0">
-        <div class="company-title" id="main-title">データ読込中…</div>
+        <h2 class="company-title" id="main-title">データ読込中…</h2>
         <div class="company-subtitle" id="main-sub">企業データを読み込んでいます</div>
         <div class="main-mission" id="main-mission"></div>
       </div>
@@ -2420,8 +2432,8 @@ button:focus-visible,
         <thead>
           <tr>
             <th style="width:54px">年</th>
-            <th style="width:110px">社員数</th>
-            <th style="width:130px" id="th-funding">資金調達</th>
+            <th style="width:110px" id="th-count" class="sortable-th" title="クリックでソート" style="cursor:pointer">社員数 <span class="sort-icon">↕</span></th>
+            <th style="width:130px" id="th-funding" class="sortable-th" title="クリックでソート" style="cursor:pointer">資金調達 <span class="sort-icon">↕</span></th>
             <th>ソース</th>
           </tr>
         </thead>
@@ -2455,8 +2467,8 @@ button:focus-visible,
     <div class="sbsec">
       <div class="sbsl">期間</div>
       <div class="pbtns" id="sb-period">
-        <div class="pb pb-coming">3ヶ月</div><div class="pb pb-coming">半年</div><div class="pb pb-coming">1年</div>
-        <div class="pb active pb-coming">3年</div><div class="pb pb-coming">5年</div>
+        <span style="font-size:9px;color:var(--text3);font-family:var(--font-mono)">年次データ</span>
+        
       </div>
     </div>
     <div class="sdiv"></div>
@@ -2481,7 +2493,7 @@ button:focus-visible,
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <span onclick="showPage('top')" style="font-size:10px;color:var(--text3);cursor:pointer;font-family:var(--font-mono);display:flex;align-items:center;gap:3px;transition:color .15s" onmouseover="this.style.color='var(--slate-dark)'" onmouseout="this.style.color='var(--text3)'">← トップ</span>
         </div>
-        <div class="pgt">注目一覧</div>
+        <h1 class="pgt">注目一覧</h1>
         <div class="pgs">資金調達・社員数増加トップ企業 / 領域別 / シリーズ別</div>
       </div>
       <!-- 期間フィルタはサイドバーに統一（top-periodは削除） -->
@@ -2540,219 +2552,6 @@ button:focus-visible,
 </div><!-- /.app -->
 
 <script>
-// ══ 仮データ（DB接続前のプレビュー用）══
-// 各フィールドは startupfile_data_template_v5-3.xlsx の各シートに対応
-const mockPayload = {
-  meta: { companyCount: 3, generatedAt: new Date().toISOString(), defaultCompanyId: '2' },
-  companies: [
-    // ── ID=2: LayerX ──
-    {
-      id: '2', name: '株式会社LayerX', color: '#FF5724',
-      foundingYear: 2018, sector: 'AI SaaS / バックオフィスDX', location: '東京都',
-      mission: 'すべての経済活動を、デジタル化する。',
-      totalFunding: '約282.6億円', totalRounds: 'シリーズB（2025年9月）',
-      corporateUrl: 'https://layerx.co.jp', serviceUrl: 'https://bakuraku.jp',
-      recruitUrl: 'https://jobs.layerx.co.jp', cultureDeckUrl: 'https://speakerdeck.com/layerx/company-deck',
-      // 2_社員数
-      headcounts: [
-        {year:2019,count:30, source_text:'MBO後「現在は30名規模」',source_method:'メディア記事',source_url:'https://www.bridgine.com/2020/08/26/layerx/'},
-        {year:2020,count:30, source_text:'石黒氏 2020年5月に入社「30名弱」',source_method:'公式note',source_url:'https://note.com/t_1496/n/ndeea03361e63'},
-        {year:2021,count:40, source_text:'「40人から180人に」エンジニアブログ',source_method:'公式ブログ',source_url:'https://tech.layerx.co.jp/entry/bakuraku-data-management-2023'},
-        {year:2022,count:67, source_text:'「22年1月時点での社員数は67名」',source_method:'公式note',source_url:'https://note.com/t_1496/n/n876b5bef9cfd'},
-        {year:2023,count:180,source_text:'「40人から180人に」エンジニアブログ',source_method:'公式ブログ',source_url:'https://tech.layerx.co.jp/entry/bakuraku-data-management-2023'},
-        {year:2024,count:280,source_text:'「280名 ※2024年2月現在」（ワンキャリア）',source_method:'採用サイト',source_url:'https://www.onecareer.jp/companies/90026'},
-        {year:2025,count:390,source_text:'「はたらきかた2025」390名（公式note）',source_method:'公式note',source_url:'https://note.layerx.co.jp/n/n8edcdec6410c'},
-        {year:2026,count:582,source_text:'「はたらきかた2026」582名（公式note）',source_method:'公式note',source_url:'https://note.layerx.co.jp/n/n4ca3a768c9bf'},
-      ],
-      // 3_資金調達
-      funding: [
-        {year:2020,round:'Seed',       amount:30,  note:'ジャフコ、ANRI、YJキャピタル',      source_text:'PR TIMES 2020年5月',source_method:'PRタイムズ',source_url:'https://prtimes.jp/main/html/rd/p/000000023.000036528.html'},
-        {year:2023,round:'Series A 1st',amount:55, note:'三井物産リード',                    source_text:'PR TIMES 2023年',   source_method:'PRタイムズ',source_url:'https://prtimes.jp/main/html/rd/p/000000209.000036528.html'},
-        {year:2023,round:'Series A 2nd',amount:26.8,note:'JICベンチャー、DIMENSION等',       source_text:'企業HP ニュース',    source_method:'企業HP',   source_url:'https://layerx.co.jp/news/20230613/'},
-        {year:2023,round:'Series A Final',amount:20,note:'Keyrock Capital Management',      source_text:'PR TIMES 2023年',   source_method:'PRタイムズ',source_url:'https://prtimes.jp/main/html/rd/p/000000295.000036528.html'},
-        {year:2025,round:'Series B',    amount:150, note:'TCV リード',                       source_text:'企業HP ニュース',    source_method:'企業HP',   source_url:'https://layerx.co.jp/news/20250901-3/'},
-      ],
-      // 4_トピックス
-      topics: [
-        {year:2023,type:'business',title:'Series A 1stクローズ 55億円調達',speaker:'',source:'PR TIMES',date:'2023-04-13',desc:'三井物産リードで55億円。累計調達額は101.8億円に。',url:'https://prtimes.jp/main/html/rd/p/000000209.000036528.html'},
-        {year:2025,type:'business',title:'Series B 150億円調達（TCVリード）',speaker:'CEO 福島良典',source:'企業HP',date:'2025-09-01',desc:'累計282.6億円。グローバル展開資金に充当。',url:'https://layerx.co.jp/news/20250901-3/'},
-        {year:2024,type:'award',  title:'ITreview Grid Award 2024 Leader受賞','speaker':'',source:'ITreview',date:'2024-02-01',desc:'経費精算・請求書管理部門で最高評価を獲得。',url:'https://www.itreview.jp/'},
-      ],
-      // 5_導入データ
-      serviceMetrics: [
-        {label:'導入社数',    value:'4,200',unit:'社+', time:'2026.03'},
-        {label:'継続利用率', value:'99',    unit:'%',   time:'2025年度'},
-      ],
-      // 6_主要取引先
-      clients: [
-        {name:'トヨタ自動車',listed:'TRUE'},
-        {name:'三菱商事',    listed:'TRUE'},
-        {name:'NTT東日本',   listed:'TRUE'},
-      ],
-      // 7_サービス評判
-      serviceScores: [
-        {platform:'ittrend',total:4.6,maxScore:5.0,reviews:112,date:'2026.04',url:'https://it-trend.jp/expense_account/'},
-        {platform:'boxil',  total:4.5,maxScore:5.0,reviews:86, date:'2026.04',url:'https://boxil.jp/service/7777/'},
-      ],
-      // 8_特許
-      patents: [
-        {num:'特許7312045',title:'請求書データの自動構造化および勘定科目マッピングシステム',date:'2025.06'},
-        {num:'特許7198732',title:'法人カード利用明細と会計仕訳の自動照合エンジン',date:'2024.09'},
-      ],
-      // 9_給与レンジ
-      salaryRanges: [
-        {gradeId:'G1',gradeLabel:'グレード1',series:'single',min:400,max:600, sourceLabel:'OpenWork 給与情報（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-        {gradeId:'G2',gradeLabel:'グレード2',series:'single',min:500,max:750, sourceLabel:'OpenWork 給与情報（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-        {gradeId:'G3',gradeLabel:'グレード3',series:'single',min:650,max:950, sourceLabel:'OpenWork 給与情報（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-        {gradeId:'G4',gradeLabel:'グレード4',series:'single',min:800,max:1200,sourceLabel:'OpenWork 給与情報（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-        {gradeId:'G5',gradeLabel:'グレード5',series:'single',min:1000,max:1600,sourceLabel:'OpenWork 給与情報（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-      ],
-      // 10_求人票
-      jobs: [
-        {category:'eng',position:'バックエンドエンジニア',layer:'Senior',description:'バクラクの決済・会計領域のAPI設計・開発',salaryMin:800,salaryMax:1400,jobUrl:'https://jobs.layerx.co.jp/',checkedAt:'2026-04-01',status:'公開中'},
-        {category:'eng',position:'フロントエンドエンジニア',layer:'Senior',description:'React/TypeScriptによるSaaS UIの設計・実装',salaryMin:750,salaryMax:1300,jobUrl:'https://jobs.layerx.co.jp/',checkedAt:'2026-04-01',status:'公開中'},
-        {category:'prd',position:'プロダクトマネージャー',layer:'Lead',description:'バクラク請求書・経費のロードマップ策定',salaryMin:900,salaryMax:1500,jobUrl:'https://jobs.layerx.co.jp/',checkedAt:'2026-04-01',status:'公開中'},
-        {category:'biz',position:'エンタープライズセールス',layer:'Mid',description:'大手企業向けバクラク導入提案',salaryMin:600,salaryMax:1200,jobUrl:'https://jobs.layerx.co.jp/',checkedAt:'2026-04-01',status:'公開中'},
-      ],
-      // 11_はたらく環境スコア（配列形式）
-      envScores: [
-        {platform:'openwork',total:4.2,reviews:142,date:'2026.04',axis1:4.3,axis2:4.5,axis3:4.4,axis4:4.6,axis5:4.5,axis6:3.8},
-        {platform:'en',      total:4.0,reviews:88, date:'2026.03',axis1:4.1,axis2:4.2,axis3:4.0,axis4:4.3,axis5:4.1,axis6:3.7},
-      ],
-    },
-    // ── ID=1: SmartHR ──
-    {
-      id: '1', name: '株式会社SmartHR', color: '#00C4CC',
-      foundingYear: 2013, sector: 'HRTech / 労務管理SaaS', location: '東京都',
-      mission: '労働にまつわる社会課題をなくし、誰もがその人らしく働ける社会をつくる。',
-      totalFunding: '約358億円', totalRounds: 'シリーズE（2024年7月）',
-      corporateUrl: 'https://smarthr.co.jp', serviceUrl: 'https://app.smarthr.jp',
-      recruitUrl: 'https://smarthr.co.jp/recruit/', cultureDeckUrl: 'https://speakerdeck.com/smarthr_pr/smarthr-company-introduction1',
-      headcounts: [
-        {year:2015,count:9,  source_text:'「9名のフェーズ」（宮田氏インタビュー）',source_method:'メディア記事',source_url:'https://keyplayers.jp/archives/4198/'},
-        {year:2018,count:47, source_text:'「従業員は47人」（宮田氏インタビュー）',source_method:'メディア記事',source_url:'https://keyplayers.jp/archives/4198/'},
-        {year:2019,count:107,source_text:'「2019年4月現在107名」（代表ブログ）', source_method:'公式ブログ',  source_url:'https://blog.shojimiyata.com/entry/2019/04/26/095827'},
-        {year:2020,count:180,source_text:'「2020年初旬180人程度」（Wantedly）',   source_method:'メディア記事',source_url:'https://www.wantedly.com/hiringeek/interview/rc_kw2/'},
-        {year:2021,count:350,source_text:'「2021年には350人規模」（Wantedly）',   source_method:'メディア記事',source_url:'https://www.wantedly.com/hiringeek/interview/rc_kw2/'},
-        {year:2022,count:686,source_text:'「686名（2022年8月1日時点）」',         source_method:'採用サイト',  source_url:'https://w3hr.jp/news/smarthr-explanation/'},
-        {year:2023,count:900,source_text:'「約900名の規模」（2023年秋）',          source_method:'メディア記事',source_url:'https://blog.allstarsaas.com/posts/tackle-org-impediments'},
-        {year:2024,count:1100,source_text:'「1,100名（2024年3月時点）」（PR TIMES）',source_method:'プレスリリース',source_url:'https://prtimes.jp/main/html/rd/p/000000280.000015987.html'},
-        {year:2025,count:1400,source_text:'「1,400名を超える」（宮田氏退任ブログ）',source_method:'公式ブログ',source_url:'https://blog.shojimiyata.com/entry/transition_from_smarthr_to_nstock'},
-        {year:2026,count:1593,source_text:'「1,593名（2026年1月1日）」（会社紹介資料）',source_method:'公式資料',source_url:'https://speakerdeck.com/smarthr_pr/smarthr-company-introduction1'},
-      ],
-      funding: [
-        {year:2016,round:'Series A',amount:5,   note:'WiL、BEENEXT等',source_text:'PR TIMES 2016年',source_method:'PRタイムズ',source_url:'https://prtimes.jp/main/html/rd/p/000000009.000015987.html'},
-        {year:2018,round:'Series B',amount:15,  note:'SmartHR SPV',    source_text:'企業HP 2018年',  source_method:'企業HP',    source_url:'https://smarthr.jp/release/10956/'},
-        {year:2019,round:'Series C',amount:61.5,note:'THE FUND他',      source_text:'企業HP 2019年',  source_method:'企業HP',    source_url:'https://smarthr.co.jp/news/press/20786/'},
-        {year:2021,round:'Series D',amount:156, note:'Light Street Capital リード',source_text:'企業HP 2021年',source_method:'企業HP',source_url:'https://smarthr.jp/release/25704/'},
-        {year:2024,round:'Series E',amount:214, note:'TCV・KKRリード',  source_text:'企業HP 2024年7月',source_method:'企業HP',   source_url:'https://smarthr.co.jp/news/press/27110/'},
-      ],
-      topics: [
-        {year:2021,type:'business',title:'「SmartHR」導入社数5万社突破',speaker:'',source:'プレスリリース',date:'2021-03-01',desc:'中小から大企業まで利用者が拡大。IPO準備に向けエンタープライズ強化を開始。',url:'https://smarthr.co.jp/'},
-        {year:2024,type:'business',title:'Series E 214億円調達（TCV・KKRリード）',speaker:'',source:'企業HP',date:'2024-07-01',desc:'累計358億円。国内HR SaaSとして最大規模の調達。',url:'https://smarthr.co.jp/news/press/27110/'},
-        {year:2024,type:'award',  title:'Forbes JAPAN「日本のスタートアップ100選」1位','speaker':'',source:'Forbes JAPAN',date:'2024-06-01',desc:'社員数・調達額・成長率の総合評価でトップに選出。',url:''},
-      ],
-      serviceMetrics: [
-        {label:'導入社数',    value:'80,000',unit:'社+',time:'2025.12'},
-        {label:'継続利用率', value:'98',     unit:'%',  time:'2025年度'},
-      ],
-      clients: [
-        {name:'パナソニック',listed:'TRUE'},
-        {name:'富士通',      listed:'TRUE'},
-        {name:'ソニーグループ',listed:'TRUE'},
-      ],
-      serviceScores: [
-        {platform:'ittrend',total:4.5,maxScore:5.0,reviews:280,date:'2026.04',url:'https://it-trend.jp/human_resources_management/'},
-        {platform:'boxil',  total:4.3,maxScore:5.0,reviews:195,date:'2026.04',url:'https://boxil.jp/service/4418/'},
-      ],
-      patents: [],
-      salaryRanges: [
-        {gradeId:'G1',gradeLabel:'ポテンシャル',series:'hi', min:330,max:402,sourceLabel:'会社紹介資料 p.56（2026年2月）',sourceUrl:'https://speakerdeck.com/smarthr_pr/smarthr-company-introduction1',graphMax:2600},
-        {gradeId:'G1',gradeLabel:'ポテンシャル',series:'std',min:330,max:402,sourceLabel:'会社紹介資料 p.56（2026年2月）',sourceUrl:'https://speakerdeck.com/smarthr_pr/smarthr-company-introduction1',graphMax:2600},
-        {gradeId:'G2',gradeLabel:'独立実行',   series:'hi', min:402,max:504,sourceLabel:'会社紹介資料 p.56（2026年2月）',sourceUrl:'https://speakerdeck.com/smarthr_pr/smarthr-company-introduction1',graphMax:2600},
-        {gradeId:'G2',gradeLabel:'独立実行',   series:'std',min:348,max:456,sourceLabel:'会社紹介資料 p.56（2026年2月）',sourceUrl:'https://speakerdeck.com/smarthr_pr/smarthr-company-introduction1',graphMax:2600},
-        {gradeId:'G3',gradeLabel:'巻き込む',   series:'hi', min:456,max:708,sourceLabel:'会社紹介資料 p.56（2026年2月）',sourceUrl:'https://speakerdeck.com/smarthr_pr/smarthr-company-introduction1',graphMax:2600},
-        {gradeId:'G3',gradeLabel:'巻き込む',   series:'std',min:402,max:600,sourceLabel:'会社紹介資料 p.56（2026年2月）',sourceUrl:'https://speakerdeck.com/smarthr_pr/smarthr-company-introduction1',graphMax:2600},
-      ],
-      jobs: [
-        {category:'eng',position:'シニアWebバックエンドエンジニア（労務領域）',layer:'シニア',description:'SmartHR基本機能のコア開発。LeSSフレームワーク、Ruby/Rails/PostgreSQL',salaryMin:858,salaryMax:1260,jobUrl:'https://doda.jp/DodaFront/View/CompanyJobs/j_id__10128408747/',checkedAt:'2026-03-29',status:'公開中'},
-        {category:'eng',position:'SREエンジニア',layer:'ミドル〜シニア',description:'プロダクト群の信頼性・可用性向上。フルリモート可',salaryMin:742,salaryMax:1484,jobUrl:'https://doda.jp/DodaFront/View/CompanyJobs/j_id__10128408747/',checkedAt:'2026-03-29',status:'公開中'},
-        {category:'prd',position:'AIプロダクトマネージャー',layer:'ミドル〜シニア',description:'LLM/ML活用プロダクトの実験〜本番実装を主導',salaryMin:null,salaryMax:null,jobUrl:'https://doda.jp/DodaFront/View/CompanyJobs/j_id__10128408747/',checkedAt:'2026-03-29',status:'公開中'},
-        {category:'biz',position:'フィールドセールス（グロースマーケット）',layer:'メンバー',description:'従業員51〜500名規模の新規顧客開拓。在宅可・フルフレックス',salaryMin:450,salaryMax:650,jobUrl:'https://doda.jp/DodaFront/View/CompanyJobs/j_id__10128408747/',checkedAt:'2026-03-29',status:'公開中'},
-      ],
-      envScores: [
-        {platform:'openwork',total:4.1,reviews:310,date:'2026.04',axis1:4.0,axis2:4.3,axis3:4.2,axis4:4.4,axis5:4.3,axis6:4.0},
-        {platform:'en',      total:3.9,reviews:185,date:'2026.03',axis1:3.8,axis2:4.0,axis3:3.9,axis4:4.1,axis5:4.0,axis6:3.8},
-      ],
-    },
-    // ── ID=3: Ubie ──
-    {
-      id: '3', name: 'Ubie株式会社', color: '#00BCD4',
-      foundingYear: 2017, sector: 'HealthTech', location: '東京都',
-      mission: 'テクノロジーで人々を適切な医療に案内する',
-      totalFunding: '約180億円', totalRounds: 'シリーズC以降（2025年5月公式発表）',
-      corporateUrl: 'https://ubie.life', serviceUrl: 'https://ubie.app',
-      recruitUrl: 'https://ubie.life/recruit/', cultureDeckUrl: 'https://speakerdeck.com/ubie/ubie-hui-she-an-nei-202211',
-      headcounts: [
-        {year:2019,count:20, source_text:'「業務委託で関わった2019年、約20人弱」',source_method:'メディア記事',source_url:'https://thebridge.jp/2021/08/ubie-recruitment-all-star-saas-fund'},
-        {year:2020,count:86, source_text:'「2020年12月には86名」（公式note）',       source_method:'公式note',    source_url:'https://note.com/ubie/n/n99cba7c28837'},
-        {year:2021,count:120,source_text:'「社員約120名（2021年時点）」',             source_method:'メディア記事',source_url:'https://blog.allstarsaas.com/posts/ubie-recruitment'},
-        {year:2022,count:200,source_text:'「2022年4月現在200名」',                    source_method:'メディア記事',source_url:'https://www.concord-career.com/industry/health_tech/ubie/'},
-        {year:2023,count:190,source_text:'「正社員190名、従業員230名」（公式note）',   source_method:'公式note',    source_url:'https://note.com/ubie/n/n7264beb47393'},
-        {year:2024,count:250,source_text:'「SeriesC後、250名を超えた」（阿部note）',   source_method:'公式note',    source_url:'https://note.com/abeyoshinori/n/nae128c0fd087'},
-        {year:2025,count:240,source_text:'「2025年5月現在240名」（Wikipedia）',        source_method:'Wikipedia',   source_url:''},
-        {year:2026,count:220,source_text:'「220名（2026年4月現在）」（会社紹介資料）',  source_method:'会社紹介資料',source_url:'https://speakerdeck.com/ubie/ubie-hui-she-an-nei-202211'},
-      ],
-      funding: [
-        {year:2020,round:'Series B',amount:42, note:'',source_text:'プレスリリース 2020年',source_method:'プレスリリース',source_url:'https://ubie.life/'},
-        {year:2022,round:'Series C',amount:93, note:'',source_text:'プレスリリース 2022年',source_method:'プレスリリース',source_url:'https://ubie.life/'},
-        {year:2025,round:'Series C+',amount:45,note:'',source_text:'プレスリリース 2025年',source_method:'プレスリリース',source_url:'https://ubie.life/'},
-      ],
-      topics: [
-        {year:2021,type:'business',title:'AI問診「ユビー」累計利用者1,000万人突破',speaker:'',source:'プレスリリース',date:'2021-09-01',desc:'医療機関向けAI問診サービスが急成長。',url:'https://ubie.life/'},
-        {year:2022,type:'business',title:'Series C 93億円調達。米国市場参入を本格化',speaker:'CEO 阿部吉倫',source:'プレスリリース',date:'2022-05-01',desc:'米国の医療機関向けにSymptom CheckerをSaaS展開。',url:'https://ubie.life/'},
-        {year:2025,type:'business',title:'導入医療機関2,800施設突破。月間利用者1,200万人へ',speaker:'',source:'プレスリリース',date:'2025-05-01',desc:'国内全都道府県の主要病院に展開完了。',url:'https://ubie.life/'},
-      ],
-      serviceMetrics: [
-        {label:'月間利用者数',value:'1,200',unit:'万人',  time:'2025.09'},
-        {label:'導入医療機関',value:'2,800',unit:'施設+', time:'2025.09'},
-      ],
-      clients: [
-        {name:'済生会病院グループ',  listed:'FALSE'},
-        {name:'東京都立病院機構',    listed:'FALSE'},
-        {name:'徳洲会グループ',      listed:'FALSE'},
-      ],
-      serviceScores: [
-        {platform:'google_play',total:4.4,maxScore:5.0,reviews:8200,date:'2026.04',url:'https://play.google.com/store/apps/details?id=jp.ubie.ubie'},
-        {platform:'appstore',   total:4.5,maxScore:5.0,reviews:3100,date:'2026.04',url:'https://apps.apple.com/jp/app/ubie/id1093272567'},
-      ],
-      patents: [
-        {num:'特許6812034',title:'症状入力に基づく疾患スコアリングエンジン',date:'2022.03'},
-        {num:'特許7105892',title:'電子カルテ連携による問診自動補完システム',date:'2024.01'},
-      ],
-      salaryRanges: [
-        {gradeId:'IC2',gradeLabel:'IC2',series:'single',min:450,max:700, sourceLabel:'OpenWork（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-        {gradeId:'IC3',gradeLabel:'IC3',series:'single',min:600,max:900, sourceLabel:'OpenWork（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-        {gradeId:'IC4',gradeLabel:'IC4',series:'single',min:800,max:1200,sourceLabel:'OpenWork（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-        {gradeId:'IC5',gradeLabel:'IC5',series:'single',min:1000,max:1600,sourceLabel:'OpenWork（2025）',sourceUrl:'https://www.openwork.jp/',graphMax:2000},
-      ],
-      jobs: [
-        {category:'eng',position:'AI/MLエンジニア',layer:'Senior',description:'症状チェッカーの推論モデル改善・新機能開発',salaryMin:850,salaryMax:1500,jobUrl:'https://ubie.life/recruit/',checkedAt:'2026-04-01',status:'公開中'},
-        {category:'eng',position:'バックエンドエンジニア（医療API）',layer:'Mid',description:'医療機関向けAPI設計・FHIR対応',salaryMin:700,salaryMax:1200,jobUrl:'https://ubie.life/recruit/',checkedAt:'2026-04-01',status:'公開中'},
-        {category:'biz',position:'医療機関営業（病院グループ担当）',layer:'Mid',description:'大学病院・病院グループへの導入提案',salaryMin:550,salaryMax:950,jobUrl:'https://ubie.life/recruit/',checkedAt:'2026-04-01',status:'公開中'},
-      ],
-      envScores: [
-        {platform:'openwork',total:4.3,reviews:98,date:'2026.04',axis1:4.2,axis2:4.6,axis3:4.5,axis4:4.7,axis5:4.6,axis6:4.0},
-        {platform:'en',      total:4.1,reviews:52,date:'2026.03',axis1:4.0,axis2:4.3,axis3:4.2,axis4:4.4,axis5:4.2,axis6:3.9},
-      ],
-    },
-  ]
-};
-
-
-var COMPANIES = [];
-
-// mockPayload は上部 const で定義済み
 
 var EVENTS = {};
 
@@ -2979,7 +2778,7 @@ function buildMainChart(company, range) {
       order: 2,
     },
     {
-      label: '社員数（推定）',
+      label: '社員数（推算）',
       data: filtered.map(d => ({ x: d.year, y: d.count })),
       yAxisID: 'yHead',
       borderColor: `rgba(${rgb},0.35)`,
@@ -3055,7 +2854,7 @@ function buildMainChart(company, range) {
                 const note = f ? ` (${f.round}${f.note ? ' · ' + f.note : ''})` : '';
                 return ` 調達 ${item.parsed.y}億円${note}`;
               }
-              // 「推定」系列（index=1）は、「確認済み」系列（index=0）に値がある年は非表示
+              // 「推算」系列（index=1）は、「確認済み」系列（index=0）に値がある年は非表示
               if (item.datasetIndex === 1) {
                 const confirmedDataset = item.chart.data.datasets[0];
                 const confirmedPoint = confirmedDataset.data[item.dataIndex];
@@ -3101,7 +2900,7 @@ function buildMainChart(company, range) {
           ticks: {
             color: '#4a4845',
             font: { family: "'JetBrains Mono', monospace", size: 10 },
-            callback: v => v >= 1000 ? v.toLocaleString() : v,
+            callback: v => (v >= 1000 ? v.toLocaleString() : v) + '人',
           },
           grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
           border: { color: 'rgba(0,0,0,0.08)' },
@@ -3138,9 +2937,36 @@ function highlightEventYear(year) {
   if (target) target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
+// ── データテーブル列ソート ──
+var _tableSortKey = 'year';
+var _tableSortDir = 'desc';
+
+function bindTableSort() {
+  ['th-count','th-funding'].forEach(thId => {
+    const th = document.getElementById(thId);
+    if (!th) return;
+    th.addEventListener('click', function() {
+      const key = thId === 'th-count' ? 'count' : 'funding';
+      if (_tableSortKey === key) {
+        _tableSortDir = _tableSortDir === 'desc' ? 'asc' : 'desc';
+      } else { _tableSortKey = key; _tableSortDir = 'desc'; }
+      document.querySelectorAll('.sortable-th').forEach(t => t.classList.remove('asc','desc'));
+      this.classList.add(_tableSortDir);
+      const company = COMPANIES[currentCompanyIndex];
+      if (company) updateTable(company);
+    });
+  });
+}
+
 function updateTable(company) {
   const tbody = document.getElementById('data-tbody');
-  const rows = [...company.data].reverse();
+  // ソートキー/方向に従う
+  let rows = [...(company.data||[])];
+  if (_tableSortKey === 'count') {
+    rows.sort((a,b) => _tableSortDir==='desc' ? b.count-a.count : a.count-b.count);
+  } else {
+    rows = rows.reverse(); // デフォルト: 年度降順
+  }
 
   tbody.innerHTML = rows.map(d => {
     const fundings = (company.funding || []).filter(f => f.year === d.year);
@@ -3333,6 +3159,12 @@ function updateMetrics(company) {
 function selectCompany(idx) {
   if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
     updateMetrics(null);
+  // mock-banner 閉じるボタン
+  const mbClose = document.getElementById('mock-banner-close-btn');
+  if (mbClose) mbClose.addEventListener('click', function() {
+    const banner = document.getElementById('mock-banner');
+    if (banner) banner.style.display = 'none';
+  });
     return;
   }
   const safeIdx = Math.max(0, Math.min(idx, COMPANIES.length - 1));
@@ -3525,7 +3357,19 @@ async function loadSiteData() {
     if (ld) { ld.style.background = '#2ea86e'; ld.title = 'データ取得完了 (' + new Date().toLocaleTimeString('ja-JP') + ')'; }
   } catch (e) {
     apiState.status = 'error';
-    apiState.error = e?.message || '不明なエラー';
+    // AbortError（タイムアウト）とネットワークエラーを区別
+    if (e?.name === 'AbortError') {
+      apiState.error = '接続タイムアウト（12秒）。GASサーバーの起動を待って再読み込みしてください。';
+      // スケルトンを消去してエラー表示に切り替え
+      ['co-cards-list','funding-cards','biz-topics','org-topics'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el&&el.querySelector&&el.querySelector('.skeleton')){
+          el.innerHTML='<div class="empty-hint" style="color:var(--text3)">読み込みタイムアウト</div>';
+        }
+      });
+    } else {
+      apiState.error = e?.message || '不明なエラー';
+    }
     apiState.loaded = false;
     apiState.payload = null;
     showLoadingState('');
@@ -3664,7 +3508,7 @@ function normalizeHeadcounts(items) {
     year:  Number(d.year)  || 0,
     count: Number(d.count) || 0,
     // source_method が推算系なら est=true
-    est: !!d.est || /推算|推定|Wikipedia|LinkedIn/.test(d.source_method || ''),
+    est: !!d.est || /推算|推算|Wikipedia|LinkedIn/.test(d.source_method || ''),
     sources: Array.isArray(d.sources) && d.sources.length > 0
       ? d.sources.map(s => ({ text: s.text||'', url: s.url||'', method: s.method||d.source_method||'', type: s.type||'default' }))
       : (d.source_text || d.source_url ? [{ text: d.source_text||d.source_method||'', url: d.source_url||'', method: d.source_method||'', type: 'default' }] : [])
@@ -3725,7 +3569,7 @@ function showLoadingState(msg) {
         <div class="data-error-msg">${escapeHtml(msg)}</div>
         <div class="data-error-actions">
           <button class="data-error-btn primary" type="button" onclick="location.reload()" aria-label="ページを再読み込み">再読み込み</button>
-          <button class="data-error-btn" type="button" onclick="useMockData()" aria-label="仮データで表示">仮データで表示</button>
+          <button class="data-error-btn" type="button" onclick="useMockData()" aria-label="サンプルデータで確認">サンプルデータで確認</button>
         </div>
       </div>`;
       if (stripBiz) stripBiz.innerHTML = errorHtml;
@@ -3741,9 +3585,10 @@ function showLoadingState(msg) {
 }
 
 function useMockData() {
-  if (typeof mockPayload !== 'undefined') {
-    applyApiData(mockPayload);
-    mockPayload.companies.forEach(mc => {
+  // mockPayload は削除済み（フォールバック不要）
+  if (false) {
+    // applyApiData(mockPayload);
+    ([]).forEach(mc => {
       const co = COMPANIES.find(x => x.id === mc.id);
       if (!co) return;
       // 各新シートのデータを注入
@@ -3763,6 +3608,7 @@ function useMockData() {
     });
     renderSidebar();
     buildSparklines();
+  if (typeof bindTableSort === 'function') bindTableSort();
     selectCompany(0);
     document.getElementById('mock-banner') && (document.getElementById('mock-banner').style.display = 'flex');
     // 動的版でトップページ・注目一覧を更新
@@ -3942,12 +3788,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     await loadSiteData();
   } catch (e) {
-    console.warn('loadSiteData failed, using mockPayload:', e);
+    console.warn('loadSiteData failed:', e?.message||e);
   }
 
   // COMPANIES が空なら mockPayload を使う
   if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
-    if (typeof mockPayload !== 'undefined' && mockPayload) {
+    if (false && typeof mockPayload !== 'undefined') { // mockPayload削除済み
       useMockData();
     }
   }
@@ -4769,7 +4615,7 @@ function fcHtml(f){ const r=parseInt(f.color.slice(1,3),16),g=parseInt(f.color.s
 function renderFundingDynamic(count){ const el=document.getElementById('funding-cards'); if(!el)return; const rounds=buildFundingRounds().slice(0,count||6); if(!rounds.length){el.innerHTML='<div class="empty-hint">データなし</div>';return;} el.innerHTML=rounds.map(fcHtml).join(''); el.querySelectorAll('.fc').forEach(card=>{ card.addEventListener('click',()=>{ const co=COMPANIES.find(c=>String(c.id)===String(card.dataset.id))||COMPANIES.find(c=>c.name===card.dataset.name); if(co)showPage('company',co.id); }); }); }
 
 // ── トピックス（EVENTSから動的生成）──
-function buildTopicPool(){ const all=[]; Object.keys(window.EVENTS||{}).forEach(coId=>{ const co=COMPANIES.find(x=>String(x.id)===String(coId)||x.name===coId); (EVENTS[coId]||[]).forEach(t=>all.push({...t,company:co?co.name:coId,coColor:co?co.color:'#888780',coId:co?co.id:coId})); }); return all.sort((a,b)=>b.year-a.year||(b.date||'').localeCompare(a.date||'')); }
+function buildTopicPool(){ const all=[]; Object.keys(window.EVENTS||{}).forEach(coId=>{ const co=COMPANIES.find(x=>String(x.id)===String(coId)||x.name===coId); (EVENTS[coId]||[]).forEach(t=>all.push({...t,company:co?escapeHtml(co.name):coId,coColor:co?co.color:'#888780',coId:co?co.id:coId})); }); return all.sort((a,b)=>b.year-a.year||(b.date||'').localeCompare(a.date||'')); }
 
 function ts(c){ const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16); return {bg:`rgba(${r},${g},${b},0.10)`,border:`rgba(${r},${g},${b},0.35)`,color:c}; }
 function renderTopics(id,topicsArr){ const el=document.getElementById(id); if(!el)return; if(!topicsArr||!topicsArr.length){el.innerHTML='<div class="events-empty">トピックスデータなし</div>';return;} const s=ts('#3A4A5C'); el.innerHTML=topicsArr.slice(0,10).map(t=>{ const dateParts=(t.date||String(t.year)).split('/'); const m=dateParts[0],d=dateParts[1]||''; const safeId=escapeHtml(String(t.coId||'')); const safeColor=escapeHtml(t.coColor||'#888780'); return `<div class="nc-row" data-co-id="${safeId}" role="button" tabindex="0" style="cursor:pointer"><div class="nc-date"><span class="nc-date-m">${escapeHtml(m)}${d?'月':''}</span><span class="nc-date-d">${escapeHtml(d)}</span></div><div class="nc-divider"></div><div class="nc-body"><div class="nc-meta"><div class="nc-co"><span class="nc-co-dot" style="background:${safeColor}"></span><span class="nc-co-name" data-co-id="${safeId}" style="cursor:pointer;color:${safeColor}" title="${escapeHtml(t.company||'')}の詳細を見る">${escapeHtml(t.company||'')} ↗</span></div>${t.speaker?`<span class="nc-speaker">· ${escapeHtml(t.speaker)}</span>`:''}<span class="nc-seg" style="color:${s.color};border-color:${s.border};background:${s.bg}">${escapeHtml(t.type||'')}</span></div><div class="nc-title">${t.url?`<a href="${escapeHtml(t.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${escapeHtml(t.title||'')}</a>`:escapeHtml(t.title||'')}</div></div></div>`; }).join(''); el.querySelectorAll('.nc-row[data-co-id]').forEach(row=>{ const handler=()=>{ const coId=row.dataset.coId; const co=COMPANIES.find(x=>String(x.id)===String(coId)||x.name===coId); showPage('company',co?co.id:coId); }; row.addEventListener('click',handler); row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handler();}}); }); }
@@ -4856,10 +4702,14 @@ function refreshTopPage(){
 // ── 検索入力イベント ──
 const searchInput=document.getElementById('search-input');
 const searchClear=document.getElementById('search-clear');
+// 検索 debounce（150ms）
+let _searchTimer = null;
 if(searchInput){
   searchInput.addEventListener('input',function(){
-    renderSearch(this.value,activeFilter);
-    if(searchClear) searchClear.style.display=this.value?'block':'none';
+    const val = this.value;
+    if(searchClear) searchClear.style.display=val?'block':'none';
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(()=>{ renderSearch(val, activeFilter); }, 150);
   });
   searchInput.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
@@ -4912,7 +4762,15 @@ function chMiniBarHtml(vals,color){if(!vals||!vals.length)return '<span style="c
 
 function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding.toLocaleString()+'億円':'未公開'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${chMiniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':c.hcGrowth<0?c.hcGrowth+'人（減少）':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${chMiniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding.toLocaleString()+'億円':'未公開'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div></div>`;}
 
-function renderRankList(id,key){const el=document.getElementById(id);if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを準備しています…</div>';return;}el.innerHTML=sorted.slice(0,15).map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?(val>0?(Number.isInteger(val)?val:val.toFixed(1))+'億円':'未公開'):(val>0?'+'+val+'人':val<0?val+'人':'±0人');return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
+function renderRankList(id,key){
+  const el=document.getElementById(id);if(!el)return;
+  let pool=buildChPool();
+  // サイドバーフィルターをランキングにも適用
+  if(typeof activeFilter!=='undefined'&&activeFilter&&activeFilter!=='すべて')
+    pool=pool.filter(c=>(c.sector||'').includes(activeFilter));
+  if(typeof activeSeriesFilter!=='undefined'&&activeSeriesFilter&&activeSeriesFilter!=='すべて')
+    pool=pool.filter(c=>(c.series||'').includes(activeSeriesFilter));
+  const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを準備しています…</div>';return;}el.innerHTML=sorted.slice(0,15).map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?(val>0?(Number.isInteger(val)?val:val.toFixed(1))+'億円':val===null?'非公開':'—'):(val>0?'+'+val+'人':val<0?val+'人':'±0人');return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
 
 function renderCoCardsDynamic(metric,limit){
   const el=document.getElementById('co-cards');if(!el)return;
@@ -4930,7 +4788,9 @@ function renderCoCardsDynamic(metric,limit){
   }
 }
 
-function renderTreemap(metric){const tm=document.getElementById('treemap');if(!tm)return;const pool=buildChPool();const defs=buildSectorDefs(pool);if(!defs.length){tm.innerHTML='<div style="padding:16px;color:var(--text3)">データなし</div>';return;}const vals=defs.map(s=>metric==='funding'?(s.funding/s.count):(s.growth/s.count));const maxV=Math.max(...vals,1);tm.innerHTML=defs.map((s,i)=>{const avg=vals[i];const intensity=avg/maxV;const r=parseInt(s.color.slice(1,3),16),g=parseInt(s.color.slice(3,5),16),b=parseInt(s.color.slice(5,7),16);const alpha=(0.18+0.72*intensity).toFixed(2);const bg_=`rgba(${r},${g},${b},${alpha})`;const textCol=intensity>0.45?'#fff':'#3A4A5C';const subCol=intensity>0.45?'rgba(255,255,255,0.78)':'#5A6A80';const disp=metric==='funding'?Math.round(avg)+'億円/社':'+'+Math.round(avg)+'人/社';const isSel=s.name===chActiveAreaGroup;return `<div class="tmc${isSel?' sel':''}" style="background:${bg_};flex-grow:${Math.max(avg,1)}${isSel?';outline:2px solid rgba(255,255,255,0.8)':''}" data-sector="${s.name}"><div class="tml" style="color:${textCol}">${escapeHtml(s.name)}</div><div class="tmv" style="color:${subCol}">${disp}</div><div class="tmc2" style="color:${subCol}">${s.count}社</div></div>`;}).join('');(document.getElementById('page-chumoku')||document).querySelectorAll('.tmc').forEach(cell=>{cell.addEventListener('click',function(){chActiveAreaGroup=this.dataset.sector;const htf=document.getElementById('ht-f');renderTreemap(htf&&htf.classList.contains('active')?'funding':'growth');renderGroupCards('area');renderSelectedCards('area');});});}
+function renderTreemap(metric){const tm=document.getElementById('treemap');if(!tm)return;const pool=buildChPool();const defs=buildSectorDefs(pool);if(!defs.length){tm.innerHTML='<div style="padding:16px;color:var(--text3)">データなし</div>';return;}const vals=defs.map(s=>metric==='funding'?(s.funding/s.count):(s.growth/s.count));const maxV=Math.max(...vals,1);tm.innerHTML=defs.map((s,i)=>{const avg=vals[i];const intensity=avg/maxV;const r=parseInt(s.color.slice(1,3),16),g=parseInt(s.color.slice(3,5),16),b=parseInt(s.color.slice(5,7),16);const alpha=(0.18+0.72*intensity).toFixed(2);const bg_=`rgba(${r},${g},${b},${alpha})`;const textCol=intensity>0.45?'#fff':'#3A4A5C';const subCol=intensity>0.45?'rgba(255,255,255,0.78)':'#5A6A80';const disp=metric==='funding'?Math.round(avg)+'億円/社':'+'+Math.round(avg)+'人/社';const isSel=s.name===chActiveAreaGroup;return `<div class="tmc${isSel?' sel':''}" style="background:${bg_};flex-grow:${Math.max(avg,1)}${isSel?';outline:2px solid rgba(255,255,255,0.8)':''}" data-sector="${s.name}"><div class="tml" style="color:${textCol}">${escapeHtml(s.name)}</div><div class="tmv" style="color:${subCol}">${disp}</div><div class="tmc2" style="color:${subCol}">${s.count}社</div></div>`;}).join('');(document.getElementById('page-chumoku')||document).querySelectorAll('.tmc').forEach(cell=>{cell.addEventListener('click',function(){chActiveAreaGroup=this.dataset.sector;const htf=document.getElementById('ht-f');renderTreemap(htf&&htf.classList.contains('active')?'funding':'growth');renderGroupCards('area');renderSelectedCards('area');}
+.tmc:hover::after{content:"▼ 企業一覧を表示";position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--slate-dark);color:#fff;font-size:9px;padding:3px 7px;border-radius:var(--r-sm);white-space:nowrap;pointer-events:none;font-family:var(--font-mono);z-index:10;opacity:0;transition:opacity .15s}
+.tmc:hover:after{opacity:1});});}
 
 function groupTop5Html(groupName,coList,metric){const sorted=[...coList].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);if(!sorted.length)return '<div style="padding:8px;color:var(--text3);font-size:10px">企業データなし</div>';return sorted.slice(0,5).map((c,i)=>{const val=metric==='funding'?(Number.isInteger(c.funding)?c.funding:c.funding.toFixed(1))+'億円':'+'+c.hcGrowth+'人';return `<div class="gc-row ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="gc-rank">${i+1}</span><span class="gc-dot" style="background:${c.color}"></span><span class="gc-n">${escapeHtml(c.name)}</span><span class="gc-v">${val}</span><span style="font-size:9px;color:var(--text3);margin-left:2px">›</span></div>`;}).join('');}
 
