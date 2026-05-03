@@ -14,7 +14,9 @@
 <meta name="twitter:title" content="StartupFile — 日本のスタートアップ企業情報">
 <meta name="theme-color" content="#3A4A5C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@300;400;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,500;1,6..72,300&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- フォント: display=swap でFOIT防止、必要ウェイトのみ読み込み -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,6 +44,8 @@
   --tag-note-bg:  #EFF6FF; --tag-note-c:  #2A5CA8; --tag-note-b:  #B8D0F0;
 
   /* ─ 後方互換（旧カラー参照を置き換え） ─ */
+  --color-funding:       #7a3fb5;
+  --color-funding-light: #b06adb;
   --amber:      #E8A020;
   --amber2:     #B87010;
   --teal:       #3BAA90;
@@ -58,6 +62,7 @@
   --font-sans: 'Noto Sans JP', sans-serif;
   /* ─ 色エイリアス ─ */
   --sd: #3A4A5C;
+  --funding-color: #8246b4; /* 調達額グラフ・表示色 */
   --sl: #EEF1F5;
   /* ── 仮データバナー色 ── */
   /* ── エラーカード色 ── */
@@ -1008,6 +1013,11 @@ canvas { transition: opacity 0.3s; }
 .ctab{font-size:9px;padding:3px 12px;border:1px solid var(--line2);border-radius:20px;background:#fff;color:var(--text2);cursor:pointer}
 .ctab.active{background:var(--sd);color:#fff;border-color:var(--sd)}
 .co-cards-list{display:flex;flex-direction:column;gap:10px}
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--r-sm)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.sk-line{height:10px;border-radius:4px}
+.sk-w-full{width:100%}.sk-w-60{width:60%}.sk-w-40{width:40%}.sk-w-80{width:80%}
 .co-more-btn{width:100%;padding:10px;border:1px solid var(--line2);border-radius:var(--r-md);background:#fff;color:var(--slate);font-size:11px;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s}
 .co-more-btn:hover{background:var(--bg3);border-color:var(--slate-mid)}
 .co-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;cursor:pointer;transition:border-color .15s}
@@ -1193,7 +1203,8 @@ canvas { transition: opacity 0.3s; }
 .gc-metric-tabs{display:flex;gap:3px;margin-bottom:8px}
 .gc-mt{font-size:9px;padding:2px 9px;border:1px solid var(--line);border-radius:20px;background:#fff;color:var(--text3);cursor:pointer}
 .gc-mt.active{background:var(--sd);color:#fff;border-color:var(--sd)}
-.gc-row{display:flex;align-items:center;gap:5px;padding:2px 0;border-bottom:1px solid var(--bg3)}
+.gc-row{display:flex;align-items:center;gap:5px;padding:2px 0;border-bottom:1px solid var(--bg3);cursor:pointer;transition:background .12s}
+.gc-row:hover{background:var(--bg3)}
 .gc-row:last-child{border:none}
 .gc-rank{font-size:9px;color:var(--text3);width:12px;flex-shrink:0}
 .gc-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
@@ -1257,7 +1268,9 @@ canvas { transition: opacity 0.3s; }
 .breadcrumb .bc-action:hover { border-color: var(--line2); color: var(--text); }
 
 /* ════ フォーカス（キーボード操作）対応 ════ */
-:focus { outline: none; }
+/* フォーカスは :focus-visible でのみ非表示にし、キーボード操作時は必ず表示 */
+:focus:not(:focus-visible) { outline: none; }
+:focus-visible { outline: 2px solid var(--slate-mid); outline-offset: 2px; }
 :focus-visible {
   outline: 2px solid var(--slate-dark);
   outline-offset: 2px;
@@ -1501,12 +1514,12 @@ button:focus-visible,
   background: #fff;
   border: 1px solid #E8C8C8;
   border-radius: var(--r-lg);
-  border-left: 3px solid #B85050;
+  border-left: 3px solid var(--error-text,#B85050);
 }
 .data-error-title {
   font-size: 12px;
   font-weight: 500;
-  color: #B85050;
+  color: var(--error-text,#B85050);
   margin-bottom: 6px;
   font-family: var(--font-sans);
 }
@@ -2184,7 +2197,7 @@ button:focus-visible,
         <div class="header-right">
           <nav class="page-nav">
             <button class="page-nav-btn active" id="nav-top" type="button"     onclick="showPage('top')" aria-label="トップページへ">トップ</button>
-            <button class="page-nav-btn" id="nav-company" type="button" onclick="showPage('company')" aria-label="個別企業ページへ（検索から選択）">個別企業</button>
+            <button class="page-nav-btn" id="nav-company" type="button" onclick="showPage('company')" aria-label="個別企業ページへ" title="企業を検索して詳細を見る" title="企業を検索してから個別ページへ">個別企業</button>
             <button class="page-nav-btn" id="nav-chumoku" type="button" onclick="showPage('chumoku')" aria-label="注目一覧ページへ">注目一覧</button>
           </nav>
           <div class="live-dot" id="shared-live-dot" title="データは定期的に更新されます" aria-label="データ更新情報"></div>
@@ -2241,7 +2254,7 @@ button:focus-visible,
             <div class="ctab" data-ct="growth">社員数増加順</div>
           </div>
         </div>
-        <div class="co-cards-list" id="co-cards-list"></div>
+        <div class="co-cards-list" id="co-cards-list" style="min-height:200px"></div>
       </div>
 
       <div>
@@ -2252,7 +2265,7 @@ button:focus-visible,
             <div class="pb" data-fp="month">直近12件</div>
           </div>
         </div>
-        <div class="funding-cards" id="funding-cards"></div>
+        <div class="funding-cards" id="funding-cards" style="min-height:120px"></div>
       </div>
 
       <div>
@@ -2280,12 +2293,12 @@ button:focus-visible,
         <div class="funding-header">
           <div class="sechdr">事業づくりトピックス</div>
         </div>
-        <div id="biz-topics"></div>
+        <div id="biz-topics" style="min-height:80px"></div>
       </div>
 
       <div>
         <div class="sechdr">組織づくりトピックス</div>
-        <div id="org-topics"></div>
+        <div id="org-topics" style="min-height:80px"></div>
       </div>
 
     </div>
@@ -2328,7 +2341,7 @@ button:focus-visible,
         </div>
         <div class="metric-block">
           <div class="metric-label metric-top">累計調達額</div>
-          <div class="metric-val" style="color:#7a3fb5;font-size:22px" id="metric-raised">—</div>
+          <div class="metric-val" style="color:var(--color-funding);font-size:22px" id="metric-raised">—</div>
           <div class="metric-note" id="metric-rounds">—</div>
         </div>
       </div>
@@ -2375,11 +2388,11 @@ button:focus-visible,
         </div>
       </div>
       <div class="chart-latest-item" id="chart-latest-fund-wrap" style="display:none">
-        <div class="chart-latest-dot" style="background:#b06adb"></div>
+        <div class="chart-latest-dot" style="background:var(--color-funding-light)"></div>
         <div>
           <div style="font-size:9px;color:var(--text3);margin-bottom:2px">累計調達</div>
           <div style="display:flex;align-items:baseline;gap:4px">
-            <span class="chart-latest-val" id="chart-latest-fund" style="color:#b06adb">—</span>
+            <span class="chart-latest-val" id="chart-latest-fund" style="color:var(--color-funding-light)">—</span>
             <span style="font-size:10px;color:var(--text3)">億円</span>
           </div>
         </div>
@@ -2828,7 +2841,11 @@ function bindSyncScroll() {
       _syncScrolling = true;
       const x = this.scrollLeft;
       all.forEach(dst => { if (dst !== this) dst.scrollLeft = x; });
-      requestAnimationFrame(() => { _syncScrolling = false; });
+      // タッチ操作でのスクロール後もフラグを確実にリセット（rAF×2でフレーム確定後に解放）
+      requestAnimationFrame(() => requestAnimationFrame(() => { _syncScrolling = false; }));
+    }, { passive: true });
+    src.addEventListener('touchend', () => {
+      setTimeout(() => { _syncScrolling = false; }, 80);
     }, { passive: true });
   });
 }
@@ -3099,7 +3116,7 @@ function buildMainChart(company, range) {
               return ` 社員数 ${item.parsed.y.toLocaleString()} 名`;
             },
             labelColor: (item) => {
-              if (item.dataset.yAxisID === 'yFund') return { borderColor: '#b06adb', backgroundColor: 'rgba(176,106,219,0.6)' };
+              if (item.dataset.yAxisID === 'yFund') return { borderColor: 'var(--color-funding-light)', backgroundColor: 'rgba(176,106,219,0.6)' };
               return { borderColor: company.color, backgroundColor: company.color };
             }
           }
@@ -3391,6 +3408,13 @@ function selectCompany(idx) {
   const activeCard = document.querySelector('.company-card[data-idx="'+safeIdx+'"]');
   if (!activeCard && typeof renderSidebarCards === 'function') {
     renderSidebarCards(_sbQuery||'', Math.max(30, safeIdx+10));
+    // 再描画後にスクロール
+    requestAnimationFrame(() => {
+      const card = document.querySelector('.company-card[data-idx="'+safeIdx+'"]');
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  } else if (activeCard) {
+    activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   const company = COMPANIES[safeIdx];
   if (!company) {
@@ -3761,7 +3785,7 @@ function showLoadingState(msg) {
       if (stripOrg) stripOrg.innerHTML = '';
       // header meta も更新
       const metaEl = document.getElementById('shared-header-meta');
-      if (metaEl) metaEl.innerHTML = '<span style="color:#B85050">データ取得エラー — 再読み込みしてください</span>';
+      if (metaEl) metaEl.innerHTML = '<span style="color:var(--error-text,#B85050)">データ取得エラー — 再読み込みしてください</span>';
     } else {
       if (stripBiz) stripBiz.innerHTML = `<div class="events-empty">${msg}</div>`;
       if (stripOrg) stripOrg.innerHTML = `<div class="events-empty">${msg}</div>`;
@@ -3884,7 +3908,7 @@ function renderSidebar() {
   if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
     const emptyLabel = apiState.status === 'error'
       ? `企業一覧を取得できませんでした: ${escapeHtml(apiState.error || '不明なエラー')}`
-      : '企業データがまだありません';
+      : '企業データを準備中です。上の検索ボックスから企業名を入力してください。';
 
     sidebar.innerHTML = `
       <div class="sidebar-head">
@@ -3937,8 +3961,30 @@ function toggleSidebar() {
 // 初期化
 // ══════════════════════════════════════════════════════
 
+
+// スケルトンカードHTML生成
+function skeletonCardHtml(){
+  return `<div class="skeleton-card">
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="skeleton sk-line" style="width:20px;height:20px;border-radius:50%;flex-shrink:0"></div>
+      <div class="skeleton sk-line sk-w-60"></div>
+    </div>
+    <div class="skeleton sk-line sk-w-full" style="height:8px"></div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+      ${[1,2,3,4,5].map(()=>'<div class="skeleton sk-line" style="height:30px;border-radius:4px"></div>').join('')}
+    </div>
+  </div>`;
+}
+function showSkeletonCards(containerId, count=3){
+  const el=document.getElementById(containerId);
+  if(el) el.innerHTML=[...Array(count)].map(skeletonCardHtml).join('');
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   updateMetrics(null);
+  // APIロード中にスケルトンUIを表示
+  showSkeletonCards('co-cards-list', 3);
+  showSkeletonCards('funding-cards', 3);
 
   // API接続を試みる。失敗時は mockPayload にフォールバック
   try {
@@ -4713,20 +4759,29 @@ function buildFilterTags() {
   if(qfEl){ qfEl.innerHTML=['すべて',...sectors].map((s,i)=>`<span class="ftag${i===0?' active':''}">${s}</span>`).join('');
     qfEl.querySelectorAll('.ftag').forEach(tag=>{ tag.addEventListener('click',function(){ qfEl.querySelectorAll('.ftag').forEach(t=>t.classList.remove('active')); this.classList.add('active'); activeFilter=this.textContent.trim(); syncSbTag('業種',activeFilter); const inp=document.getElementById('search-input'); if(inp)renderSearch(inp.value,activeFilter); }); }); }
 }
-function bindSbTags(container,groupLabel){ container.querySelectorAll('.sb-tag').forEach(tag=>{ tag.addEventListener('click',function(){ container.querySelectorAll('.sb-tag').forEach(t=>t.classList.remove('active')); this.classList.add('active'); const label=this.textContent.replace(/\s*\d+社$/,'').trim(); const inp=document.getElementById('search-input'); if(groupLabel==='業種'){ activeFilter=label; syncQuickFilter(label); if(inp)renderSearch(inp.value,activeFilter); } else if(groupLabel==='シリーズ'){ activeSeriesFilter=label; if(inp)renderSearch(inp.value,activeFilter); } }); }); }
+function bindSbTags(container,groupLabel){ container.querySelectorAll('.sb-tag').forEach(tag=>{ tag.addEventListener('click',function(){ container.querySelectorAll('.sb-tag').forEach(t=>t.classList.remove('active')); this.classList.add('active'); const label=this.textContent.replace(/\s*\d+社$/,'').trim(); const inp=document.getElementById('search-input'); if(groupLabel==='業種'){ activeFilter=label; syncQuickFilter(label); if(inp)renderSearch(inp.value,activeFilter); if(typeof renderCoCards==='function'){_coCardLimit=10;renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding');} } else if(groupLabel==='シリーズ'){ activeSeriesFilter=label; if(inp)renderSearch(inp.value,activeFilter); if(typeof renderCoCards==='function'){_coCardLimit=10;renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding');} } // フィルター変更時にランキングカードも更新
+if(typeof renderCoCards==='function') renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding'); }); }); }
 function syncSbTag(groupLabel,label){ document.querySelectorAll('.sb-tag').forEach(tag=>{ const grp=tag.closest('.sbsec'); const lbl=grp&&grp.querySelector('.sbsl'); if(lbl&&lbl.textContent.includes(groupLabel))tag.classList.toggle('active',tag.textContent.trim()===label); }); }
 function syncQuickFilter(label){ const qfEl=document.getElementById('search-quick-filters'); if(qfEl)qfEl.querySelectorAll('.ftag').forEach(t=>t.classList.toggle('active',t.textContent.trim()===label)); }
 
 // ── 注目企業カード ──
 function miniBarHtml(vals,color){ if(!vals||!vals.length)return '<span style="color:var(--text3);font-size:9px">データなし</span>'; const mx=Math.max(...vals,1); return vals.map((v,i)=>{ const h=Math.round(v/mx*34); const op=(0.35+0.65*(i/Math.max(vals.length-1,1))).toFixed(2); return `<div class="mbar" style="height:${h}px;background:${color};opacity:${op}"></div>`; }).join(''); }
 
-function coCardHtml(c,i){ return `<div class="co-card" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細へ"><div class="co-card-head"><span class="co-rank">${i+1}</span><span class="co-dot" style="background:${c.color}"></span><span class="co-name">${escapeHtml(c.name)}</span><span class="co-sector-badge">${escapeHtml(c.sector)}</span><span class="co-founded">${c.founded?'設立 '+c.founded+'年':''}</span></div><div class="co-desc">${escapeHtml(c.desc)}</div><div class="co-info-grid"><div class="co-info-item"><div class="co-info-label">累計調達額</div><div class="co-info-val">${c.funding>0?c.funding+'億円':'—'}</div></div><div class="co-info-item"><div class="co-info-label">現シリーズ</div><div class="co-info-val">${escapeHtml(c.series)}</div></div><div class="co-info-item"><div class="co-info-label">現社員数</div><div class="co-info-val">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</div></div><div class="co-info-item"><div class="co-info-label">導入社数</div><div class="co-info-val">${c.smVal||'—'}</div></div><div class="co-info-item"><div class="co-info-label">サービス評価</div><div class="co-info-val">${c.svcVal||'—'}</div></div></div><div class="co-graphs"><div class="co-graph-box"><div class="co-graph-title">社員数推移</div><div class="mini-bars">${miniBarHtml(c.hc5y,c.color)}</div><div class="co-graph-foot"><span class="co-graph-val">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</span><span class="co-graph-delta">${c.hcGrowth>0?'+'+c.hcGrowth+'人':''}</span></div></div><div class="co-graph-box"><div class="co-graph-title">資金調達推移</div><div class="mini-bars">${miniBarHtml(c.f5y,c.color)}</div><div class="co-graph-foot"><span class="co-graph-val">${c.funding>0?c.funding+'億円':'—'}</span><span class="co-graph-delta">${c.funding>0?'累計':''}</span></div></div></div></div>`; }
+function coCardHtml(c,i){ return `<div class="co-card" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細へ"><div class="co-card-head"><span class="co-rank">${i+1}</span><span class="co-dot" style="background:${c.color}"></span><span class="co-name">${escapeHtml(c.name)}</span><span class="co-sector-badge">${escapeHtml(c.sector)}</span><span class="co-founded">${c.founded?'設立 '+c.founded+'年':''}</span></div><div class="co-desc">${escapeHtml(c.desc)}</div><div class="co-info-grid"><div class="co-info-item"><div class="co-info-label">累計調達額</div><div class="co-info-val">${c.funding>0?c.funding.toLocaleString()+'億円':'未公開'}</div></div><div class="co-info-item"><div class="co-info-label">現シリーズ</div><div class="co-info-val">${escapeHtml(c.series)}</div></div><div class="co-info-item"><div class="co-info-label">現社員数</div><div class="co-info-val">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</div></div><div class="co-info-item"><div class="co-info-label">導入社数</div><div class="co-info-val">${c.smVal||'—'}</div></div><div class="co-info-item"><div class="co-info-label">サービス評価</div><div class="co-info-val">${c.svcVal||'—'}</div></div></div><div class="co-graphs"><div class="co-graph-box"><div class="co-graph-title">社員数推移</div><div class="mini-bars">${miniBarHtml(c.hc5y,c.color)}</div><div class="co-graph-foot"><span class="co-graph-val">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</span><span class="co-graph-delta">${c.hcGrowth>0?'+'+c.hcGrowth+'人':c.hcGrowth<0?c.hcGrowth+'人（減少）':''}</span></div></div><div class="co-graph-box"><div class="co-graph-title">資金調達推移</div><div class="mini-bars">${miniBarHtml(c.f5y,c.color)}</div><div class="co-graph-foot"><span class="co-graph-val">${c.funding>0?c.funding.toLocaleString()+'億円':'未公開'}</span><span class="co-graph-delta">${c.funding>0?'累計':''}</span></div></div></div></div>`; }
 
 function navigateFromCard(card){ const id=card.dataset.id; const name=card.dataset.name; const co=(id&&COMPANIES.find(c=>String(c.id)===String(id)))||(name&&COMPANIES.find(c=>c.name===name)); showPage('company',co?co.id:id||name); }
 
 var _coCardLimit=10;
 function renderCoCards(metric,limit){
-  const pool=buildTopPool();
+  let pool=buildTopPool();
+  // サイドバーフィルターを企業ランキングカードに連動
+  if(activeFilter&&activeFilter!=='すべて') pool=pool.filter(c=>(c.sector||'').includes(activeFilter));
+  if(activeSeriesFilter&&activeSeriesFilter!=='すべて') pool=pool.filter(c=>(c.series||'').includes(activeSeriesFilter));
+  if(activeFoundingFilter&&activeFoundingFilter!=='すべて'){
+    if(activeFoundingFilter==='〜2015') pool=pool.filter(c=>c.founded&&c.founded<=2015);
+    else if(activeFoundingFilter==='2016〜2019') pool=pool.filter(c=>c.founded&&c.founded>=2016&&c.founded<=2019);
+    else if(activeFoundingFilter==='2020〜') pool=pool.filter(c=>c.founded&&c.founded>=2020);
+  }
   const sorted=[...pool].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);
   const el=document.getElementById('co-cards-list');
   if(!el)return;
@@ -4781,6 +4836,8 @@ function bindFoundingYearFilter() {
       activeFoundingFilter = this.textContent.trim();
       const inp = document.getElementById('search-input');
       if (inp) renderSearch(inp.value, activeFilter);
+      if(typeof renderCoCards==='function') renderCoCards('funding');
+      if(typeof renderCoCards==='function') renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding');
     });
   });
 }
@@ -4849,6 +4906,14 @@ if(searchInput){
     renderSearch(this.value,activeFilter);
     if(searchClear) searchClear.style.display=this.value?'block':'none';
   });
+  searchInput.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      this.value='';
+      renderSearch('',activeFilter);
+      if(searchClear) searchClear.style.display='none';
+      this.blur();
+    }
+  });
 }
 if(searchClear){
   searchClear.addEventListener('click',function(){
@@ -4884,15 +4949,15 @@ var _arInit=false,_srInit=false; // タブ遅延初期化フラグ（グロー�
 var _chPoolCache=null,_topPoolCache=null; // メモ化キャッシュ
 
 function invalidatePoolCache(){_chPoolCache=null;_topPoolCache=null;}
-function buildChPool(){ if(_chPoolCache)return _chPoolCache; if(!Array.isArray(window.COMPANIES)||!COMPANIES.length)return []; return (_chPoolCache = COMPANIES.map(co=>{ const api=co.api||{},data=Array.isArray(co.data)?co.data:[],funding=Array.isArray(co.funding)?co.funding:[]; const totalFunding=(()=>{const f=api.totalFunding;if(f==null)return 0;const n=Number(f);return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n;})(); const headcount=data.length?data[data.length-1].count:0; const hcGrowth=data.length>=2?data[data.length-1].count-data[0].count:0; const smList=Array.isArray(co.serviceMetrics)?co.serviceMetrics:[]; const smItem=smList.find(m=>/導入|契約|顧客|社数/i.test(m.label)); const svcScores=Array.isArray(co.serviceScores)?co.serviceScores:[]; const topScore=svcScores.length?svcScores[0]:null; return {id:co.id,name:co.name,color:co.color||'#888780',sector:co.sector||'その他',series:String(api.totalRounds||'—').trim()||'—',funding:totalFunding,hcGrowth,founded:co.founding_year||0,headcount,desc:api.mission||'',hc5y:data.slice(-7).map(d=>d.count),f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),smVal:smItem?(smItem.value+(smItem.unit||'')):null,svcVal:topScore?topScore.total+'/'+(topScore.maxScore||5):null}; })); }
+function buildChPool(){ if(_chPoolCache)return _chPoolCache; if(!Array.isArray(window.COMPANIES)||!COMPANIES.length)return []; return (_chPoolCache = COMPANIES.map(co=>{ const api=co.api||{},data=Array.isArray(co.data)?co.data:[],funding=Array.isArray(co.funding)?co.funding:[]; const totalFunding=(()=>{const f=api.totalFunding;if(f==null)return null;const n=Number(f);return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n;})(); const headcount=data.length?data[data.length-1].count:0; const hcGrowth=data.length>=2?data[data.length-1].count-data[0].count:0; const smList=Array.isArray(co.serviceMetrics)?co.serviceMetrics:[]; const smItem=smList.find(m=>/導入|契約|顧客|社数/i.test(m.label)); const svcScores=Array.isArray(co.serviceScores)?co.serviceScores:[]; const topScore=svcScores.length?svcScores[0]:null; return {id:co.id,name:co.name,color:co.color||'#888780',sector:co.sector||'その他',series:String(api.totalRounds||'—').trim()||'—',funding:totalFunding||0,fundingNull:totalFunding===null,hcGrowth,founded:co.founding_year||0,headcount,desc:api.mission||'',hc5y:data.slice(-7).map(d=>d.count),f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),smVal:smItem?(smItem.value+(smItem.unit||'')):null,svcVal:topScore?topScore.total+'/'+(topScore.maxScore||5):null}; })); }
 
 function buildSectorDefs(pool){ const map={}; pool.forEach(c=>{const sec=c.sector||'その他';if(!map[sec])map[sec]={name:sec,funding:0,growth:0,count:0};map[sec].funding+=c.funding||0;map[sec].growth+=c.hcGrowth||0;map[sec].count+=1;}); const palette=['#3A5A8C','#3A7A6A','#5A4A8C','#7A4A6A','#3A6A7A','#7A5A3A','#4A7A4A','#6A4A5A','#4A5A7A','#6A6A3A','#5A7A5A','#7A7A7A']; let pi=0; return Object.values(map).sort((a,b)=>b.funding-a.funding).map(s=>({...s,color:palette[pi++%palette.length]})); }
 
 function chMiniBarHtml(vals,color){if(!vals||!vals.length)return '<span style="color:var(--text3);font-size:9px">データなし</span>';const mx=Math.max(...vals,1);return vals.map((v,i)=>{const h=Math.round(v/mx*34);const op=(0.35+0.65*(i/Math.max(vals.length-1,1))).toFixed(2);return `<div class="mbar" style="height:${h}px;background:${color};opacity:${op}"></div>`;}).join('');}
 
-function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding+'億円':'—'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${chMiniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${chMiniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding+'億円':'—'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div></div>`;}
+function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding.toLocaleString()+'億円':'未公開'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${chMiniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':c.hcGrowth<0?c.hcGrowth+'人（減少）':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${chMiniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding.toLocaleString()+'億円':'未公開'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div></div>`;}
 
-function renderRankList(id,key){const el=document.getElementById(id);if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを準備しています…</div>';return;}el.innerHTML=sorted.slice(0,15).map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?val+'億円':'+'+val+'人';return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
+function renderRankList(id,key){const el=document.getElementById(id);if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを準備しています…</div>';return;}el.innerHTML=sorted.slice(0,15).map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?(val>0?val+'億円':'未公開'):(val>0?'+'+val+'人':val<0?val+'人':'±0人');return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
 
 function renderCoCardsDynamic(metric,limit){
   const el=document.getElementById('co-cards');if(!el)return;
