@@ -3877,10 +3877,23 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // [Diag] API接続状況をコンソールに出力
+  console.group('StartupFile 初期化診断');
+  console.log('API URL:', typeof API_URL !== 'undefined' ? API_URL : '未定義');
+  console.log('APIステータス:', typeof apiState !== 'undefined' ? apiState.status : '不明');
+  console.log('APIエラー:', typeof apiState !== 'undefined' ? (apiState.error || 'なし') : '不明');
+  console.log('COMPANIES 件数:', Array.isArray(COMPANIES) ? COMPANIES.length : '未ロード');
+  console.log('データソース:', (Array.isArray(COMPANIES) && COMPANIES.length > 3) ? '✅ GAS API' : '⚠️ mockPayload（仮データ3社）');
+  console.groupEnd();
+
   if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) return;
 
   buildSparklines();
   selectCompany(Math.min(currentCompanyIndex, COMPANIES.length - 1));
+
+  // [Root Fix] データ取得完了後にトップ・注目一覧を確実に描画
+  if (typeof refreshTopPage     === 'function') refreshTopPage();
+  if (typeof refreshChumokuPage === 'function') refreshChumokuPage();
 });
 
 // ══════════════════════════════════════════════════════
@@ -4718,7 +4731,6 @@ if(searchInput)searchInput.addEventListener('input',function(){renderSearch(this
 <div class="fab-wrap" id="fab-wrap">
   <button class="fab-btn" id="fab-top" title="ページトップへ" aria-label="ページトップへ戻る">↑</button>
 </div>
-</body>
 
 <script>
 // ══════════════════════════════════════════════════════════════
@@ -4758,4 +4770,5 @@ function refreshChumokuPage(){const pool=buildChPool();if(!pool.length)return;co
 (function bindChumokuEvents(){const chPage=document.getElementById('page-chumoku');if(!chPage)return;const htf=chPage.querySelector('#ht-f'),htg=chPage.querySelector('#ht-g');if(htf)htf.addEventListener('click',function(){this.classList.add('active');htg&&htg.classList.remove('active');const note=chPage.querySelector('.hmnote');if(note)note.textContent='面積・色の濃さ＝1社平均の調達額規模';renderTreemap('funding');});if(htg)htg.addEventListener('click',function(){this.classList.add('active');htf&&htf.classList.remove('active');const note=chPage.querySelector('.hmnote');if(note)note.textContent='面積・色の濃さ＝1社平均の社員数増加規模';renderTreemap('growth');});chPage.querySelectorAll('#sb-metric .pb').forEach(btn=>{btn.addEventListener('click',function(){chPage.querySelectorAll('#sb-metric .pb').forEach(b=>b.classList.remove('active'));this.classList.add('active');chGlobalMetric=this.dataset.m;renderGroupCards('area');renderSelectedCards('area');renderGroupCards('series');renderSelectedCards('series');});});chPage.querySelectorAll('#sb-period .pb').forEach(btn=>{btn.addEventListener('click',function(){chPage.querySelectorAll('#sb-period .pb').forEach(b=>b.classList.remove('active'));this.classList.add('active');});});window.setCoCardView=function(mode){const el=document.getElementById('co-cards');const lb=document.getElementById('co-view-list');const gb=document.getElementById('co-view-grid');if(!el)return;if(mode==='grid'){el.classList.add('grid-mode');lb&&lb.classList.remove('active');gb&&gb.classList.add('active');}else{el.classList.remove('grid-mode');lb&&lb.classList.add('active');gb&&gb.classList.remove('active');}};let _ar=false,_sr=false;chPage.querySelectorAll('.mtab').forEach(tab=>{tab.addEventListener('click',function(){chPage.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));chPage.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));this.classList.add('active');const panel=chPage.querySelector('#panel-'+this.dataset.tab);if(panel)panel.classList.add('active');chPage.querySelectorAll('.sbi').forEach(b=>b.classList.toggle('active',b.dataset.nav===this.dataset.tab));if(this.dataset.tab==='areas'&&!_ar){_ar=true;renderTreemap('funding');renderGroupCards('area');renderSelectedCards('area');}if(this.dataset.tab==='series'&&!_sr){_sr=true;renderGroupCards('series');renderSelectedCards('series');}});});chPage.querySelectorAll('.sbi').forEach(item=>{item.addEventListener('click',function(){const tab=this.dataset.nav;chPage.querySelectorAll('.mtab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));chPage.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));const panel=chPage.querySelector('#panel-'+tab);if(panel)panel.classList.add('active');chPage.querySelectorAll('.sbi').forEach(b=>b.classList.toggle('active',b.dataset.nav===tab));});});chPage.addEventListener('click',function(e){const card=e.target.closest('.ch-nav-card');if(card){const co=COMPANIES.find(x=>String(x.id)===String(card.dataset.id))||COMPANIES.find(x=>x.name===card.dataset.name);showPage('company',co?co.id:(card.dataset.id||card.dataset.name));}});chPage.querySelectorAll('.ctab').forEach(tab=>{tab.addEventListener('click',function(){chPage.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));this.classList.add('active');renderCoCardsDynamic(this.dataset.ct);});});})();
 </script>
 
+</body>
 </html>
