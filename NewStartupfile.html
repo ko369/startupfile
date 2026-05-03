@@ -3460,6 +3460,11 @@ function setRange(range, btn) {
 
 // ══════════════════════════════════════════════════════
 // ★ API連携設定 ★
+// GASを再デプロイした場合は下記 API_URL の文字列を新しいURLに差し替えてください。
+// GAS再デプロイ手順:
+//   1. GASエディタ → 右上「デプロイ」→「デプロイを管理」
+//   2. 既存デプロイの鉛筆アイコン →「バージョン」を「新しいバージョン」に変更 → デプロイ
+//   3. 表示されたURLをコピーしてここに貼り付ける
 // ══════════════════════════════════════════════════════
 const APP_CONFIG = {
   API_URL: window.STARTUPFILE_API_URL || document.documentElement.dataset.apiUrl || 'https://script.google.com/macros/s/AKfycbzMD961b42An2I8HzcMXbiejeUDuXGlGuGvYeD79KqzOUIblIf6B_iZkmrc_ESz8Rlk/exec'
@@ -3482,7 +3487,8 @@ async function loadSiteData() {
     showLoadingState('JSON APIからデータを読み込み中...');
 
     const res = await fetch(`${API_URL}?t=${Date.now()}`, {
-      cache: 'no-store'
+      cache: 'no-store',
+      redirect: 'follow'
     });
 
     if (!res.ok) {
@@ -3535,6 +3541,23 @@ async function loadSiteData() {
     apiState.loaded = false;
     apiState.payload = null;
     showLoadingState('');
+
+    // ── エラー時：トピックスの「読み込み中」表示をエラーメッセージに切り替え ──
+    ['strip-biz', 'strip-org'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const empty = el.querySelector('.events-empty');
+        if (empty) empty.textContent = 'データを取得できませんでした';
+      }
+    });
+    // biz-topics / org-topics（成長データタブ側）も同様に更新
+    ['biz-topics', 'org-topics'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.innerHTML.trim() === '') {
+        el.innerHTML = '<div class="events-empty">データを取得できませんでした</div>';
+      }
+    });
+
     throw e; // DOMContentLoaded の try/catch へ再送
   }
 }
