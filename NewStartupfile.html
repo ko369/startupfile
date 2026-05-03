@@ -2205,20 +2205,12 @@ button:focus-visible,
     <div class="sbl">絞り込み</div>
     <div class="sbsec">
       <div class="sbsl">業種</div>
-      <div>
-        <span class="sb-tag active">すべて</span><span class="sb-tag">Fintech</span>
-        <span class="sb-tag">HR Tech</span><span class="sb-tag">SaaS</span>
-        <span class="sb-tag">AI</span><span class="sb-tag">HealthTech</span>
-      </div>
+      <div id="sb-sector-tags"><span class="sb-tag active">すべて</span></div>
     </div>
     <div class="sdiv"></div>
     <div class="sbsec">
       <div class="sbsl">シリーズ</div>
-      <div>
-        <span class="sb-tag active">すべて</span><span class="sb-tag">Series A</span>
-        <span class="sb-tag">Series B</span><span class="sb-tag">Series C</span>
-        <span class="sb-tag">Series D+</span><span class="sb-tag">上場</span>
-      </div>
+      <div id="sb-series-tags"><span class="sb-tag active">すべて</span></div>
     </div>
     <div class="sdiv"></div>
     <div class="sbsec">
@@ -2277,9 +2269,7 @@ button:focus-visible,
           </div>
           <div class="search-filters">
             <span class="filter-label">クイックフィルタ：</span>
-            <span class="ftag active">すべて</span>
-            <span class="ftag">Fintech</span><span class="ftag">HR Tech</span>
-            <span class="ftag">SaaS</span><span class="ftag">AI</span><span class="ftag">HealthTech</span>
+            <span id="search-quick-filters"><span class="ftag active">すべて</span></span>
           </div>
           <div class="search-results" id="search-results"></div>
         </div>
@@ -3540,14 +3530,8 @@ async function loadSiteData() {
     apiState.loaded = false;
     apiState.payload = null;
     showLoadingState('');
-    ['strip-biz', 'strip-org'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { const empty = el.querySelector('.events-empty'); if (empty) empty.textContent = 'データを取得できませんでした'; }
-    });
-    ['biz-topics', 'org-topics'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && el.innerHTML.trim() === '') el.innerHTML = '<div class="events-empty">データを取得できませんでした</div>';
-    });
+    ['strip-biz','strip-org'].forEach(id=>{const el=document.getElementById(id);if(el){const e2=el.querySelector('.events-empty');if(e2)e2.textContent='データを取得できませんでした';}});
+    ['biz-topics','org-topics'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.innerHTML.trim())el.innerHTML='<div class="events-empty">データを取得できませんでした</div>';});
     throw e;
   }
 }
@@ -4578,305 +4562,337 @@ function showPage(page, companyId) {
 </script>
 
 <script>
+// ══════════════════════════════════════════════════════════════
+//  トップページ — 完全動的版
+//  データソース: COMPANIES（GAS）/ EVENTS（4_トピックス）
+// ══════════════════════════════════════════════════════════════
 
-
-
-// companies[] は mockPayload から自動生成（データ二重管理を解消）
-// mockPayload が未定義の場合のフォールバック
-const companies = (typeof mockPayload !== 'undefined' && mockPayload && mockPayload.companies)
-  ? mockPayload.companies.map(mc => ({
-      id:        mc.id,
-      name:      mc.name,
-      color:     mc.color || '#888',
-      sector:    mc.sector || '',
-      series:    mc.totalRounds || '—',
-      funding:   mc.totalFunding || 0,
-      hcGrowth:  mc.headcounts && mc.headcounts.length >= 2
-                   ? mc.headcounts[mc.headcounts.length-1].count - mc.headcounts[0].count
-                   : 0,
-      founded:   mc.foundingYear || 0,
-      headcount: mc.headcounts && mc.headcounts.length
-                   ? mc.headcounts[mc.headcounts.length-1].count
-                   : 0,
-      desc:      mc.mission || '',
-      hc5y:      mc.headcounts ? mc.headcounts.slice(-7).map(h => h.count) : [],
-      f5y:       mc.funding    ? mc.funding.slice(-7).map(f => f.amount)   : [],
-    }))
-  : [
-      {id:'1',name:'SmartHR',color:'#00C4CC',sector:'HR Tech',series:'Series E',funding:320,hcGrowth:680,founded:2015,headcount:1200,desc:'人事労務のクラウド化を推進するSaaSプラットフォーム。',hc5y:[520,680,850,1000,1100,1150,1200],f5y:[80,120,180,230,270,300,320]},
-      {id:'2',name:'LayerX',color:'#FF5724',sector:'Fintech',series:'Series B',funding:280,hcGrowth:540,founded:2018,headcount:380,desc:'法人支出管理・バクラク事業を展開するフィンテックスタートアップ。',hc5y:[60,100,150,210,280,330,380],f5y:[30,60,100,150,200,240,280]},
-      {id:'sansancloud',name:'Sansanクラウド',color:'#5B8FCC',sector:'SaaS',series:'上場',funding:240,hcGrowth:420,founded:2007,headcount:1800,desc:'名刺管理から拡張した営業DXプラットフォーム。',hc5y:[1200,1350,1450,1550,1650,1730,1800],f5y:[120,150,170,190,210,225,240]},
-      {id:'kinto',name:'KINTO',color:'#C04040',sector:'Mobility',series:'Series D',funding:210,hcGrowth:380,founded:2019,headcount:560,desc:'トヨタグループのモビリティサービス。車のサブスクリプション事業を展開。',hc5y:[100,160,240,340,430,500,560],f5y:[40,70,110,150,180,200,210]},
-      {id:'3',name:'Ubie',color:'#00BCD4',sector:'HealthTech',series:'Series D',funding:190,hcGrowth:340,founded:2017,headcount:420,desc:'AIによる症状チェッカーと医療機関向けDXツールを提供。',hc5y:[80,130,190,260,330,380,420],f5y:[30,60,90,130,160,178,190]},
-    ];
-
-const fundingWeek=[
-  {name:'LayerX',color:'#FF5724',amount:85,round:'Series C',date:'04/28',note:'既存VCに加え事業会社3社が参加。バクラク事業の海外展開を加速。'},
-  {name:'Ubie',color:'#00BCD4',amount:62,round:'Series D',date:'04/27',note:'医療機関向けAIの開発強化。欧米市場への参入資金に充当予定。'},
-  {name:'Nizitech',color:'#5B8FCC',amount:48,round:'Series B',date:'04/25',note:'製造業向けAI検査の精度向上と新領域（食品・薬品）への展開を計画。'},
-  {name:'Yoomii',color:'#3BAA90',amount:32,round:'Series A',date:'04/24',note:'フリーランス向け金融サービスの拡充。確定申告支援の機能を大幅強化。'},
-  {name:'Autify',color:'#E8A020',amount:28,round:'Series B',date:'04/23',note:'North AmericaでのGTMを強化。エンタープライズ向けプランを新設。'},
-  {name:'Antelope',color:'#C04040',amount:22,round:'Series A',date:'04/22',note:'物流ネットワーク拡大のため大手運送会社と資本業務提携。'},
-];
-const fundingMonth=[
-  {name:'LayerX',color:'#FF5724',amount:85,round:'Series C',date:'04/28',note:'既存VCに加え事業会社3社が参加。バクラク事業の海外展開を加速。'},
-  {name:'Ubie',color:'#00BCD4',amount:62,round:'Series D',date:'04/27',note:'医療機関向けAIの開発強化。欧米市場への参入資金に充当予定。'},
-  {name:'Nizitech',color:'#5B8FCC',amount:48,round:'Series B',date:'04/25',note:'製造業向けAI検査の精度向上と新領域への展開を計画。'},
-  {name:'SmartHR',color:'#00C4CC',amount:40,round:'Series E',date:'04/18',note:'人事労務SaaSの機能拡充とグローバル展開への足がかりを構築。'},
-  {name:'Gaudiy',color:'#C04040',amount:35,round:'Series B',date:'04/10',note:'IPコラボ事業を拡大。新規エンタメパートナー5社との契約を締結。'},
-  {name:'LabBase',color:'#7C5CBF',amount:28,round:'Series C',date:'04/03',note:'理系採用プラットフォームの海外大学向け機能を強化。'},
-];
-
-function fcHtml(f){
-  const r=parseInt(f.color.slice(1,3),16),g=parseInt(f.color.slice(3,5),16),b=parseInt(f.color.slice(5,7),16);
-  const bg=`rgba(${r},${g},${b},0.08)`,bc=`rgba(${r},${g},${b},0.3)`;
-  return `<div class="fc" data-name="${f.name}" tabindex="0" role="button" aria-label="${f.name}の詳細へ">
-    <div class="fc-top">
-      <div class="fc-dot" style="background:${f.color}"></div>
-      <div class="fc-name" style="color:${f.color}">${f.name} <span style="font-size:9px;opacity:.7">↗</span></div>
-      <div class="fc-date">${f.date}</div>
-    </div>
-    <div class="fc-amount">${f.amount}<span>億円</span></div>
-    <div class="fc-round" style="color:${f.color};border-color:${bc};background:${bg}">${f.round}</div>
-    <div class="fc-note">${f.note}</div>
-    <div style="margin-top:8px;padding-top:6px;border-top:1px solid ${bc};font-size:9px;color:${f.color};opacity:.75;text-align:right">企業情報を見る ›</div>
-  </div>`;
-}
-function renderFunding(data){document.getElementById('funding-cards').innerHTML=data.map(fcHtml).join('');}
-document.querySelectorAll('[data-fp]').forEach(btn=>{
-  btn.addEventListener('click',function(){
-    document.querySelectorAll('[data-fp]').forEach(b=>b.classList.remove('active'));
-    this.classList.add('active');
-    renderFunding(this.dataset.fp==='week'?fundingWeek:fundingMonth);
+// ── COMPANIESをトップページ用プールに変換 ──
+function buildTopPool() {
+  if (!Array.isArray(window.COMPANIES) || !COMPANIES.length) return [];
+  return COMPANIES.map(co => {
+    const api     = co.api || {};
+    const data    = Array.isArray(co.data)    ? co.data    : [];
+    const funding = Array.isArray(co.funding) ? co.funding : [];
+    const totalFunding = (() => {
+      const f = api.totalFunding;
+      if (f == null) return 0;
+      const n = Number(f);
+      return isNaN(n) ? (parseFloat(String(f).replace(/[^\d.]/g,'')) || 0) : n;
+    })();
+    const headcount = data.length ? data[data.length-1].count : 0;
+    const hcGrowth  = data.length >= 2 ? data[data.length-1].count - data[0].count : 0;
+    const smList    = Array.isArray(co.serviceMetrics) ? co.serviceMetrics : [];
+    const smItem    = smList.find(m => /導入|契約|顧客|社数/i.test(m.label));
+    const svcScores = Array.isArray(co.serviceScores)  ? co.serviceScores  : [];
+    const topScore  = svcScores.length ? svcScores[0] : null;
+    return {
+      id:        co.id,
+      name:      co.name,
+      color:     co.color || '#888780',
+      sector:    co.sector || 'その他',
+      series:    String(api.totalRounds || '—').trim() || '—',
+      funding:   totalFunding,
+      hcGrowth,
+      founded:   co.founding_year || 0,
+      headcount,
+      desc:      api.mission || '',
+      hc5y:      data.slice(-7).map(d => d.count),
+      f5y:       funding.slice(-7).map(f => typeof f.amount === 'number' ? f.amount : 0),
+      smVal:     smItem ? (smItem.value + (smItem.unit || '')) : null,
+      svcVal:    topScore ? topScore.total + '/' + (topScore.maxScore || 5) : null,
+    };
   });
-});
+}
 
-function miniBarHtml(vals,color){
-  const mx=Math.max(...vals);
-  return vals.map((v,i)=>{
-    const h=Math.round(v/mx*34);
-    const op=(0.35+0.65*(i/(vals.length-1))).toFixed(2);
+// ── サイドバー・クイックフィルタのタグを動的生成 ──
+function buildFilterTags() {
+  const pool    = buildTopPool();
+  const sectors = [...new Set(pool.map(c => c.sector).filter(Boolean))].sort();
+  const series  = [...new Set(pool.map(c => c.series).filter(s => s && s !== '—'))].sort();
+
+  // サイドバー 業種
+  const secEl = document.getElementById('sb-sector-tags');
+  if (secEl) {
+    secEl.innerHTML = ['すべて', ...sectors].map((s,i) =>
+      `<span class="sb-tag${i===0?' active':''}">${s}</span>`).join('');
+    bindSbTags(secEl, '業種');
+  }
+
+  // サイドバー シリーズ
+  const serEl = document.getElementById('sb-series-tags');
+  if (serEl) {
+    serEl.innerHTML = ['すべて', ...series].map((s,i) =>
+      `<span class="sb-tag${i===0?' active':''}">${s}</span>`).join('');
+    bindSbTags(serEl, 'シリーズ');
+  }
+
+  // クイックフィルタ（業種のみ）
+  const qfEl = document.getElementById('search-quick-filters');
+  if (qfEl) {
+    qfEl.innerHTML = ['すべて', ...sectors].map((s,i) =>
+      `<span class="ftag${i===0?' active':''}">${s}</span>`).join('');
+    qfEl.querySelectorAll('.ftag').forEach(tag => {
+      tag.addEventListener('click', function() {
+        qfEl.querySelectorAll('.ftag').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        activeFilter = this.textContent.trim();
+        syncSbTag('業種', activeFilter);
+        const inp = document.getElementById('search-input');
+        if (inp) renderSearch(inp.value, activeFilter);
+      });
+    });
+  }
+}
+
+function bindSbTags(container, groupLabel) {
+  container.querySelectorAll('.sb-tag').forEach(tag => {
+    tag.addEventListener('click', function() {
+      container.querySelectorAll('.sb-tag').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      const label = this.textContent.trim();
+      if (groupLabel === '業種') {
+        activeFilter = label;
+        syncQuickFilter(label);
+        const inp = document.getElementById('search-input');
+        if (inp) renderSearch(inp.value, activeFilter);
+      }
+    });
+  });
+}
+
+function syncSbTag(groupLabel, label) {
+  document.querySelectorAll('.sb-tag').forEach(tag => {
+    const grp = tag.closest('.sbsec');
+    const lbl = grp && grp.querySelector('.sbsl');
+    if (lbl && lbl.textContent.includes(groupLabel)) {
+      tag.classList.toggle('active', tag.textContent.trim() === label);
+    }
+  });
+}
+function syncQuickFilter(label) {
+  const qfEl = document.getElementById('search-quick-filters');
+  if (qfEl) qfEl.querySelectorAll('.ftag').forEach(t => t.classList.toggle('active', t.textContent.trim() === label));
+}
+
+// ── 注目企業カード（トップページ左カラム）──
+function miniBarHtml(vals, color) {
+  if (!vals || !vals.length) return '<span style="color:var(--text3);font-size:9px">データなし</span>';
+  const mx = Math.max(...vals, 1);
+  return vals.map((v,i) => {
+    const h  = Math.round(v / mx * 34);
+    const op = (0.35 + 0.65 * (i / Math.max(vals.length-1, 1))).toFixed(2);
     return `<div class="mbar" style="height:${h}px;background:${color};opacity:${op}"></div>`;
   }).join('');
 }
-function coCardHtml(c,i){
-  return `<div class="co-card" data-id="${c.id}" data-name="${c.name}" tabindex="0" role="button" aria-label="${c.name}の詳細へ">
+
+function coCardHtml(c, i) {
+  return `<div class="co-card" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細へ">
     <div class="co-card-head">
       <span class="co-rank">${i+1}</span>
       <span class="co-dot" style="background:${c.color}"></span>
-      <span class="co-name">${c.name}</span>
-      <span class="co-sector-badge">${c.sector}</span>
-      <span class="co-founded">設立 ${c.founded}年</span>
+      <span class="co-name">${escapeHtml(c.name)}</span>
+      <span class="co-sector-badge">${escapeHtml(c.sector)}</span>
+      <span class="co-founded">${c.founded ? '設立 '+c.founded+'年' : ''}</span>
     </div>
-    <div class="co-desc">${c.desc}</div>
+    <div class="co-desc">${escapeHtml(c.desc)}</div>
     <div class="co-info-grid">
-      <div class="co-info-item"><div class="co-info-label">累計調達額</div><div class="co-info-val">${c.funding > 0 ? c.funding + '億円' : '—'}</div></div>
-      <div class="co-info-item"><div class="co-info-label">現シリーズ</div><div class="co-info-val">${c.series}</div></div>
-      <div class="co-info-item"><div class="co-info-label">現社員数</div><div class="co-info-val">${c.headcount.toLocaleString()}人</div></div>
-      <div class="co-info-item"><div class="co-info-label">導入社数</div><div class="co-info-val">—</div></div>
-      <div class="co-info-item"><div class="co-info-label">サービス評価</div><div class="co-info-val">—</div></div>
+      <div class="co-info-item"><div class="co-info-label">累計調達額</div><div class="co-info-val">${c.funding > 0 ? c.funding+'億円' : '—'}</div></div>
+      <div class="co-info-item"><div class="co-info-label">現シリーズ</div><div class="co-info-val">${escapeHtml(c.series)}</div></div>
+      <div class="co-info-item"><div class="co-info-label">現社員数</div><div class="co-info-val">${c.headcount ? c.headcount.toLocaleString()+'人' : '—'}</div></div>
+      <div class="co-info-item"><div class="co-info-label">導入社数</div><div class="co-info-val">${c.smVal || '—'}</div></div>
+      <div class="co-info-item"><div class="co-info-label">サービス評価</div><div class="co-info-val">${c.svcVal || '—'}</div></div>
     </div>
     <div class="co-graphs">
       <div class="co-graph-box">
-        <div class="co-graph-title">社員数推移（5年間）</div>
-        <div class="mini-bars">${miniBarHtml(c.hc5y,c.color)}</div>
-        <div class="co-graph-foot"><span class="co-graph-val">${c.headcount.toLocaleString()}人</span><span class="co-graph-delta">+${c.hcGrowth}人 / 5年</span></div>
+        <div class="co-graph-title">社員数推移</div>
+        <div class="mini-bars">${miniBarHtml(c.hc5y, c.color)}</div>
+        <div class="co-graph-foot"><span class="co-graph-val">${c.headcount ? c.headcount.toLocaleString()+'人' : '—'}</span><span class="co-graph-delta">${c.hcGrowth > 0 ? '+'+c.hcGrowth+'人' : ''}</span></div>
       </div>
       <div class="co-graph-box">
-        <div class="co-graph-title">資金調達推移（5年間）</div>
-        <div class="mini-bars">${miniBarHtml(c.f5y,c.color)}</div>
-        <div class="co-graph-foot"><span class="co-graph-val">${c.funding > 0 ? c.funding + '億円' : '—'}</span><span class="co-graph-delta">${c.funding > 0 ? '累計' : ''}</span></div>
+        <div class="co-graph-title">資金調達推移</div>
+        <div class="mini-bars">${miniBarHtml(c.f5y, c.color)}</div>
+        <div class="co-graph-foot"><span class="co-graph-val">${c.funding > 0 ? c.funding+'億円' : '—'}</span><span class="co-graph-delta">${c.funding > 0 ? '累計' : ''}</span></div>
       </div>
     </div>
   </div>`;
 }
-function renderCoCards(metric) {
-  // COMPANIES（DB対応）優先、なければ companies（静的フォールバック）
-  const pool = (typeof COMPANIES !== 'undefined' && COMPANIES.length > 0)
-    ? COMPANIES.map(co => ({
-        id: co.id, name: co.name, color: co.color, sector: co.sector,
-        series: co.api?.totalRounds || '—',
-        funding: (() => {
-          const f = co.api?.totalFunding;
-          if (!f) return 0;
-          const n = Number(f);
-          if (!isNaN(n)) return n;
-          // "約282.6億円" 等の文字列から数値抽出
-          const m = String(f).match(/[\d.]+/);
-          return m ? parseFloat(m[0]) : 0;
-        })(),
-        hcGrowth: co.data?.length >= 2 ? co.data[co.data.length-1].count - co.data[0].count : 0,
-        founded: co.founding_year || 0,
-        headcount: co.data?.length ? co.data[co.data.length-1].count : 0,
-        desc: co.api?.mission || '',
-        hc5y: co.data ? co.data.slice(-7).map(d => d.count) : [],
-        f5y: co.funding ? co.funding.slice(-7).map(f => typeof f.amount === 'number' ? f.amount : 0) : [],
-      }))
-    : (typeof companies !== 'undefined' ? companies : []);
-  const sorted = [...pool].sort((a, b) => metric === 'funding' ? b.funding - a.funding : b.hcGrowth - a.hcGrowth);
-  const el = document.getElementById('co-cards-list');
-  if (el) el.innerHTML = sorted.map((co, i) => coCardHtml(co, i)).join('');
-}
-document.querySelectorAll('.ctab').forEach(tab=>{
-  tab.addEventListener('click',function(){
-    document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
-    this.classList.add('active');
-    renderCoCards(this.dataset.ct);
-  });
-});
 
-function ts(c){
+function renderCoCards(metric) {
+  const pool   = buildTopPool();
+  const sorted = [...pool].sort((a,b) => metric==='funding' ? b.funding-a.funding : b.hcGrowth-a.hcGrowth);
+  const el     = document.getElementById('co-cards-list');
+  if (!el) return;
+  if (!sorted.length) { el.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:11px">データを読み込み中...</div>'; return; }
+  el.innerHTML = sorted.map((c,i) => coCardHtml(c,i)).join('');
+  el.querySelectorAll('.co-card').forEach(card => {
+    card.addEventListener('click', () => navigateFromCard(card));
+    card.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); navigateFromCard(card); }});
+  });
+}
+
+function navigateFromCard(card) {
+  const id   = card.dataset.id;
+  const name = card.dataset.name;
+  const co   = (id && COMPANIES.find(c => String(c.id)===String(id))) || (name && COMPANIES.find(c => c.name===name));
+  showPage('company', co ? co.id : id || name);
+}
+
+// ── 最新資金調達カード（3_資金調達シートから動的生成）──
+function buildFundingCards() {
+  const pool = buildTopPool();
+  // 全企業の調達履歴をフラット化して日付降順で返す
+  const allRounds = [];
+  COMPANIES.forEach(co => {
+    (co.funding || []).forEach(f => {
+      if (!f.year) return;
+      allRounds.push({
+        name:   co.name,
+        color:  co.color || '#888780',
+        amount: typeof f.amount === 'number' ? f.amount : parseFloat(String(f.amount).replace(/[^\d.]/g,'')) || 0,
+        round:  f.round || '—',
+        year:   f.year,
+        note:   f.note || '',
+        coId:   co.id,
+        sources: f.sources || [],
+      });
+    });
+  });
+  // 年降順でソート（同年は調達額降順）
+  allRounds.sort((a,b) => b.year - a.year || b.amount - a.amount);
+  return allRounds;
+}
+
+function fcHtml(f) {
+  const r=parseInt(f.color.slice(1,3),16), g=parseInt(f.color.slice(3,5),16), b=parseInt(f.color.slice(5,7),16);
+  const bg=`rgba(${r},${g},${b},0.08)`, bc=`rgba(${r},${g},${b},0.3)`;
+  const src = f.sources && f.sources[0];
+  const srcLink = src && src.url
+    ? `<a href="${escapeHtml(src.url)}" target="_blank" rel="noopener" style="font-size:9px;color:${f.color};opacity:.7;text-decoration:none">情報源を見る ↗</a>`
+    : `<div style="font-size:9px;color:${f.color};opacity:.75;text-align:right">企業情報を見る ›</div>`;
+  return `<div class="fc" data-id="${f.coId}" data-name="${escapeHtml(f.name)}" tabindex="0" role="button" aria-label="${escapeHtml(f.name)}の詳細へ">
+    <div class="fc-top">
+      <div class="fc-dot" style="background:${f.color}"></div>
+      <div class="fc-name" style="color:${f.color}">${escapeHtml(f.name)} <span style="font-size:9px;opacity:.7">↗</span></div>
+      <div class="fc-date">${f.year}年</div>
+    </div>
+    <div class="fc-amount">${f.amount > 0 ? f.amount : '非公開'}<span>${f.amount > 0 ? '億円' : ''}</span></div>
+    <div class="fc-round" style="color:${f.color};border-color:${bc};background:${bg}">${escapeHtml(f.round)}</div>
+    <div class="fc-note">${escapeHtml(f.note)}</div>
+    <div style="margin-top:8px;padding-top:6px;border-top:1px solid ${bc};text-align:right">${srcLink}</div>
+  </div>`;
+}
+
+function renderFundingDynamic(count) {
+  const el = document.getElementById('funding-cards');
+  if (!el) return;
+  const rounds = buildFundingCards().slice(0, count || 6);
+  if (!rounds.length) { el.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:11px">データなし</div>'; return; }
+  el.innerHTML = rounds.map(fcHtml).join('');
+  el.querySelectorAll('.fc').forEach(card => {
+    card.addEventListener('click', () => {
+      const co = COMPANIES.find(c => String(c.id)===String(card.dataset.id)) || COMPANIES.find(c => c.name===card.dataset.name);
+      if (co) showPage('company', co.id);
+    });
+  });
+}
+
+// ── トピックス（EVENTS から動的生成）──
+function buildTopicPool() {
+  const all = [];
+  Object.keys(window.EVENTS || {}).forEach(coId => {
+    const co = COMPANIES.find(x => String(x.id)===String(coId) || x.name===coId);
+    (EVENTS[coId] || []).forEach(t => all.push({
+      ...t,
+      company:  co ? co.name  : coId,
+      coColor:  co ? co.color : '#888780',
+      coId:     co ? co.id    : coId,
+      typeColor: '#3A4A5C',
+    }));
+  });
+  return all.sort((a,b) => b.year - a.year || (b.date||'').localeCompare(a.date||''));
+}
+
+function ts(c) {
   const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
   return {bg:`rgba(${r},${g},${b},0.10)`,border:`rgba(${r},${g},${b},0.35)`,color:c};
 }
-const bizTopics=[
-  {type:'プロダクト',typeColor:'#3A5A8C',company:'LayerX',coColor:'#FF5724',title:'バクラク、AP自動化機能を大幅アップデート — 請求書処理の自動化率が従来比2倍に向上',date:'04/15',speaker:'Product Team'},
-  {type:'海外展開',typeColor:'#3A7A6A',company:'Ubie',coColor:'#00BCD4',title:'Ubieが米国市場へ正式参入、現地パートナーと提携して2026年末までに100施設連携を目指す',date:'04/08',speaker:'CEO 久保恒太'},
-  {type:'資金調達',typeColor:'#7A5A3A',company:'Nizitech',coColor:'#5B8FCC',title:'Series B 48億円調達。食品・薬品分野へ拡大し規制要件の厳しい新領域へ本格参入',date:'03/22',speaker:''},
-  {type:'パートナー',typeColor:'#5A4A8C',company:'10X',coColor:'#3BAA90',title:'イオングループ全店舗でStailer導入完了 — 月間アクティブユーザー数が500万人を突破',date:'03/10',speaker:'BizDev'},
-  {type:'プロダクト',typeColor:'#3A5A8C',company:'Autify',coColor:'#E8A020',title:'LLMを活用したテスト生成機能をリリース。自然言語でシナリオが自動生成される新機能',date:'02/28',speaker:'CTO'},
-  {type:'受賞',typeColor:'#4A7A4A',company:'Gaudiy',coColor:'#C04040',title:'グッドデザイン賞 金賞を受賞。ファンコミュニティの体験設計が高く評価される',date:'02/14',speaker:''},
-];
-const orgTopics=[
-  {type:'採用',typeColor:'#3A7A6A',company:'SmartHR',coColor:'#00C4CC',title:'エンジニア100名採用計画を発表。AI・データ基盤チームを中心にリモートで全国募集',date:'04/20',speaker:'CHRO 内田雅彦'},
-  {type:'組織設計',typeColor:'#5A4A8C',company:'LayerX',coColor:'#FF5724',title:'スクワッドモデルへ移行完了。プロダクト・エンジニア・デザインを1チームに統合',date:'04/05',speaker:'VPoE'},
-  {type:'カルチャー',typeColor:'#7A4A6A',company:'Ubie',coColor:'#00BCD4',title:'「医療×テクノロジー」採用ブランド戦略を公開 — 医師・研究者・エンジニアが同一チームで',date:'03/18',speaker:'Talent Acquisition'},
-  {type:'評価制度',typeColor:'#3A5A8C',company:'Freee',coColor:'#E8A020',title:'ジョブグレード制度を全面刷新。スキルベース評価を導入し給与レンジも公開化へ',date:'03/05',speaker:'HR Lead'},
-  {type:'採用',typeColor:'#3A7A6A',company:'LabBase',coColor:'#7C5CBF',title:'理系PhD採用でトップスタートアップ1位を獲得。研究者比率が全社の15%まで拡大',date:'02/20',speaker:''},
-  {type:'組織設計',typeColor:'#5A4A8C',company:'KINTO',coColor:'#C04040',title:'全職種フルフレックス制を導入。コアタイム廃止でエンゲージメントスコアが向上',date:'02/08',speaker:'COO'},
-];
 
-function renderTopics(id,topics){
-  const el=document.getElementById(id);
-  el.innerHTML=topics.map(t=>{
-    const s=ts(t.typeColor);
-    const [m,d]=t.date.split('/');
-    // COMPANIES から企業IDを取得（個別ページへのリンク用）
-    // COMPANIES（個別企業）と companies（トップ）の両方から検索
-    const coObj = (typeof COMPANIES !== 'undefined' && COMPANIES.find(x => x.name === t.company))
-                || (typeof companies !== 'undefined' && companies.find(x => x.name === t.company));
-    const coId = coObj ? coObj.id : null;
-    const coClickAttr = coId
-      ? `onclick="showPage('company','${coId}')" style="cursor:pointer;color:${t.coColor}" title="${t.company}の詳細を見る"`
-      : `onclick="showPage('company','${escapeHtml(t.company)}')" style="cursor:pointer;color:${t.coColor}" title="${t.company}の情報を見る"`;
-    const rowClick = coId
-      ? `onclick="showPage('company','${coId}')" role="button" tabindex="0" aria-label="${t.company}の詳細を見る" style="cursor:pointer"`
-      : `onclick="showPage('company','${escapeHtml(t.company)}')" role="button" tabindex="0" aria-label="${t.company}の企業情報を見る" style="cursor:pointer"`;
+function renderTopics(id, topicsArr) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!topicsArr || !topicsArr.length) {
+    el.innerHTML = '<div class="events-empty">トピックスデータなし</div>';
+    return;
+  }
+  const s = ts('#3A4A5C');
+  el.innerHTML = topicsArr.slice(0, 10).map(t => {
+    const dateParts = (t.date || String(t.year)).split('/');
+    const m = dateParts[0], d = dateParts[1] || '';
+    const coClickAttr = `onclick="showPage('company','${t.coId}')" style="cursor:pointer;color:${t.coColor}" title="${escapeHtml(t.company)}の詳細を見る"`;
+    const rowClick    = `onclick="showPage('company','${t.coId}')" role="button" tabindex="0" aria-label="${escapeHtml(t.company)}の詳細を見る" style="cursor:pointer"`;
     return `<div class="nc-row" ${rowClick}>
-      <div class="nc-date"><span class="nc-date-m">${m}月</span><span class="nc-date-d">${d}</span></div>
+      <div class="nc-date"><span class="nc-date-m">${m}${d?'月':''}</span><span class="nc-date-d">${d}</span></div>
       <div class="nc-divider"></div>
       <div class="nc-body">
         <div class="nc-meta">
           <div class="nc-co">
             <span class="nc-co-dot" style="background:${t.coColor}"></span>
-            <span class="nc-co-name" ${coClickAttr}>${t.company}${coId ? ' ↗' : ''}</span>
+            <span class="nc-co-name" ${coClickAttr}>${escapeHtml(t.company)} ↗</span>
           </div>
-          ${t.speaker?`<span class="nc-speaker">· ${t.speaker}</span>`:''}
-          <span class="nc-seg" style="color:${s.color};border-color:${s.border};background:${s.bg}">${t.type}</span>
+          ${t.speaker ? `<span class="nc-speaker">· ${escapeHtml(t.speaker)}</span>` : ''}
+          <span class="nc-seg" style="color:${s.color};border-color:${s.border};background:${s.bg}">${escapeHtml(t.type)}</span>
         </div>
-        <div class="nc-title">${t.title}</div>
+        <div class="nc-title">${t.url ? `<a href="${escapeHtml(t.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${escapeHtml(t.title)}</a>` : escapeHtml(t.title)}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-// 注目企業カード・検索結果クリックで個別企業ページへ
-function navigateFromCard(card) {
-  // data-id があればそれを使う、なければ名前で検索
-  const id   = card.dataset.id || card.dataset.coId;
-  const nameEl = card.querySelector('.co-name');
-  const name = nameEl ? nameEl.textContent.trim() : null;
-  const co = (id && COMPANIES.find(c => String(c.id) === String(id)))
-          || (name && COMPANIES.find(c => c.name === name || c.name.includes(name) || name.includes(c.name)));
-  showPage('company', co ? co.id : null);
+function renderTopicsDynamic() {
+  const all = buildTopicPool();
+  const bizTopics = all.filter(t => /prd|biz|product|service|business|プロダクト|事業|調達|funding|award|受賞|partner|パートナー|turning|海外|founder/i.test(t.type));
+  const orgTopics = all.filter(t => /org|workstyle|culture|hiring|採用|組織|カルチャー|環境|評価|制度/i.test(t.type));
+  // どちらにも分類されない場合は両方に表示
+  const uncat = all.filter(t => !bizTopics.includes(t) && !orgTopics.includes(t));
+  renderTopics('biz-topics', [...bizTopics, ...uncat].slice(0,10));
+  renderTopics('org-topics', orgTopics.slice(0,10));
 }
-document.getElementById('co-cards-list').addEventListener('click', function(e) {
-  const card = e.target.closest('.co-card');
-  if (card) navigateFromCard(card);
-});
-document.getElementById('co-cards-list').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' || e.key === ' ') {
-    const card = e.target.closest('.co-card');
-    if (card) { e.preventDefault(); navigateFromCard(card); }
-  }
-});
-document.getElementById('search-results').addEventListener('click', function(e) {
-  const row = e.target.closest('.sr-row');
-  if (row) {
-    const nameEl = row.querySelector('.sr-name');
-    const name = nameEl ? nameEl.textContent.trim() : null;
-    const co = name && COMPANIES.find(c => c.name === name);
-    showPage('company', co ? co.id : null);
-  }
-});
-document.getElementById('search-results').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' || e.key === ' ') {
-    const row = e.target.closest('.sr-row');
-    if (row) {
-      e.preventDefault();
-      const nameEl = row.querySelector('.sr-name');
-      const name = nameEl ? nameEl.textContent.trim() : null;
-      const co = name && COMPANIES.find(c => c.name === name);
-      showPage('company', co ? co.id : null);
-    }
-  }
-});
-document.getElementById('funding-cards').addEventListener('click', function(e) {
-  const card = e.target.closest('.fc');
-  if (card) {
-    const nameEl = card.querySelector('.fc-name');
-    const rawName = nameEl ? nameEl.textContent.trim().replace(/\s*[↗↑→].*$/, '').trim() : null;
-    const co = rawName && COMPANIES.find(c => c.name === rawName || c.name.includes(rawName) || rawName.includes(c.name));
-    if (co) showPage('company', co.id);
-    else if (rawName) showPage('company', rawName); // IDとして渡す（未登録フォールバックへ）
-  }
-});
 
-const searchInput=document.getElementById('search-input');
-let activeFilter='すべて';
-function renderSearch(query,sector){
-  const el=document.getElementById('search-results');
-  if(!query&&(!sector||sector==='すべて')){
+// ── 検索 ──
+let activeFilter = 'すべて';
+
+function renderSearch(query, sector) {
+  const el = document.getElementById('search-results');
+  if (!el) return;
+  if (!query && (!sector || sector === 'すべて')) {
     el.classList.add('fading');
-    setTimeout(() => { el.innerHTML=''; el.classList.remove('fading'); }, 150);
+    setTimeout(() => { el.innerHTML = ''; el.classList.remove('fading'); }, 150);
     return;
   }
-
-  // COMPANIES（個別企業APIデータ）優先、なければトップページのcompanies使用
-  const pool = (typeof COMPANIES !== 'undefined' && COMPANIES.length > 0)
-    ? COMPANIES.map(co => ({
-        name: co.name,
-        sector: co.sector || '',
-        series: co.api?.totalRounds || '—',
-        headcount: co.data?.length ? co.data[co.data.length-1].count : 0,
-        color: co.color,
-        id: co.id
-      }))
-    : companies;
-
+  const pool = buildTopPool();
   let filtered = pool;
-  if(query) filtered = filtered.filter(c =>
-    c.name.includes(query) || (c.sector||'').includes(query)
-  );
-  if(sector && sector!=='すべて') filtered = filtered.filter(c =>
-    (c.sector||'').includes(sector)
-  );
-
-  if(filtered.length===0){
-    el.innerHTML='<div style="font-size:10px;color:var(--text3);padding:8px 0;text-align:center">該当する企業が見つかりませんでした</div>';
-    return;
-  }
-
-  el.innerHTML = filtered.slice(0,8).map(c=>`<div class="sr-row" data-name="${c.name}" tabindex="0" role="button" aria-label="${c.name}の詳細を見る">
-    <span class="sr-dot" style="background:${c.color}"></span>
-    <span class="sr-name">${c.name}</span>
-    <span class="sr-sector">${c.sector||''}</span>
-    <span class="sr-series">${c.series||'—'}</span>
-    <span class="sr-hc">${c.headcount ? c.headcount.toLocaleString()+'人' : '—'}</span>
-    <span class="sr-arrow" style="color:var(--slate)">›</span>
-  </div>`).join('');
-
-  // サイドバーの業種タグに件数バッジを更新
+  if (query)                      filtered = filtered.filter(c => c.name.includes(query) || (c.sector||'').includes(query));
+  if (sector && sector !== 'すべて') filtered = filtered.filter(c => (c.sector||'').includes(sector));
+  if (!filtered.length) { el.innerHTML = '<div style="font-size:10px;color:var(--text3);padding:8px 0;text-align:center">該当する企業が見つかりませんでした</div>'; return; }
+  el.innerHTML = filtered.slice(0,8).map(c =>
+    `<div class="sr-row" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細を見る">
+      <span class="sr-dot" style="background:${c.color}"></span>
+      <span class="sr-name">${escapeHtml(c.name)}</span>
+      <span class="sr-sector">${escapeHtml(c.sector||'')}</span>
+      <span class="sr-series">${escapeHtml(c.series||'—')}</span>
+      <span class="sr-hc">${c.headcount ? c.headcount.toLocaleString()+'人' : '—'}</span>
+      <span class="sr-arrow" style="color:var(--slate)">›</span>
+    </div>`
+  ).join('');
+  el.querySelectorAll('.sr-row').forEach(row => {
+    const handler = () => {
+      const co = COMPANIES.find(x => String(x.id)===String(row.dataset.id)) || COMPANIES.find(x => x.name===row.dataset.name);
+      showPage('company', co ? co.id : row.dataset.id);
+    };
+    row.addEventListener('click', handler);
+    row.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); handler(); }});
+  });
   updateSidebarFilterBadges(pool, sector);
 }
 
@@ -4884,100 +4900,59 @@ function updateSidebarFilterBadges(pool, activeSector) {
   document.querySelectorAll('.tp-sidebar .sb-tag').forEach(tag => {
     const label = tag.textContent.replace(/\s*\d+社$/, '').trim();
     tag.dataset.label = label;
-    const count = label === 'すべて'
-      ? pool.length
-      : pool.filter(co => (co.sector||'').includes(label)).length;
-    // 既存のバッジを除去して再描画
+    const count = label === 'すべて' ? pool.length : pool.filter(co => (co.sector||'').includes(label)).length;
     const badge = tag.querySelector('.sb-count');
     if (badge) badge.remove();
     if (count > 0) {
       const sp = document.createElement('span');
-      sp.className = 'sb-count';
-      sp.textContent = count;
+      sp.className = 'sb-count'; sp.textContent = count;
       tag.appendChild(sp);
     }
   });
 }
-if(searchInput) searchInput.addEventListener('input',function(){renderSearch(this.value,activeFilter);});
-document.querySelectorAll('.ftag').forEach(tag=>{
-  tag.addEventListener('click',function(){
-    document.querySelectorAll('.ftag').forEach(t=>t.classList.remove('active'));
-    this.classList.add('active');
-    activeFilter = this.textContent.trim();
-    // サイドバーの業種フィルタも同期
-    document.querySelectorAll('.sbsec').forEach(sec => {
-      const lbl = sec.querySelector('.sbsl');
-      if (lbl && lbl.textContent.includes('業種')) {
-        sec.querySelectorAll('.sb-tag').forEach(t => {
-          t.classList.toggle('active', t.textContent.trim() === activeFilter);
-        });
-      }
+
+// ── トップページ全体再描画（API完了後に呼ぶ）──
+function refreshTopPage() {
+  buildFilterTags();
+  renderCoCards('funding');
+  renderFundingDynamic(6);
+  renderTopicsDynamic();
+  // ctabが既にイベント登録済みでも問題ないよう上書き
+  document.querySelectorAll('.ctab').forEach(tab => {
+    const clone = tab.cloneNode(true);
+    tab.parentNode.replaceChild(clone, tab);
+    clone.addEventListener('click', function() {
+      document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      renderCoCards(this.dataset.ct);
     });
-    if(searchInput) renderSearch(searchInput.value, activeFilter);
   });
-});
-document.querySelectorAll('.sb-tag').forEach(tag=>{
-  tag.addEventListener('click',function(){
-    const grp=this.closest('.sbsec');
-    grp.querySelectorAll('.sb-tag').forEach(t=>t.classList.remove('active'));
-    this.classList.add('active');
-    // 業種フィルタの場合、検索のQuickフィルタと同期
-    const label = this.textContent.trim();
-    if (grp.querySelector('.sbsl') && grp.querySelector('.sbsl').textContent.includes('業種')) {
-      activeFilter = label;
-      // QuickフィルタUIも同期
-      document.querySelectorAll('.ftag').forEach(ft => {
-        ft.classList.toggle('active', ft.textContent.trim() === label);
-      });
-      if (document.getElementById('search-input').value || label !== 'すべて') {
-        renderSearch(document.getElementById('search-input').value, activeFilter);
-      }
-    }
+  // 資金調達期間タブ
+  document.querySelectorAll('[data-fp]').forEach(btn => {
+    const clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+    clone.addEventListener('click', function() {
+      document.querySelectorAll('[data-fp]').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      // すべて表示 or 直近N件（将来的に年フィルタも可）
+      renderFundingDynamic(12);
+    });
   });
-});
+}
 
-// 注目企業・資金調達・検索結果クリック → 個別企業ページへ
-document.getElementById('co-cards-list').addEventListener('click', function(e){
-  const card = e.target.closest('.co-card');
-  if (card) {
-    const nameEl = card.querySelector('.co-name');
-    const name = nameEl ? nameEl.textContent.trim() : null;
-    const co = name && COMPANIES.find(c => c.name === name);
-    showPage('company', co ? co.id : null);
-  }
-});
-document.getElementById('funding-cards').addEventListener('click', function(e){
-  const card = e.target.closest('.fc');
-  if (card) {
-    const nameEl = card.querySelector('.fc-name');
-    const name = nameEl ? nameEl.textContent.trim() : null;
-    const co = name && COMPANIES.find(c => c.name === name);
-    showPage('company', co ? co.id : null);
-  }
-});
-document.getElementById('search-results').addEventListener('click', function(e){
-  const row = e.target.closest('.sr-row');
-  if (row) {
-    const nameEl = row.querySelector('.sr-name');
-    const name = nameEl ? nameEl.textContent.trim() : null;
-    const co = name && COMPANIES.find(c => c.name === name);
-    showPage('company', co ? co.id : null);
-  }
-});
+// ── 検索入力イベント ──
+const searchInput = document.getElementById('search-input');
+if (searchInput) searchInput.addEventListener('input', function() { renderSearch(this.value, activeFilter); });
 
-
-// ════ ページ切り替え ════
-
-
-// 初期ページ判定
-(function(){
-  const h = location.hash;
-  if (h === '#company') showPage('company');
-  else if (h === '#chumoku') showPage('chumoku');
-  else showPage('top');
-})();
-
-
+// ── applyApiData フック（API完了後に自動実行）──
+const _origApplyApiDataTop = typeof applyApiData === 'function' ? applyApiData : null;
+if (_origApplyApiDataTop) {
+  const _prev = window.applyApiData;
+  window.applyApiData = function(payload) {
+    _prev(payload);
+    refreshTopPage();
+  };
+}
 </script>
 
 
@@ -4993,551 +4968,77 @@ document.getElementById('search-results').addEventListener('click', function(e){
 //  データソース: COMPANIES（GAS JSON API）& EVENTS（4_トピックス）
 // ══════════════════════════════════════════════════════════════
 
-// ── シリーズ表示順・カラー（UIのみ固定） ──────────────────────
 const chSeriesOrder  = ['Pre-Seed','Seed','Series A','Series B','Series C','Series D','Series E','Series F','上場','非公開'];
-const chSeriesColors = {
-  'Pre-Seed':'#6A7A8C','Seed':'#4A7A6A','Series A':'#3A7A6A','Series B':'#3A5A8C',
-  'Series C':'#5A4A8C','Series D':'#7A4A6A','Series E':'#E8A020','Series F':'#C04040',
-  '上場':'#C04040','非公開':'#7A7A7A'
-};
+const chSeriesColors = {'Pre-Seed':'#6A7A8C','Seed':'#4A7A6A','Series A':'#3A7A6A','Series B':'#3A5A8C','Series C':'#5A4A8C','Series D':'#7A4A6A','Series E':'#E8A020','Series F':'#C04040','上場':'#C04040','非公開':'#7A7A7A'};
+let chGlobalMetric='funding', chActiveAreaGroup='', chActiveSeriesGroup='';
 
-let chGlobalMetric    = 'funding';
-let chActiveAreaGroup = '';
-let chActiveSeriesGroup = '';
-
-// ── COMPANIESをchCompanies形式に変換 ─────────────────────────
 function buildChPool() {
-  if (!Array.isArray(window.COMPANIES) || COMPANIES.length === 0) return [];
+  if (!Array.isArray(window.COMPANIES)||!COMPANIES.length) return [];
   return COMPANIES.map(co => {
-    const api     = co.api || {};
-    const data    = Array.isArray(co.data) ? co.data : [];
-    const funding = Array.isArray(co.funding) ? co.funding : [];
-
-    const totalFunding = (() => {
-      const f = api.totalFunding;
-      if (f == null) return 0;
-      const n = Number(f);
-      return isNaN(n) ? (parseFloat(String(f).replace(/[^\d.]/g,'')) || 0) : n;
-    })();
-
-    const headcount = data.length ? data[data.length - 1].count : 0;
-    const hcGrowth  = data.length >= 2 ? data[data.length-1].count - data[0].count : 0;
-
-    // 直近7件の社員数・調達額スパークライン
-    const hc5y = data.slice(-7).map(d => d.count);
-    const f5y  = funding.slice(-7).map(f => (typeof f.amount === 'number' ? f.amount : 0));
-
-    // ラウンド表記
-    const roundsRaw = api.totalRounds;
-    const series = (() => {
-      if (!roundsRaw && roundsRaw !== 0) return '—';
-      const s = String(roundsRaw).trim();
-      if (s === '' || s === 'null') return '—';
-      // 数字のみ → "Series X" 変換は行わない（そのまま表示）
-      return s;
-    })();
-
-    // 導入社数（5_serviceMetrics から取得）
-    const smList = Array.isArray(co.serviceMetrics) ? co.serviceMetrics : [];
-    const smItem = smList.find(m => /導入|契約|顧客|社数/i.test(m.label));
-    const smVal  = smItem ? (smItem.value + (smItem.unit || '')) : null;
-
-    // サービス評判スコア（7_serviceScores）
-    const svcScores = Array.isArray(co.serviceScores) ? co.serviceScores : [];
-    const topScore  = svcScores.length ? svcScores[0] : null;
-    const svcVal    = topScore ? topScore.total + '/' + (topScore.maxScore || 5) : null;
-
-    return {
-      id:        co.id,
-      name:      co.name,
-      color:     co.color || '#888780',
-      sector:    co.sector || 'その他',
-      series,
-      funding:   totalFunding,
-      hcGrowth,
-      founded:   co.founding_year || 0,
-      headcount,
-      desc:      api.mission || '',
-      hc5y,
-      f5y,
-      smVal,
-      svcVal,
-    };
+    const api=co.api||{}, data=Array.isArray(co.data)?co.data:[], funding=Array.isArray(co.funding)?co.funding:[];
+    const totalFunding=(()=>{const f=api.totalFunding;if(f==null)return 0;const n=Number(f);return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n;})();
+    const headcount=data.length?data[data.length-1].count:0;
+    const hcGrowth=data.length>=2?data[data.length-1].count-data[0].count:0;
+    const smList=Array.isArray(co.serviceMetrics)?co.serviceMetrics:[];
+    const smItem=smList.find(m=>/導入|契約|顧客|社数/i.test(m.label));
+    const svcScores=Array.isArray(co.serviceScores)?co.serviceScores:[];
+    const topScore=svcScores.length?svcScores[0]:null;
+    return {id:co.id,name:co.name,color:co.color||'#888780',sector:co.sector||'その他',series:String(api.totalRounds||'—').trim()||'—',funding:totalFunding,hcGrowth,founded:co.founding_year||0,headcount,desc:api.mission||'',hc5y:data.slice(-7).map(d=>d.count),f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),smVal:smItem?(smItem.value+(smItem.unit||'')):null,svcVal:topScore?topScore.total+'/'+(topScore.maxScore||5):null};
   });
 }
 
-// ── セクター集計をCOMPANIESから動的生成 ──────────────────────
 function buildSectorDefs(pool) {
-  const map = {};
-  pool.forEach(c => {
-    const sec = c.sector || 'その他';
-    if (!map[sec]) map[sec] = { name: sec, funding: 0, growth: 0, count: 0 };
-    map[sec].funding += c.funding || 0;
-    map[sec].growth  += c.hcGrowth || 0;
-    map[sec].count   += 1;
-  });
-  // カラーパレット（セクター名ハッシュで自動割当）
-  const palette = ['#3A5A8C','#3A7A6A','#5A4A8C','#7A4A6A','#3A6A7A','#7A5A3A','#4A7A4A','#6A4A5A','#4A5A7A','#6A6A3A','#5A7A5A','#7A7A7A'];
-  let pi = 0;
-  return Object.values(map)
-    .sort((a, b) => b.funding - a.funding)
-    .map(s => ({ ...s, color: palette[pi++ % palette.length] }));
+  const map={};
+  pool.forEach(c=>{const sec=c.sector||'その他';if(!map[sec])map[sec]={name:sec,funding:0,growth:0,count:0};map[sec].funding+=c.funding||0;map[sec].growth+=c.hcGrowth||0;map[sec].count+=1;});
+  const palette=['#3A5A8C','#3A7A6A','#5A4A8C','#7A4A6A','#3A6A7A','#7A5A3A','#4A7A4A','#6A4A5A','#4A5A7A','#6A6A3A','#5A7A5A','#7A7A7A'];
+  let pi=0;
+  return Object.values(map).sort((a,b)=>b.funding-a.funding).map(s=>({...s,color:palette[pi++%palette.length]}));
 }
 
-// ── ミニスパークバー ──────────────────────────────────────────
-function chMiniBarHtml(vals, color) {
-  if (!vals || !vals.length) return '<span style="color:var(--text3);font-size:9px">データなし</span>';
-  const mx = Math.max(...vals, 1);
-  return vals.map((v, i) => {
-    const h  = Math.round(v / mx * 34);
-    const op = (0.35 + 0.65 * (i / Math.max(vals.length - 1, 1))).toFixed(2);
-    return `<div class="mbar" style="height:${h}px;background:${color};opacity:${op}"></div>`;
-  }).join('');
-}
+function chMiniBarHtml(vals,color){if(!vals||!vals.length)return '<span style="color:var(--text3);font-size:9px">データなし</span>';const mx=Math.max(...vals,1);return vals.map((v,i)=>{const h=Math.round(v/mx*34);const op=(0.35+0.65*(i/Math.max(vals.length-1,1))).toFixed(2);return `<div class="mbar" style="height:${h}px;background:${color};opacity:${op}"></div>`;}).join('');}
 
-// ── 企業カードHTML ────────────────────────────────────────────
-function chCoCardHtml(c, i) {
-  const bg = c.color + '18';
-  return `<div class="cocard ch-nav-card" data-name="${c.name}" data-id="${c.id}" style="cursor:pointer;--card-accent:${c.color}">
-    <div class="coch">
-      <div class="cork" style="background:${bg};color:${c.color}">${i + 1}</div>
-      <div class="codo" style="background:${c.color}"></div>
-      <div class="coname">${escapeHtml(c.name)}</div>
-      <div class="cosb">${escapeHtml(c.sector)}</div>
-      <div class="cometa">${c.founded ? '設立 ' + c.founded + '年' : ''}</div>
-    </div>
-    <div class="codesc">${escapeHtml(c.desc)}</div>
-    <div class="coig">
-      <div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding > 0 ? c.funding + '億円' : '—'}</div></div>
-      <div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div>
-      <div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount ? c.headcount.toLocaleString() + '人' : '—'}</div></div>
-      <div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal || '—'}</div></div>
-      <div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal || '—'}</div></div>
-    </div>
-    <div class="cogs">
-      <div class="cogb">
-        <div class="cogt">社員数推移</div>
-        <div class="mbars">${chMiniBarHtml(c.hc5y, c.color)}</div>
-        <div class="cogf"><span class="cogv">${c.headcount ? c.headcount.toLocaleString() + '人' : '—'}</span><span class="cogd">${c.hcGrowth > 0 ? '+' + c.hcGrowth + '人' : ''}</span></div>
-      </div>
-      <div class="cogb">
-        <div class="cogt">資金調達推移</div>
-        <div class="mbars">${chMiniBarHtml(c.f5y, c.color)}</div>
-        <div class="cogf"><span class="cogv">${c.funding > 0 ? c.funding + '億円' : '—'}</span><span class="cogd">累計</span></div>
-      </div>
-    </div>
-    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end">
-      <span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span>
-    </div>
-  </div>`;
-}
+function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding+'億円':'—'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${chMiniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${chMiniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding+'億円':'—'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div></div>`;}
 
-// ── ランキングリスト ──────────────────────────────────────────
-function renderRankList(id, key) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const pool   = buildChPool();
-  const sorted = [...pool].sort((a, b) => key === 'funding' ? b.funding - a.funding : b.hcGrowth - a.hcGrowth);
-  const mx     = sorted.length ? (key === 'funding' ? sorted[0].funding : sorted[0].hcGrowth) : 1;
-  if (!sorted.length) { el.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:11px">データを読み込み中...</div>'; return; }
-  el.innerHTML = sorted.map((c, i) => {
-    const val  = key === 'funding' ? c.funding : c.hcGrowth;
-    const pct  = Math.round(val / Math.max(mx, 1) * 100);
-    const disp = key === 'funding' ? val + '億円' : '+' + val + '人';
-    return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer" title="${escapeHtml(c.name)}の詳細へ">
-      <span class="rn">${i+1}</span>
-      <span class="rd" style="background:${c.color}"></span>
-      <span class="rname">${escapeHtml(c.name)}</span>
-      <span class="rsec">${escapeHtml(c.sector)}</span>
-      <div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div>
-      <span class="rv">${disp}</span>
-      <span style="font-size:9px;color:var(--text3);margin-left:4px">›</span>
-    </div>`;
-  }).join('');
-  el.querySelectorAll('.ch-nav-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const co = COMPANIES.find(x => String(x.id) === String(row.dataset.id)) ||
-                 COMPANIES.find(x => x.name === row.dataset.name);
-      showPage('company', co ? co.id : row.dataset.id);
-    });
-  });
-}
+function renderRankList(id,key){const el=document.getElementById(id);if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを読み込み中...</div>';return;}el.innerHTML=sorted.map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?val+'億円':'+'+val+'人';return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
 
-// ── 企業カードグリッド ────────────────────────────────────────
-function renderCoCardsDynamic(metric) {
-  const el = document.getElementById('co-cards');
-  if (!el) return;
-  const pool   = buildChPool();
-  const sorted = [...pool].sort((a, b) => metric === 'funding' ? b.funding - a.funding : b.hcGrowth - a.hcGrowth);
-  if (!sorted.length) {
-    el.innerHTML = '<div style="padding:24px;color:var(--text3);font-size:12px;text-align:center">データを読み込み中...</div>';
-    return;
-  }
-  el.innerHTML = sorted.map((c, i) => chCoCardHtml(c, i)).join('');
-}
+function renderCoCardsDynamic(metric){const el=document.getElementById('co-cards');if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);if(!sorted.length){el.innerHTML='<div style="padding:24px;color:var(--text3);font-size:12px;text-align:center">データを読み込み中...</div>';return;}el.innerHTML=sorted.map((c,i)=>chCoCardHtml(c,i)).join('');}
 
-// ── ツリーマップ ──────────────────────────────────────────────
-function renderTreemap(metric) {
-  const tm   = document.getElementById('treemap');
-  if (!tm) return;
-  const pool = buildChPool();
-  const defs = buildSectorDefs(pool);
-  if (!defs.length) { tm.innerHTML = '<div style="padding:16px;color:var(--text3)">データなし</div>'; return; }
-  const vals = defs.map(s => metric === 'funding' ? (s.funding / s.count) : (s.growth / s.count));
-  const maxV = Math.max(...vals, 1);
-  tm.innerHTML = defs.map((s, i) => {
-    const avg       = vals[i];
-    const intensity = avg / maxV;
-    const r = parseInt(s.color.slice(1,3),16), g = parseInt(s.color.slice(3,5),16), b = parseInt(s.color.slice(5,7),16);
-    const alpha   = (0.18 + 0.72 * intensity).toFixed(2);
-    const bg      = `rgba(${r},${g},${b},${alpha})`;
-    const textCol = intensity > 0.45 ? '#fff' : '#3A4A5C';
-    const subCol  = intensity > 0.45 ? 'rgba(255,255,255,0.78)' : '#5A6A80';
-    const disp    = metric === 'funding' ? Math.round(avg) + '億円/社' : '+' + Math.round(avg) + '人/社';
-    const isSel   = s.name === chActiveAreaGroup;
-    return `<div class="tmc${isSel?' sel':''}" style="background:${bg};flex-grow:${Math.max(avg,1)}${isSel?';outline:2px solid rgba(255,255,255,0.8)':''}" data-sector="${s.name}">
-      <div class="tml" style="color:${textCol}">${escapeHtml(s.name)}</div>
-      <div class="tmv" style="color:${subCol}">${disp}</div>
-      <div class="tmc2" style="color:${subCol}">${s.count}社</div>
-    </div>`;
-  }).join('');
-  (document.getElementById('page-chumoku') || document).querySelectorAll('.tmc').forEach(cell => {
-    cell.addEventListener('click', function() {
-      chActiveAreaGroup = this.dataset.sector;
-      const htf = document.getElementById('ht-f');
-      renderTreemap(htf && htf.classList.contains('active') ? 'funding' : 'growth');
-      renderGroupCards('area');
-      renderSelectedCards('area');
-    });
-  });
-}
+function renderTreemap(metric){const tm=document.getElementById('treemap');if(!tm)return;const pool=buildChPool();const defs=buildSectorDefs(pool);if(!defs.length){tm.innerHTML='<div style="padding:16px;color:var(--text3)">データなし</div>';return;}const vals=defs.map(s=>metric==='funding'?(s.funding/s.count):(s.growth/s.count));const maxV=Math.max(...vals,1);tm.innerHTML=defs.map((s,i)=>{const avg=vals[i];const intensity=avg/maxV;const r=parseInt(s.color.slice(1,3),16),g=parseInt(s.color.slice(3,5),16),b=parseInt(s.color.slice(5,7),16);const alpha=(0.18+0.72*intensity).toFixed(2);const bg=`rgba(${r},${g},${b},${alpha})`;const textCol=intensity>0.45?'#fff':'#3A4A5C';const subCol=intensity>0.45?'rgba(255,255,255,0.78)':'#5A6A80';const disp=metric==='funding'?Math.round(avg)+'億円/社':'+'+Math.round(avg)+'人/社';const isSel=s.name===chActiveAreaGroup;return `<div class="tmc${isSel?' sel':''}" style="background:${bg};flex-grow:${Math.max(avg,1)}${isSel?';outline:2px solid rgba(255,255,255,0.8)':''}" data-sector="${s.name}"><div class="tml" style="color:${textCol}">${escapeHtml(s.name)}</div><div class="tmv" style="color:${subCol}">${disp}</div><div class="tmc2" style="color:${subCol}">${s.count}社</div></div>`;}).join('');(document.getElementById('page-chumoku')||document).querySelectorAll('.tmc').forEach(cell=>{cell.addEventListener('click',function(){chActiveAreaGroup=this.dataset.sector;const htf=document.getElementById('ht-f');renderTreemap(htf&&htf.classList.contains('active')?'funding':'growth');renderGroupCards('area');renderSelectedCards('area');});});}
 
-// ── グループTop5 ──────────────────────────────────────────────
-function groupTop5Html(groupName, coList, metric) {
-  const sorted = [...coList].sort((a, b) => metric === 'funding' ? b.funding - a.funding : b.hcGrowth - a.hcGrowth);
-  if (!sorted.length) return '<div style="padding:8px;color:var(--text3);font-size:10px">企業データなし</div>';
-  return sorted.slice(0, 5).map((c, i) => {
-    const val = metric === 'funding' ? c.funding + '億円' : '+' + c.hcGrowth + '人';
-    return `<div class="gc-row ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer" title="${escapeHtml(c.name)}の詳細へ">
-      <span class="gc-rank">${i+1}</span>
-      <span class="gc-dot" style="background:${c.color}"></span>
-      <span class="gc-n">${escapeHtml(c.name)}</span>
-      <span class="gc-v">${val}</span>
-      <span style="font-size:9px;color:var(--text3);margin-left:2px">›</span>
-    </div>`;
-  }).join('');
-}
+function groupTop5Html(groupName,coList,metric){const sorted=[...coList].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);if(!sorted.length)return '<div style="padding:8px;color:var(--text3);font-size:10px">企業データなし</div>';return sorted.slice(0,5).map((c,i)=>{const val=metric==='funding'?c.funding+'億円':'+'+c.hcGrowth+'人';return `<div class="gc-row ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="gc-rank">${i+1}</span><span class="gc-dot" style="background:${c.color}"></span><span class="gc-n">${escapeHtml(c.name)}</span><span class="gc-v">${val}</span><span style="font-size:9px;color:var(--text3);margin-left:2px">›</span></div>`;}).join('');}
 
-// ── グループカード（領域別・シリーズ別） ─────────────────────
-function renderGroupCards(type) {
-  const pool          = buildChPool();
-  const defs          = buildSectorDefs(pool);
-  const containerId   = type === 'area' ? 'sector-tops' : 'series-tops';
-  const activeGroup   = type === 'area' ? chActiveAreaGroup : chActiveSeriesGroup;
-  const el            = document.getElementById(containerId);
-  if (!el) return;
+function renderGroupCards(type){const pool=buildChPool();const defs=buildSectorDefs(pool);const containerId=type==='area'?'sector-tops':'series-tops';const activeGroup=type==='area'?chActiveAreaGroup:chActiveSeriesGroup;const el=document.getElementById(containerId);if(!el)return;let items;if(type==='area'){items=defs.slice(0,8);}else{const existingSeries=[...new Set(pool.map(c=>c.series).filter(s=>s&&s!=='—'))];const ordered=chSeriesOrder.filter(s=>existingSeries.includes(s));const rest=existingSeries.filter(s=>!chSeriesOrder.includes(s));items=[...ordered,...rest].map(s=>({name:s,color:chSeriesColors[s]||'#5A6A80'}));}if(!items.length){el.innerHTML='<div style="padding:16px;color:var(--text3);font-size:11px">データなし</div>';return;}el.innerHTML=items.map(item=>{const gname=item.name;const hexCol=item.color;const r=parseInt(hexCol.slice(1,3),16),g=parseInt(hexCol.slice(3,5),16),b=parseInt(hexCol.slice(5,7),16);const headerBg=`rgba(${r},${g},${b},0.10)`;const borderCol=`rgba(${r},${g},${b},0.35)`;const isSelected=gname===activeGroup;const cos=type==='area'?pool.filter(c=>c.sector===gname):pool.filter(c=>c.series===gname);return `<div class="group-card${isSelected?' selected':''}" data-group="${gname}" data-type="${type}" style="border-color:${isSelected?hexCol:borderCol}${isSelected?';border-width:1.5px;background:rgba('+r+','+g+','+b+',0.05)':''}"><div class="gc-top"><div class="gc-name" style="color:${hexCol}">${escapeHtml(gname)}</div><span class="gc-badge" style="color:${hexCol};border-color:${borderCol};background:${headerBg}">${cos.length}社</span></div><div class="gc-metric-tabs"><div class="gc-mt${chGlobalMetric==='funding'?' active':''}" data-m="funding" data-group="${gname}" data-type="${type}">調達額</div><div class="gc-mt${chGlobalMetric==='growth'?' active':''}" data-m="growth" data-group="${gname}" data-type="${type}">社員数</div></div><div class="gc-list" id="gc-list-${type}-${gname.replace(/\s/g,'_')}">${groupTop5Html(gname,cos,chGlobalMetric)}</div></div>`;}).join('');el.querySelectorAll('.group-card').forEach(card=>{card.addEventListener('click',function(e){if(e.target.classList.contains('gc-mt'))return;if(type==='area')chActiveAreaGroup=this.dataset.group;else chActiveSeriesGroup=this.dataset.group;renderGroupCards(type);renderSelectedCards(type);});});el.querySelectorAll('.gc-mt').forEach(btn=>{btn.addEventListener('click',function(e){e.stopPropagation();const m=this.dataset.m;const gname=this.dataset.group;const t=this.dataset.type;const container=this.closest('.group-card');container.querySelectorAll('.gc-mt').forEach(b=>b.classList.remove('active'));this.classList.add('active');const cos=t==='area'?pool.filter(c=>c.sector===gname):pool.filter(c=>c.series===gname);const listEl=document.getElementById('gc-list-'+t+'-'+gname.replace(/\s/g,'_'));if(listEl)listEl.innerHTML=groupTop5Html(gname,cos,m);});});el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);if(co)showPage('company',co.id);});});}
 
-  let items;
-  if (type === 'area') {
-    items = defs.slice(0, 8);
-  } else {
-    // COMPANIESに存在するシリーズのみ表示（順序はchSeriesOrder優先）
-    const existingSeries = [...new Set(pool.map(c => c.series).filter(s => s && s !== '—'))];
-    const ordered = chSeriesOrder.filter(s => existingSeries.includes(s));
-    const rest    = existingSeries.filter(s => !chSeriesOrder.includes(s));
-    items = [...ordered, ...rest].map(s => ({ name: s, color: chSeriesColors[s] || '#5A6A80' }));
-  }
+function renderSelectedCards(type){const pool=buildChPool();const outputId=type==='area'?'area-selected-cards':'series-selected-cards';const activeGroup=type==='area'?chActiveAreaGroup:chActiveSeriesGroup;const accentColor=type==='area'?(buildSectorDefs(pool).find(s=>s.name===activeGroup)||{color:'#3A4A5C'}).color:(chSeriesColors[activeGroup]||'#3A4A5C');const r=parseInt(accentColor.slice(1,3),16),g=parseInt(accentColor.slice(3,5),16),b=parseInt(accentColor.slice(5,7),16);const cos=type==='area'?pool.filter(c=>c.sector===activeGroup):pool.filter(c=>c.series===activeGroup);const sorted=[...cos].sort((a,b2)=>chGlobalMetric==='funding'?b2.funding-a.funding:b2.hcGrowth-a.hcGrowth).slice(0,15);const el=document.getElementById(outputId);if(!el)return;el.innerHTML=`<div class="sel-label" style="border-left-color:${accentColor};background:rgba(${r},${g},${b},0.07);color:${accentColor}"><span style="width:8px;height:8px;background:${accentColor};border-radius:50%;display:inline-block;flex-shrink:0"></span>${escapeHtml(activeGroup)} — トップ${sorted.length}企業<div class="switch-bar"><div class="swbtn sel-sw${chGlobalMetric==='funding'?' active':''}" data-sm="funding" data-group="${activeGroup}" data-type="${type}" style="${chGlobalMetric==='funding'?'background:'+accentColor+';border-color:'+accentColor+';color:#fff':''}">調達額順</div><div class="swbtn sel-sw${chGlobalMetric==='growth'?' active':''}" data-sm="growth" data-group="${activeGroup}" data-type="${type}" style="${chGlobalMetric==='growth'?'background:'+accentColor+';border-color:'+accentColor+';color:#fff':''}">社員数順</div></div></div><div class="cocards" id="${type}-cards-inner">${sorted.length>0?sorted.map((c,i)=>chCoCardHtml(c,i)).join(''):'<div style="padding:16px;color:var(--text3);font-size:11px">企業データは準備中です</div>'}</div>`;el.querySelectorAll('.sel-sw').forEach(btn=>{btn.addEventListener('click',function(){const m=this.dataset.sm;const gname=this.dataset.group;const t=this.dataset.type;const pool2=buildChPool();const allCos=t==='area'?pool2.filter(c=>c.sector===gname):pool2.filter(c=>c.series===gname);const resorted=[...allCos].sort((a,b2)=>m==='funding'?b2.funding-a.funding:b2.hcGrowth-a.hcGrowth).slice(0,15);el.querySelectorAll('.sel-sw').forEach(b=>{b.classList.remove('active');b.style.background='';b.style.borderColor='';b.style.color='';});this.classList.add('active');this.style.background=accentColor;this.style.borderColor=accentColor;this.style.color='#fff';const inner=document.getElementById(t+'-cards-inner');if(inner)inner.innerHTML=resorted.map((c,i)=>chCoCardHtml(c,i)).join('');});});}
 
-  if (!items.length) { el.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:11px">データなし</div>'; return; }
+function renderDynamicTopics(){const bizEl=document.getElementById('biz-topics');const orgEl=document.getElementById('org-topics');if(!bizEl&&!orgEl)return;const allTopics=[];Object.keys(window.EVENTS||{}).forEach(coId=>{const co=COMPANIES.find(x=>String(x.id)===String(coId)||x.name===coId);(EVENTS[coId]||[]).forEach(t=>allTopics.push({...t,coName:co?co.name:coId,coColor:co?co.color:'#888780',coId:coId}));});allTopics.sort((a,b)=>b.year-a.year||(b.date||'').localeCompare(a.date||''));const bizTopics=allTopics.filter(t=>/prd|biz|product|service|business|プロダクト|事業|調達|funding|award|受賞|partner|パートナー/i.test(t.type));const orgTopics=allTopics.filter(t=>/org|workstyle|culture|hiring|採用|組織|カルチャー|環境/i.test(t.type));function topicHtml(t){return `<div class="ev-item" style="border-left:2px solid ${t.coColor}"><div style="display:flex;gap:6px;align-items:center;margin-bottom:3px"><span style="font-size:9px;background:${t.coColor}20;color:${t.coColor};padding:1px 6px;border-radius:10px;font-weight:500">${escapeHtml(t.coName)}</span><span style="font-size:9px;color:var(--text3)">${t.date||t.year+'年'}</span><span style="font-size:9px;color:var(--text3)">${escapeHtml(t.type)}</span></div><div style="font-size:11px;font-weight:500;line-height:1.4">${t.url?'<a href="'+escapeHtml(t.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+escapeHtml(t.title)+'</a>':escapeHtml(t.title)}</div>${t.desc?'<div style="font-size:10px;color:var(--text2);margin-top:2px">'+escapeHtml(t.desc)+'</div>':''}</div>`;}if(bizEl)bizEl.innerHTML=bizTopics.length?bizTopics.slice(0,10).map(topicHtml).join(''):'<div class="events-empty">事業トピックスデータなし</div>';if(orgEl)orgEl.innerHTML=orgTopics.length?orgTopics.slice(0,10).map(topicHtml).join(''):'<div class="events-empty">組織トピックスデータなし</div>';}
 
-  el.innerHTML = items.map(item => {
-    const gname  = item.name;
-    const hexCol = item.color;
-    const r = parseInt(hexCol.slice(1,3),16), g = parseInt(hexCol.slice(3,5),16), b = parseInt(hexCol.slice(5,7),16);
-    const headerBg  = `rgba(${r},${g},${b},0.10)`;
-    const borderCol = `rgba(${r},${g},${b},0.35)`;
-    const isSelected = gname === activeGroup;
-    const cos = type === 'area'
-      ? pool.filter(c => c.sector === gname)
-      : pool.filter(c => c.series === gname);
-    return `<div class="group-card${isSelected?' selected':''}" data-group="${gname}" data-type="${type}" style="border-color:${isSelected?hexCol:borderCol}${isSelected?';border-width:1.5px;background:rgba('+r+','+g+','+b+',0.05)':''}">
-      <div class="gc-top">
-        <div class="gc-name" style="color:${hexCol}">${escapeHtml(gname)}</div>
-        <span class="gc-badge" style="color:${hexCol};border-color:${borderCol};background:${headerBg}">${cos.length}社</span>
-      </div>
-      <div class="gc-metric-tabs">
-        <div class="gc-mt${chGlobalMetric==='funding'?' active':''}" data-m="funding" data-group="${gname}" data-type="${type}">調達額</div>
-        <div class="gc-mt${chGlobalMetric==='growth'?' active':''}" data-m="growth" data-group="${gname}" data-type="${type}">社員数</div>
-      </div>
-      <div class="gc-list" id="gc-list-${type}-${gname.replace(/\s/g,'_')}">${groupTop5Html(gname, cos, chGlobalMetric)}</div>
-    </div>`;
-  }).join('');
+function refreshChumokuPage(){const pool=buildChPool();if(!pool.length)return;const defs=buildSectorDefs(pool);if(!chActiveAreaGroup&&defs.length)chActiveAreaGroup=defs[0].name;if(!chActiveSeriesGroup){const existingSeries=[...new Set(pool.map(c=>c.series).filter(s=>s&&s!=='—'))];const first=chSeriesOrder.find(s=>existingSeries.includes(s))||existingSeries[0]||'';chActiveSeriesGroup=first;}renderRankList('rfunding','funding');renderRankList('rheadcount','hcGrowth');renderCoCardsDynamic(chGlobalMetric);renderGroupCards('area');renderSelectedCards('area');renderDynamicTopics();}
 
-  el.querySelectorAll('.group-card').forEach(card => {
-    card.addEventListener('click', function(e) {
-      if (e.target.classList.contains('gc-mt')) return;
-      if (type === 'area') chActiveAreaGroup = this.dataset.group;
-      else chActiveSeriesGroup = this.dataset.group;
-      renderGroupCards(type);
-      renderSelectedCards(type);
-    });
-  });
-  el.querySelectorAll('.gc-mt').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const m     = this.dataset.m;
-      const gname = this.dataset.group;
-      const t     = this.dataset.type;
-      const container = this.closest('.group-card');
-      container.querySelectorAll('.gc-mt').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      const cos = t === 'area' ? pool.filter(c => c.sector === gname) : pool.filter(c => c.series === gname);
-      const listEl = document.getElementById('gc-list-' + t + '-' + gname.replace(/\s/g,'_'));
-      if (listEl) listEl.innerHTML = groupTop5Html(gname, cos, m);
-    });
-  });
-  // gc-row クリック
-  el.querySelectorAll('.ch-nav-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const co = COMPANIES.find(x => String(x.id) === String(row.dataset.id)) ||
-                 COMPANIES.find(x => x.name === row.dataset.name);
-      if (co) showPage('company', co.id);
-    });
-  });
-}
-
-// ── 選択グループの企業カード ──────────────────────────────────
-function renderSelectedCards(type) {
-  const pool        = buildChPool();
-  const outputId    = type === 'area' ? 'area-selected-cards' : 'series-selected-cards';
-  const activeGroup = type === 'area' ? chActiveAreaGroup : chActiveSeriesGroup;
-  const accentColor = type === 'area'
-    ? (buildSectorDefs(pool).find(s => s.name === activeGroup) || {color:'#3A4A5C'}).color
-    : (chSeriesColors[activeGroup] || '#3A4A5C');
-  const r = parseInt(accentColor.slice(1,3),16), g = parseInt(accentColor.slice(3,5),16), b = parseInt(accentColor.slice(5,7),16);
-  const cos    = type === 'area' ? pool.filter(c => c.sector === activeGroup) : pool.filter(c => c.series === activeGroup);
-  const sorted = [...cos].sort((a, b2) => chGlobalMetric === 'funding' ? b2.funding - a.funding : b2.hcGrowth - a.hcGrowth).slice(0, 15);
-  const el     = document.getElementById(outputId);
-  if (!el) return;
-  el.innerHTML = `
-    <div class="sel-label" style="border-left-color:${accentColor};background:rgba(${r},${g},${b},0.07);color:${accentColor}">
-      <span style="width:8px;height:8px;background:${accentColor};border-radius:50%;display:inline-block;flex-shrink:0"></span>
-      ${escapeHtml(activeGroup)} — トップ${sorted.length}企業
-      <div class="switch-bar">
-        <div class="swbtn sel-sw${chGlobalMetric==='funding'?' active':''}" data-sm="funding" data-group="${activeGroup}" data-type="${type}" style="${chGlobalMetric==='funding'?'background:'+accentColor+';border-color:'+accentColor+';color:#fff':''}">調達額順</div>
-        <div class="swbtn sel-sw${chGlobalMetric==='growth'?' active':''}" data-sm="growth" data-group="${activeGroup}" data-type="${type}" style="${chGlobalMetric==='growth'?'background:'+accentColor+';border-color:'+accentColor+';color:#fff':''}">社員数順</div>
-      </div>
-    </div>
-    <div class="cocards" id="${type}-cards-inner">${sorted.length > 0 ? sorted.map((c, i) => chCoCardHtml(c, i)).join('') : '<div style="padding:16px;color:var(--text3);font-size:11px">企業データは準備中です</div>'}</div>`;
-  el.querySelectorAll('.sel-sw').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const m     = this.dataset.sm;
-      const gname = this.dataset.group;
-      const t     = this.dataset.type;
-      const pool2 = buildChPool();
-      const allCos   = t === 'area' ? pool2.filter(c => c.sector === gname) : pool2.filter(c => c.series === gname);
-      const resorted = [...allCos].sort((a, b2) => m === 'funding' ? b2.funding - a.funding : b2.hcGrowth - a.hcGrowth).slice(0, 15);
-      el.querySelectorAll('.sel-sw').forEach(b => { b.classList.remove('active'); b.style.background=''; b.style.borderColor=''; b.style.color=''; });
-      this.classList.add('active'); this.style.background = accentColor; this.style.borderColor = accentColor; this.style.color = '#fff';
-      const inner = document.getElementById(t + '-cards-inner');
-      if (inner) inner.innerHTML = resorted.map((c, i) => chCoCardHtml(c, i)).join('');
-    });
-  });
-}
-
-// ── bizTopics / orgTopics をEVENTSから動的生成 ────────────────
-function renderDynamicTopics() {
-  const bizEl = document.getElementById('biz-topics');
-  const orgEl = document.getElementById('org-topics');
-  if (!bizEl && !orgEl) return;
-
-  // EVENTS から全トピックスを収集
-  const allTopics = [];
-  Object.keys(window.EVENTS || {}).forEach(coId => {
-    const co = COMPANIES.find(x => String(x.id) === String(coId) || x.name === coId);
-    (EVENTS[coId] || []).forEach(t => allTopics.push({ ...t, coName: co ? co.name : coId, coColor: co ? co.color : '#888780', coId: coId }));
-  });
-
-  // 年降順でソート
-  allTopics.sort((a, b) => b.year - a.year || (b.date||'').localeCompare(a.date||''));
-
-  const bizTopics = allTopics.filter(t => /prd|biz|product|service|business|プロダクト|事業|調達|funding|award|受賞|partner|パートナー/i.test(t.type));
-  const orgTopics = allTopics.filter(t => /org|workstyle|culture|hiring|採用|組織|カルチャー|環境/i.test(t.type));
-
-  function topicHtml(t) {
-    return `<div class="ev-item" style="border-left:2px solid ${t.coColor}">
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px">
-        <span style="font-size:9px;background:${t.coColor}20;color:${t.coColor};padding:1px 6px;border-radius:10px;font-weight:500">${escapeHtml(t.coName)}</span>
-        <span style="font-size:9px;color:var(--text3)">${t.date || t.year + '年'}</span>
-        <span style="font-size:9px;color:var(--text3)">${escapeHtml(t.type)}</span>
-      </div>
-      <div style="font-size:11px;font-weight:500;line-height:1.4">${t.url ? '<a href="'+escapeHtml(t.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+escapeHtml(t.title)+'</a>' : escapeHtml(t.title)}</div>
-      ${t.desc ? '<div style="font-size:10px;color:var(--text2);margin-top:2px">'+escapeHtml(t.desc)+'</div>' : ''}
-    </div>`;
-  }
-
-  if (bizEl) {
-    if (bizTopics.length) {
-      bizEl.innerHTML = bizTopics.slice(0, 10).map(topicHtml).join('');
-    } else {
-      bizEl.innerHTML = '<div class="events-empty">事業トピックスデータなし</div>';
-    }
-  }
-  if (orgEl) {
-    if (orgTopics.length) {
-      orgEl.innerHTML = orgTopics.slice(0, 10).map(topicHtml).join('');
-    } else {
-      orgEl.innerHTML = '<div class="events-empty">組織トピックスデータなし</div>';
-    }
-  }
-}
-
-// ── 注目一覧ページの全体再描画（API読み込み完了後に呼ぶ） ────
-function refreshChumokuPage() {
-  const pool = buildChPool();
-  if (!pool.length) return;
-
-  // 初期アクティブグループを設定
-  const defs = buildSectorDefs(pool);
-  if (!chActiveAreaGroup && defs.length)   chActiveAreaGroup   = defs[0].name;
-  if (!chActiveSeriesGroup) {
-    const existingSeries = [...new Set(pool.map(c => c.series).filter(s => s && s !== '—'))];
-    const first = chSeriesOrder.find(s => existingSeries.includes(s)) || existingSeries[0] || '';
-    chActiveSeriesGroup = first;
-  }
-
-  renderRankList('rfunding',   'funding');
-  renderRankList('rheadcount', 'hcGrowth');
-  renderCoCardsDynamic(chGlobalMetric);
-  renderGroupCards('area');
-  renderSelectedCards('area');
-  renderDynamicTopics();
-}
-
-// ── API読み込み完了イベントをフック ──────────────────────────
-// applyApiData が呼ばれた後に refreshChumokuPage を実行
-const _origApplyApiData = typeof applyApiData === 'function' ? applyApiData : null;
-if (_origApplyApiData) {
+// applyApiData フック
+const _origApplyApiDataChu = typeof applyApiData === 'function' ? applyApiData : null;
+if (_origApplyApiDataChu) {
+  const _prevChu = window.applyApiData;
   window.applyApiData = function(payload) {
-    _origApplyApiData(payload);
+    _prevChu(payload);
     refreshChumokuPage();
   };
-} else {
-  // applyApiData がまだ定義されていない場合は DOMContentLoaded 後に待機
-  document.addEventListener('startupfile:apiLoaded', refreshChumokuPage);
 }
 
-// ── ローディング中の仮表示 ───────────────────────────────────
-(function initLoadingState() {
-  const loadingHtml = '<div style="padding:24px;color:var(--text3);font-size:12px;text-align:center">データを読み込み中...</div>';
-  ['co-cards','rfunding','rheadcount'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el && !el.innerHTML.trim()) el.innerHTML = loadingHtml;
-  });
-})();
-
-// ── UIイベント登録（ツリーマップ・メトリック切り替え等） ─────
-(function bindEvents() {
-  const chPage = document.getElementById('page-chumoku');
-  if (!chPage) return;
-
-  // ツリーマップ切り替え
-  const htf = chPage.querySelector('#ht-f');
-  const htg = chPage.querySelector('#ht-g');
-  if (htf) htf.addEventListener('click', function() {
-    this.classList.add('active'); htg && htg.classList.remove('active');
-    const note = chPage.querySelector('.hmnote');
-    if (note) note.textContent = '面積・色の濃さ＝1社平均の調達額規模';
-    renderTreemap('funding');
-  });
-  if (htg) htg.addEventListener('click', function() {
-    this.classList.add('active'); htf && htf.classList.remove('active');
-    const note = chPage.querySelector('.hmnote');
-    if (note) note.textContent = '面積・色の濃さ＝1社平均の社員数増加規模';
-    renderTreemap('growth');
-  });
-
-  // グローバルメトリック切り替え
-  chPage.querySelectorAll('#sb-metric .pb').forEach(btn => {
-    btn.addEventListener('click', function() {
-      chPage.querySelectorAll('#sb-metric .pb').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      chGlobalMetric = this.dataset.m;
-      renderGroupCards('area');   renderSelectedCards('area');
-      renderGroupCards('series'); renderSelectedCards('series');
-    });
-  });
-
-  // 期間ボタン
-  chPage.querySelectorAll('#sb-period .pb').forEach(btn => {
-    btn.addEventListener('click', function() {
-      chPage.querySelectorAll('#sb-period .pb').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-
-  // 企業カード閲覧モード切り替え
-  window.setCoCardView = function(mode) {
-    const el      = document.getElementById('co-cards');
-    const listBtn = document.getElementById('co-view-list');
-    const gridBtn = document.getElementById('co-view-grid');
-    if (!el) return;
-    if (mode === 'grid') { el.classList.add('grid-mode'); listBtn && listBtn.classList.remove('active'); gridBtn && gridBtn.classList.add('active'); }
-    else                 { el.classList.remove('grid-mode'); listBtn && listBtn.classList.add('active'); gridBtn && gridBtn.classList.remove('active'); }
-  };
-
-  // タブ切り替え（注目企業/注目領域/シリーズ）
-  let _areasRendered = false, _seriesRendered = false;
-  chPage.querySelectorAll('.mtab').forEach(tab => {
-    tab.addEventListener('click', function() {
-      chPage.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
-      chPage.querySelectorAll('.tp').forEach(p => p.classList.remove('active'));
-      this.classList.add('active');
-      const panel = chPage.querySelector('#panel-' + this.dataset.tab);
-      if (panel) panel.classList.add('active');
-      chPage.querySelectorAll('.sbi').forEach(b => b.classList.toggle('active', b.dataset.nav === this.dataset.tab));
-      if (this.dataset.tab === 'areas' && !_areasRendered) {
-        _areasRendered = true;
-        renderTreemap('funding');
-        renderGroupCards('area');
-        renderSelectedCards('area');
-      }
-      if (this.dataset.tab === 'series' && !_seriesRendered) {
-        _seriesRendered = true;
-        renderGroupCards('series');
-        renderSelectedCards('series');
-      }
-    });
-  });
-  chPage.querySelectorAll('.sbi').forEach(item => {
-    item.addEventListener('click', function() {
-      const tab = this.dataset.nav;
-      chPage.querySelectorAll('.mtab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-      chPage.querySelectorAll('.tp').forEach(p => p.classList.remove('active'));
-      const panel = chPage.querySelector('#panel-' + tab);
-      if (panel) panel.classList.add('active');
-      chPage.querySelectorAll('.sbi').forEach(b => b.classList.toggle('active', b.dataset.nav === tab));
-    });
-  });
-
-  // 企業カード・ランキング行クリック → 個別企業ページ
-  chPage.addEventListener('click', function(e) {
-    const card = e.target.closest('.ch-nav-card');
-    if (card) {
-      const co = COMPANIES.find(x => String(x.id) === String(card.dataset.id)) ||
-                 COMPANIES.find(x => x.name === card.dataset.name);
-      showPage('company', co ? co.id : (card.dataset.id || card.dataset.name));
-    }
-  });
-
-  // 閲覧モードボタン（ctab）
-  chPage.querySelectorAll('.ctab').forEach(tab => {
-    tab.addEventListener('click', function() {
-      chPage.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-      renderCoCardsDynamic(this.dataset.ct);
-    });
-  });
+// UIイベント
+(function bindChumokuEvents(){
+  const chPage=document.getElementById('page-chumoku');if(!chPage)return;
+  const htf=chPage.querySelector('#ht-f'),htg=chPage.querySelector('#ht-g');
+  if(htf)htf.addEventListener('click',function(){this.classList.add('active');htg&&htg.classList.remove('active');const note=chPage.querySelector('.hmnote');if(note)note.textContent='面積・色の濃さ＝1社平均の調達額規模';renderTreemap('funding');});
+  if(htg)htg.addEventListener('click',function(){this.classList.add('active');htf&&htf.classList.remove('active');const note=chPage.querySelector('.hmnote');if(note)note.textContent='面積・色の濃さ＝1社平均の社員数増加規模';renderTreemap('growth');});
+  chPage.querySelectorAll('#sb-metric .pb').forEach(btn=>{btn.addEventListener('click',function(){chPage.querySelectorAll('#sb-metric .pb').forEach(b=>b.classList.remove('active'));this.classList.add('active');chGlobalMetric=this.dataset.m;renderGroupCards('area');renderSelectedCards('area');renderGroupCards('series');renderSelectedCards('series');});});
+  chPage.querySelectorAll('#sb-period .pb').forEach(btn=>{btn.addEventListener('click',function(){chPage.querySelectorAll('#sb-period .pb').forEach(b=>b.classList.remove('active'));this.classList.add('active');});});
+  window.setCoCardView=function(mode){const el=document.getElementById('co-cards');const listBtn=document.getElementById('co-view-list');const gridBtn=document.getElementById('co-view-grid');if(!el)return;if(mode==='grid'){el.classList.add('grid-mode');listBtn&&listBtn.classList.remove('active');gridBtn&&gridBtn.classList.add('active');}else{el.classList.remove('grid-mode');listBtn&&listBtn.classList.add('active');gridBtn&&gridBtn.classList.remove('active');}};
+  let _areasRendered=false,_seriesRendered=false;
+  chPage.querySelectorAll('.mtab').forEach(tab=>{tab.addEventListener('click',function(){chPage.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));chPage.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));this.classList.add('active');const panel=chPage.querySelector('#panel-'+this.dataset.tab);if(panel)panel.classList.add('active');chPage.querySelectorAll('.sbi').forEach(b=>b.classList.toggle('active',b.dataset.nav===this.dataset.tab));if(this.dataset.tab==='areas'&&!_areasRendered){_areasRendered=true;renderTreemap('funding');renderGroupCards('area');renderSelectedCards('area');}if(this.dataset.tab==='series'&&!_seriesRendered){_seriesRendered=true;renderGroupCards('series');renderSelectedCards('series');}});});
+  chPage.querySelectorAll('.sbi').forEach(item=>{item.addEventListener('click',function(){const tab=this.dataset.nav;chPage.querySelectorAll('.mtab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));chPage.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));const panel=chPage.querySelector('#panel-'+tab);if(panel)panel.classList.add('active');chPage.querySelectorAll('.sbi').forEach(b=>b.classList.toggle('active',b.dataset.nav===tab));});});
+  chPage.addEventListener('click',function(e){const card=e.target.closest('.ch-nav-card');if(card){const co=COMPANIES.find(x=>String(x.id)===String(card.dataset.id))||COMPANIES.find(x=>x.name===card.dataset.name);showPage('company',co?co.id:(card.dataset.id||card.dataset.name));}});
+  chPage.querySelectorAll('.ctab').forEach(tab=>{tab.addEventListener('click',function(){chPage.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));this.classList.add('active');renderCoCardsDynamic(this.dataset.ct);});});
 })();
 </script>
 
