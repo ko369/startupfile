@@ -137,7 +137,7 @@ body.sidebar-collapsed {
   font-size: 11px;
   color: var(--text2);
   line-height: 1.6;
-  max-width: 720px;
+  width: 100%;
 }
 .company-summary-line {
   margin-top: 4px;
@@ -1317,7 +1317,7 @@ button:focus-visible,
 
 /* ════ 仮データバナー ════ */
 .mock-banner {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 8px;
   padding: 7px 20px;
@@ -2308,7 +2308,7 @@ button:focus-visible,
       <span class="bc-action" id="bc-chumoku-link" onclick="showPage('chumoku')" title="注目一覧へ" style="display:none">注目一覧で比較 →</span>
     </div>
     <div class="main-header">
-      <div>
+      <div style="flex:1;min-width:0">
         <div class="company-title" id="main-title">データ読込中…</div>
         <div class="company-subtitle" id="main-sub">企業データを読み込んでいます</div>
         <div class="main-mission" id="main-mission"></div>
@@ -3523,6 +3523,8 @@ async function loadSiteData() {
     }
 
     showLoadingState('');
+    // APIデータ取得成功時はバナーを非表示に
+    const mb = document.getElementById('mock-banner'); if(mb) mb.style.display='none';
   } catch (e) {
     apiState.status = 'error';
     apiState.error = e?.message || '不明なエラー';
@@ -4749,7 +4751,7 @@ function chMiniBarHtml(vals,color){if(!vals||!vals.length)return '<span style="c
 
 function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding+'億円':'—'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${chMiniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString()+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${chMiniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding+'億円':'—'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div></div>`;}
 
-function renderRankList(id,key){const el=document.getElementById(id);if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを読み込み中...</div>';return;}el.innerHTML=sorted.map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?val+'億円':'+'+val+'人';return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
+function renderRankList(id,key){const el=document.getElementById(id);if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを読み込み中...</div>';return;}el.innerHTML=sorted.slice(0,15).map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?val+'億円':'+'+val+'人';return `<div class="rrow ch-nav-row" data-name="${escapeHtml(c.name)}" data-id="${c.id}" style="cursor:pointer"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span><span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{row.addEventListener('click',()=>{const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name);showPage('company',co?co.id:row.dataset.id);});});}
 
 function renderCoCardsDynamic(metric){const el=document.getElementById('co-cards');if(!el)return;const pool=buildChPool();const sorted=[...pool].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);if(!sorted.length){el.innerHTML='<div style="padding:24px;color:var(--text3);font-size:12px;text-align:center">データを読み込み中...</div>';return;}el.innerHTML=sorted.map((c,i)=>chCoCardHtml(c,i)).join('');}
 
