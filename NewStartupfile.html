@@ -3614,7 +3614,7 @@ function applyApiData(payload) {
       id:             api.id != null ? String(api.id) : slugify(api.name),
       name:           api.name,
       sub:            buildCompanySub(api),
-      sector:         api.sector || '',
+      sector:         api.sector || 'その他', // [Fix #2] 空文字だと領域フィルター不一致になるため 'その他' にフォールバック
       founding_year:  api.foundingYear || null,
       color:          api.color || '#888780',
       colorDim:       makeColorDim(api.color || '#888780'),
@@ -4527,6 +4527,8 @@ function showPage(page, companyId) {
     history.replaceState(null, '', '#chumoku');
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.title = '注目一覧 | StartupFile';
+    // [Fix #1] データ読込済みなら企業カード・ランキング・領域を描画
+    if (typeof refreshChumokuPage === 'function') refreshChumokuPage();
   }
 }
 
@@ -4627,7 +4629,17 @@ const searchInput=document.getElementById('search-input');
 if(searchInput)searchInput.addEventListener('input',function(){renderSearch(this.value,activeFilter);});
 
 // ── applyApiData フック ──
-(function(){ const prev=typeof applyApiData==='function'?applyApiData:null; if(prev){ window.applyApiData=function(payload){ prev(payload); refreshTopPage(); }; } })();
+// [Fix #1] 二重ラップを避けるため、Top・注目一覧の両リフレッシュを1つのラッパーにまとめる
+(function(){
+  const prev = typeof applyApiData === 'function' ? applyApiData : null;
+  if (prev) {
+    window.applyApiData = function(payload) {
+      prev(payload);
+      if (typeof refreshTopPage     === 'function') refreshTopPage();
+      if (typeof refreshChumokuPage === 'function') refreshChumokuPage();
+    };
+  }
+})();
 </script>
 
 
@@ -4670,7 +4682,7 @@ function renderDynamicTopicsChu(){const allTopics=[];Object.keys(window.EVENTS||
 
 function refreshChumokuPage(){const pool=buildChPool();if(!pool.length)return;const defs=buildSectorDefs(pool);if(!chActiveAreaGroup&&defs.length)chActiveAreaGroup=defs[0].name;if(!chActiveSeriesGroup){const ex=[...new Set(pool.map(c=>c.series).filter(s=>s&&s!=='—'))];chActiveSeriesGroup=chSeriesOrder.find(s=>ex.includes(s))||ex[0]||'';}renderRankList('rfunding','funding');renderRankList('rheadcount','hcGrowth');renderCoCardsDynamic(chGlobalMetric);renderGroupCards('area');renderSelectedCards('area');renderDynamicTopicsChu();}
 
-(function(){const prev=typeof applyApiData==='function'?applyApiData:null;if(prev){window.applyApiData=function(payload){prev(payload);refreshChumokuPage();};}})();
+// [Fix #1] refreshChumokuPage のフックは上の統合IIFEに移動済み
 
 (function bindChumokuEvents(){const chPage=document.getElementById('page-chumoku');if(!chPage)return;const htf=chPage.querySelector('#ht-f'),htg=chPage.querySelector('#ht-g');if(htf)htf.addEventListener('click',function(){this.classList.add('active');htg&&htg.classList.remove('active');const note=chPage.querySelector('.hmnote');if(note)note.textContent='面積・色の濃さ＝1社平均の調達額規模';renderTreemap('funding');});if(htg)htg.addEventListener('click',function(){this.classList.add('active');htf&&htf.classList.remove('active');const note=chPage.querySelector('.hmnote');if(note)note.textContent='面積・色の濃さ＝1社平均の社員数増加規模';renderTreemap('growth');});chPage.querySelectorAll('#sb-metric .pb').forEach(btn=>{btn.addEventListener('click',function(){chPage.querySelectorAll('#sb-metric .pb').forEach(b=>b.classList.remove('active'));this.classList.add('active');chGlobalMetric=this.dataset.m;renderGroupCards('area');renderSelectedCards('area');renderGroupCards('series');renderSelectedCards('series');});});chPage.querySelectorAll('#sb-period .pb').forEach(btn=>{btn.addEventListener('click',function(){chPage.querySelectorAll('#sb-period .pb').forEach(b=>b.classList.remove('active'));this.classList.add('active');});});window.setCoCardView=function(mode){const el=document.getElementById('co-cards');const lb=document.getElementById('co-view-list');const gb=document.getElementById('co-view-grid');if(!el)return;if(mode==='grid'){el.classList.add('grid-mode');lb&&lb.classList.remove('active');gb&&gb.classList.add('active');}else{el.classList.remove('grid-mode');lb&&lb.classList.add('active');gb&&gb.classList.remove('active');}};let _ar=false,_sr=false;chPage.querySelectorAll('.mtab').forEach(tab=>{tab.addEventListener('click',function(){chPage.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));chPage.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));this.classList.add('active');const panel=chPage.querySelector('#panel-'+this.dataset.tab);if(panel)panel.classList.add('active');chPage.querySelectorAll('.sbi').forEach(b=>b.classList.toggle('active',b.dataset.nav===this.dataset.tab));if(this.dataset.tab==='areas'&&!_ar){_ar=true;renderTreemap('funding');renderGroupCards('area');renderSelectedCards('area');}if(this.dataset.tab==='series'&&!_sr){_sr=true;renderGroupCards('series');renderSelectedCards('series');}});});chPage.querySelectorAll('.sbi').forEach(item=>{item.addEventListener('click',function(){const tab=this.dataset.nav;chPage.querySelectorAll('.mtab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));chPage.querySelectorAll('.tp').forEach(p=>p.classList.remove('active'));const panel=chPage.querySelector('#panel-'+tab);if(panel)panel.classList.add('active');chPage.querySelectorAll('.sbi').forEach(b=>b.classList.toggle('active',b.dataset.nav===tab));});});chPage.addEventListener('click',function(e){const card=e.target.closest('.ch-nav-card');if(card){const co=COMPANIES.find(x=>String(x.id)===String(card.dataset.id))||COMPANIES.find(x=>x.name===card.dataset.name);showPage('company',co?co.id:(card.dataset.id||card.dataset.name));}});chPage.querySelectorAll('.ctab').forEach(tab=>{tab.addEventListener('click',function(){chPage.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));this.classList.add('active');renderCoCardsDynamic(this.dataset.ct);});});})();
 </script>
