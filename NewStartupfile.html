@@ -3756,19 +3756,12 @@ function useMockData() {
       }
     });
     renderSidebar();
-    renderCoCards('funding');
     buildSparklines();
     selectCompany(0);
     document.getElementById('mock-banner') && (document.getElementById('mock-banner').style.display = 'flex');
-    // トピックス表示
-    if (typeof renderTopics === 'function') {
-      if (typeof bizTopics !== 'undefined') renderTopics('biz-topics', bizTopics);
-      if (typeof orgTopics !== 'undefined') renderTopics('org-topics', orgTopics);
-    }
-    // 検索ページのトピックスも更新
-    if (typeof renderFunding === 'function' && typeof fundingWeek !== 'undefined') {
-      renderFunding(fundingWeek);
-    }
+    // 動的版でトップページ・注目一覧を更新
+    if (typeof refreshTopPage === 'function')     refreshTopPage();
+    if (typeof refreshChumokuPage === 'function') refreshChumokuPage();
     showLoadingState('');
   }
 }
@@ -3877,13 +3870,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) return;
 
-  // 静的トピックス・調達データ（DB未接続時も表示）
-  if (typeof renderFunding === 'function' && typeof fundingWeek !== 'undefined') renderFunding(fundingWeek);
-  if (typeof renderTopics === 'function') {
-    if (typeof bizTopics !== 'undefined') renderTopics('biz-topics', bizTopics);
-    if (typeof orgTopics !== 'undefined') renderTopics('org-topics', orgTopics);
-  }
-  if (typeof renderCoCards === 'function' && typeof companies !== 'undefined') renderCoCards('funding');
   buildSparklines();
   selectCompany(Math.min(currentCompanyIndex, COMPANIES.length - 1));
 });
