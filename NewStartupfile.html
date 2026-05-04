@@ -2172,7 +2172,7 @@ button:focus-visible,
 .tmc:hover::after { opacity: 1; }
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-hG6tLc9q8bFM5OQASDTJTJJg/wn8PP0PcayE3I2H1972/F7ktiSvWutAuQIkt4QUTIhiaFEnkrKea7XHUv1ugg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
 
 </head>
 
@@ -3230,33 +3230,37 @@ function updateMetrics(company) {
 }
 
 function selectCompany(idx) {
-  if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
-    updateMetrics(null);
-  // サイドバー折りたたみ状態を復元
+  // サイドバー折りたたみ状態を復元（初回のみ）
   try {
     if (localStorage.getItem('sf_sidebar_collapsed') === '1') {
       document.body.classList.add('sidebar-collapsed');
       updateSidebarToggle();
     }
   } catch(e) {}
-  // 前/次企業ナビゲーション
+  // 前/次企業ナビゲーション（初回のみ登録）
   const prevBtn = document.getElementById('btn-prev-co');
   const nextBtn = document.getElementById('btn-next-co');
-  if (prevBtn) prevBtn.addEventListener('click', goToPrevCompany);
-  if (nextBtn) nextBtn.addEventListener('click', goToNextCompany);
-  // キーボード ← → で企業切替（個別企業ページ表示中のみ）
-  document.addEventListener('keydown', function(e) {
-    if (document.getElementById('page-company').style.display === 'none') return;
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.key === 'ArrowLeft') goToPrevCompany();
-    if (e.key === 'ArrowRight') goToNextCompany();
-  });
+  if (prevBtn && !prevBtn.dataset.bound) { prevBtn.dataset.bound='1'; prevBtn.addEventListener('click', goToPrevCompany); }
+  if (nextBtn && !nextBtn.dataset.bound) { nextBtn.dataset.bound='1'; nextBtn.addEventListener('click', goToNextCompany); }
+  // キーボード ← → で企業切替
+  if (!window._keydownBound) {
+    window._keydownBound = true;
+    document.addEventListener('keydown', function(e) {
+      if (document.getElementById('page-company').style.display === 'none') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowLeft') goToPrevCompany();
+      if (e.key === 'ArrowRight') goToNextCompany();
+    });
+  }
   // mock-banner 閉じるボタン
   const mbClose = document.getElementById('mock-banner-close-btn');
-  if (mbClose) mbClose.addEventListener('click', function() {
+  if (mbClose && !mbClose.dataset.bound) { mbClose.dataset.bound='1'; mbClose.addEventListener('click', function() {
     const banner = document.getElementById('mock-banner');
     if (banner) banner.style.display = 'none';
-  });
+  }); }
+
+  if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
+    updateMetrics(null);
     return;
   }
   const safeIdx = Math.max(0, Math.min(idx, COMPANIES.length - 1));
@@ -4814,6 +4818,18 @@ function renderSearch(query,sector){
   const totalCount=filtered.length;
   const showCount=Math.min(8,filtered.length);
   const countHtml=filtered.length>12?`<div style="font-size:9px;color:var(--text3);padding:4px 2px 2px">${filtered.length}社中 ${showCount}社を表示</div>`:'';
+  // 前方一致 → 社員数降順ソート
+  const _lq=(query||'').trim().toLowerCase();
+  if(_lq){
+    filtered.sort((a,b)=>{
+      const an=(a.name||'').toLowerCase(),bn=(b.name||'').toLowerCase();
+      const af=an.startsWith(_lq)?0:1, bf=bn.startsWith(_lq)?0:1;
+      if(af!==bf)return af-bf;
+      const ah=a.data?.length?a.data[a.data.length-1].count:0;
+      const bh=b.data?.length?b.data[b.data.length-1].count:0;
+      return bh-ah;
+    });
+  }
   el.innerHTML=countHtml+filtered.slice(0,12).map(c=>`<div class="sr-row" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細を見る"><span class="sr-dot" style="background:${c.color}"></span><span class="sr-name">${escapeHtml(c.name)}</span><span class="sr-sector">${escapeHtml(c.sector||'')}</span><span class="sr-series">${escapeHtml(c.series||'—')}</span><span class="sr-hc">${c.headcount?c.headcount.toLocaleString('ja-JP')+'人':'—'}</span><span class="sr-arrow" style="color:var(--slate)">›</span></div>`).join('');
   el.querySelectorAll('.sr-row').forEach(row=>{ const handler=()=>{ const co=COMPANIES.find(x=>String(x.id)===String(row.dataset.id))||COMPANIES.find(x=>x.name===row.dataset.name); showPage('company',co?co.id:row.dataset.id); }; row.addEventListener('click',handler); row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handler();}}); });
   updateSidebarFilterBadges(pool,sector);
