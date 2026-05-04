@@ -220,6 +220,7 @@ body.sidebar-collapsed .sidebar-body {
   border-left: 2px solid transparent;
   transition: all 0.18s;
   position: relative;
+  min-width: 144px;
 }
 .company-card:hover { background: var(--bg3); }
 .company-card.active {
@@ -533,7 +534,7 @@ h1.company-title, .company-title {
 .svc-m { background: var(--bg3); border-radius: var(--r-sm); padding: 10px 12px; }
 .svc-ml { font-size: 9px; color: var(--text3); margin-bottom: 4px; letter-spacing: .04em; }
 .svc-mv { font-size: 15px; font-weight: 500; color: var(--slate-dark); line-height: 1; }
-.svc-ms { font-size: 9px; color: var(--text3); margin-top: 3px; font-family: var(--font-mono); }
+
 .svc-block { padding: 0 var(--page-pad-x) 14px; }
 .svc-block-label { font-size: 9px; color: var(--text3); letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
 .svc-block-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
@@ -726,7 +727,6 @@ h1.company-title, .company-title {
 }
 
 /* Transition */
-.company-card { transition: background 0.15s, border-color 0.15s; }
 canvas { transition: opacity 0.3s; }
 
 /* ══════════════════════════════════════
@@ -1083,12 +1083,8 @@ canvas { transition: opacity 0.3s; }
 .nc-title{font-size:11px;font-weight:500;color:var(--text);line-height:1.5}
 
 /* ════ ページ表示制御 ════ */
-#page-top     { display:block; }
 
 /* ── トップページ: グリッドレイアウト ── */
-#page-top {
-  grid-column: 1 / -1;   /* .app グリッドの全幅を占有 */
-}
 /* .tp-page は独自の2カラムグリッドを持つ */
 #page-top .tp-page {
   display:grid;
@@ -1584,7 +1580,6 @@ button:focus-visible,
 .data-error-btn.primary:hover { background: var(--slate); }
 
 /* ════ サイドバー: 現在表示中インジケーター ════ */
-.company-card { position: relative; }
 .company-card.active::before {
   content: '';
   position: absolute;
@@ -1886,7 +1881,7 @@ button:focus-visible,
   .header-right { order: 2; margin-left: auto; }
   .sidebar-head { padding: 0 12px 8px; min-width: max-content; }
   .sidebar-body { display: flex; gap: 0; min-width: max-content; }
-  .company-card { min-width: 144px; }
+  
   .company-badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
   .main-mission { font-size: 10px; line-height: 1.6; }
   
@@ -2099,6 +2094,8 @@ button:focus-visible,
 /* ════ よく使うユーティリティ ════ */
 .meta-hint { font-size: 9px; color: var(--text3); }
 .mb-0 { margin-bottom: 0; }
+.flex-base-4 { display: flex; align-items: baseline; gap: 4px; }
+.flex-center-6 { display: flex; align-items: center; gap: 6px; }
 
 /* ════ トピックスタイムライン 凡例タグ ════ */
 .ttag {
@@ -2254,7 +2251,7 @@ button:focus-visible,
           <div class="search-inner">
             <div class="search-input-wrap">
               <div class="search-icon"></div>
-              <input class="search-input" id="search-input" placeholder="企業名・業種で検索… (1056社)" autocomplete="off" maxlength="100"/>
+              <input class="search-input" id="search-input" placeholder="企業名・業種で検索… (1056社)" autocomplete="off" maxlength="100" aria-label="企業名・業種で検索"/>
               <button class="search-clear-btn" id="search-clear" type="button" aria-label="検索をクリア" style="display:none">✕</button>
             </div>
             <button class="search-btn" id="search-btn" type="button" aria-label="検索実行">検索</button>
@@ -2362,7 +2359,7 @@ button:focus-visible,
         <div class="chart-latest-dot" id="chart-latest-dot" style="background:var(--teal)"></div>
         <div>
           <div style="font-size:9px;color:var(--text3);margin-bottom:2px">最新社員数</div>
-          <div style="display:flex;align-items:baseline;gap:4px">
+          <div class="flex-base-4">
             <span class="chart-latest-val" id="chart-latest-hc">—</span>
             <span style="font-size:10px;color:var(--text3)">名</span>
             <span class="chart-latest-year" id="chart-latest-year"></span>
@@ -2373,7 +2370,7 @@ button:focus-visible,
         <div class="chart-latest-dot" style="background:var(--color-funding-light)"></div>
         <div>
           <div style="font-size:9px;color:var(--text3);margin-bottom:2px">累計調達</div>
-          <div style="display:flex;align-items:baseline;gap:4px">
+          <div class="flex-base-4">
             <span class="chart-latest-val" id="chart-latest-fund" style="color:var(--color-funding-light)">—</span>
             <span style="font-size:10px;color:var(--text3)">億円</span>
           </div>
@@ -2456,8 +2453,8 @@ button:focus-visible,
         <thead>
           <tr>
             <th scope="col" style="width:54px">年</th>
-            <th scope="col" style="width:110px" id="th-count" class="sortable-th" title="クリックでソート" style="cursor:pointer">社員数 <span class="sort-icon">↕</span></th>
-            <th scope="col" style="width:130px" id="th-funding" class="sortable-th" title="クリックでソート" style="cursor:pointer">資金調達 <span class="sort-icon">↕</span></th>
+            <th scope="col" style="width:110px;cursor:pointer" id="th-count" class="sortable-th" title="クリックでソート">社員数 <span class="sort-icon">↕</span></th>
+            <th scope="col" style="width:130px;cursor:pointer" id="th-funding" class="sortable-th" title="クリックでソート">資金調達 <span class="sort-icon">↕</span></th>
             <th scope="col">ソース</th>
           </tr>
         </thead>
@@ -3536,7 +3533,7 @@ function normalizeEnvScores(items) {
 
 
 function applyApiData(payload) {
-  invalidatePoolCache(); // データ更新時にメモ化キャッシュを無効化
+  _chPoolCache = null; _topPoolCache = null; // メモ化キャッシュを無効化（データ更新時）
   const rawCompanies = Array.isArray(payload?.companies) ? payload.companies.slice() : [];
   const normalized = rawCompanies.map((api, idx) => ({
     ...api,
@@ -3659,7 +3656,6 @@ function showLoadingState(msg) {
         <div class="data-error-msg">${escapeHtml(msg)}</div>
         <div class="data-error-actions">
           <button class="data-error-btn primary" type="button" onclick="location.reload()" aria-label="ページを再読み込み">再読み込み</button>
-          <button class="data-error-btn" type="button" onclick="useMockData()" aria-label="サンプルデータで確認">サンプルデータで確認</button>
         </div>
       </div>`;
       if (stripBiz) stripBiz.innerHTML = errorHtml;
@@ -3674,47 +3670,7 @@ function showLoadingState(msg) {
   }
 }
 
-function useMockData() {
-  // mockPayload は削除済み（フォールバック不要）
-  if (false) {
-    // applyApiData(mockPayload);
-    ([]).forEach(mc => {
-      const co = COMPANIES.find(x => x.id === mc.id);
-      if (!co) return;
-      // 各新シートのデータを注入
-      if (mc.serviceMetrics) co.serviceMetrics = normalizeServiceMetrics(mc.serviceMetrics);
-      if (mc.clients)        co.clients        = normalizeClients(mc.clients);
-      if (mc.serviceScores)  co.serviceScores  = normalizeServiceScores(mc.serviceScores);
-      if (mc.envScores)      co.envScores      = normalizeEnvScores(mc.envScores);
-      if (mc.patents)        co.patents        = normalizePatents(mc.patents);
-      if (co.api) {
-        if (mc.salaryRanges)   co.api.salaryRanges   = mc.salaryRanges;
-        if (mc.jobs)           co.api.jobs           = mc.jobs;
-        co.api.corporateUrl   = mc.corporateUrl   || null;
-        co.api.serviceUrl     = mc.serviceUrl     || null;
-        co.api.recruitUrl     = mc.recruitUrl     || null;
-        co.api.cultureDeckUrl = mc.cultureDeckUrl || null;
-      }
-    });
-    renderSidebar();
-    buildSparklines();
-  if (typeof bindTableSort === 'function') bindTableSort();
-    selectCompany(0);
-    document.getElementById('mock-banner') && (document.getElementById('mock-banner').style.display = 'flex');
-    // 動的版でトップページ・注目一覧を更新
-    if (typeof refreshTopPage === 'function')     refreshTopPage();
-    if (typeof refreshChumokuPage === 'function') {
-      if (Array.isArray(window.COMPANIES) && COMPANIES.length > 0) {
-        refreshChumokuPage();
-      }
-      // COMPANIESがまだ空の場合はAPIロード完了後にFix Cフックが再呼び出す
-    }
-    // モバイル（768px以下）でモバイルフィルターバーを表示
-    const mf=document.getElementById('chumoku-mobile-filter');
-    if(mf) mf.style.display=window.innerWidth<=768?'flex':'none';
-    showLoadingState('');
-  }
-}
+function useMockData() {}
 
 
 // ══════════════════════════════════════════════════════
@@ -3895,6 +3851,13 @@ function showSkeletonCards(containerId, count=3){
   if(el) el.innerHTML=[...Array(count)].map(skeletonCardHtml).join('');
 }
 
+// メモ化キャッシュ（複数scriptブロックからアクセスするためここで宣言）
+
+// メモ化キャッシュ（複数scriptブロックからアクセスするためここで宣言）
+
+// メモ化キャッシュ変数（applyApiDataより前に宣言が必要）
+var _chPoolCache = null, _topPoolCache = null;
+
 window.addEventListener('DOMContentLoaded', async () => {
   apiState.status = 'loading'; // 最初から'loading'状態にしてupdateMetricsに正確な状態を伝える
   updateMetrics(null);
@@ -3902,7 +3865,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   showSkeletonCards('co-cards-list', 3);
   showSkeletonCards('funding-cards', 3);
 
-  // API接続を試みる。失敗時は mockPayload にフォールバック
   try {
     await loadSiteData();
   } catch (e) {
@@ -3910,13 +3872,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     // エラー状態でupdateMetrics(null)を再呼び出し
     // → apiState.status='error' のとき main-title を「データ取得エラー」に更新
     updateMetrics(null);
-  }
-
-  // COMPANIES が空なら mockPayload を使う
-  if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
-    if (false && typeof mockPayload !== 'undefined') { // mockPayload削除済み
-      useMockData();
-    }
   }
 
   if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
@@ -4522,7 +4477,11 @@ function showPage(page, companyId) {
     const ptEl = document.getElementById('page-top');
     ptEl.style.display = 'block';
     ptEl.classList.remove('page-fade-in');
-    requestAnimationFrame(() => ptEl.classList.add('page-fade-in'));
+    requestAnimationFrame(() => {
+      ptEl.classList.add('page-fade-in');
+      const h = ptEl.querySelector('h2, [tabindex="-1"]') || document.getElementById('nav-top');
+      if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+    });
     document.getElementById('nav-top').classList.add('active');
     history.pushState({page:'top'}, '', '#top');
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -4706,7 +4665,7 @@ function renderCoCards(metric,limit){
   const sorted=[...pool].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);
   const el=document.getElementById('co-cards-list');
   if(!el)return;
-  if(!sorted.length){el.innerHTML='<div class="empty-hint">データを準備しています…</div>';return;}
+  if(!sorted.length){el.innerHTML='<div class="empty-hint">データ未収録</div>';return;}
   const show=limit||_coCardLimit;
   const visible=sorted.slice(0,show);
   const remaining=sorted.length-show;
@@ -4900,7 +4859,7 @@ var chSeriesColors={'Pre-Seed':'#6A7A8C','Seed':'#4A7A6A','Series A':'#3A7A6A','
 var chGlobalMetric='funding',chActiveAreaGroup='',chActiveSeriesGroup='';
 
 var _arInit=false,_srInit=false; // タブ遅延初期化フラグ（グローバル）
-var _chPoolCache=null,_topPoolCache=null; // メモ化キャッシュ
+// _chPoolCacheはscriptブロック1で宣言済み
 
 function invalidatePoolCache(){_chPoolCache=null;_topPoolCache=null;}
 function buildChPool(){ if(_chPoolCache)return _chPoolCache; if(!Array.isArray(window.COMPANIES)||!COMPANIES.length)return []; return (_chPoolCache = COMPANIES.map(co=>{ const api=co.api||{},data=Array.isArray(co.data)?co.data:[],funding=Array.isArray(co.funding)?co.funding:[]; const totalFunding=(()=>{const f=api.totalFunding;if(f==null)return null;const n=Number(f);return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n;})(); const headcount=data.length?data[data.length-1].count:0; const hcGrowth=data.length>=2?data[data.length-1].count-data[0].count:0; const smList=Array.isArray(co.serviceMetrics)?co.serviceMetrics:[]; const smItem=smList.find(m=>/導入|契約|顧客|社数/i.test(m.label)); const svcScores=Array.isArray(co.serviceScores)?co.serviceScores:[]; const topScore=svcScores.length?svcScores[0]:null; return {id:co.id,name:co.name,color:co.color||'#5A6A80',sector:co.sector||'その他',series:String(api.totalRounds||'—').trim()||'—',funding:totalFunding||0,fundingNull:totalFunding===null,hcGrowth,founded:co.founding_year||0,headcount,desc:api.mission||'',hc5y:data.slice(-7).map(d=>d.count),f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),smVal:smItem?(smItem.value+(smItem.unit||'')):null,svcVal:topScore?topScore.total+'/'+(topScore.maxScore||5):null}; })); }
