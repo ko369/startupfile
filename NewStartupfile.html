@@ -20,6 +20,8 @@
 <meta name="twitter:title" content="StartupFile — 日本のスタートアップ企業情報">
 <meta name="theme-color" content="#3A4A5C">
 <meta name="color-scheme" content="light">
+<link rel="dns-prefetch" href="//fonts.googleapis.com">
+<link rel="dns-prefetch" href="//fonts.gstatic.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- フォント: display=swap でFOIT防止、必要ウェイトのみ読み込み -->
@@ -1167,7 +1169,7 @@ canvas { transition: opacity 0.3s; }
 .rb{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
 .rbt{font-size:10px;color:var(--text2);margin-bottom:8px}
 .rbt strong{color:var(--slate-dark)}
-.rrow{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--bg3);transition:background .12s}
+.rrow{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--bg3);transition:background .12s;cursor:pointer}
 .rrow:hover{background:var(--bg3)}
 .rrow:last-child{border:none}
 .rn{font-size:10px;color:var(--text3);width:14px;text-align:right;flex-shrink:0}
@@ -2453,10 +2455,10 @@ button:focus-visible,
       <table class="data-table">
         <thead>
           <tr>
-            <th style="width:54px">年</th>
-            <th style="width:110px" id="th-count" class="sortable-th" title="クリックでソート" style="cursor:pointer">社員数 <span class="sort-icon">↕</span></th>
-            <th style="width:130px" id="th-funding" class="sortable-th" title="クリックでソート" style="cursor:pointer">資金調達 <span class="sort-icon">↕</span></th>
-            <th>ソース</th>
+            <th scope="col" style="width:54px">年</th>
+            <th scope="col" style="width:110px" id="th-count" class="sortable-th" title="クリックでソート" style="cursor:pointer">社員数 <span class="sort-icon">↕</span></th>
+            <th scope="col" style="width:130px" id="th-funding" class="sortable-th" title="クリックでソート" style="cursor:pointer">資金調達 <span class="sort-icon">↕</span></th>
+            <th scope="col">ソース</th>
           </tr>
         </thead>
         <tbody id="data-tbody"></tbody>
@@ -2529,7 +2531,7 @@ button:focus-visible,
     <div class="tp active" id="panel-companies">
       <div class="sechdr">トップ15 ランキング</div>
       <div class="t15g">
-        <div class="rb"><div class="rbt"><strong>資金調達額</strong> トップ15 <span class="meta-hint">（直近3年分）</span></div><div id="rfunding"></div></div>
+        <div class="rb"><div class="rbt"><strong>資金調達額</strong> トップ15 <span class="meta-hint">（累計調達額順）</span></div><div id="rfunding"></div></div>
         <div class="rb"><div class="rbt"><strong>社員数増加</strong> トップ15 <span class="meta-hint">（直近3年分）</span></div><div id="rheadcount"></div></div>
       </div>
       <div class="sechdr" style="display:flex;align-items:center">
@@ -2772,9 +2774,9 @@ function clearMainChart() {
 
 function buildMainChart(company, range) {
   if (typeof Chart === 'undefined') return; // Chart.js未ロード時は何もしない
+  clearMainChart(); // 既存チャートを破棄してからビルド（メモリリーク防止）
   const filtered = getFilteredData(company, range);
   if (!filtered.length) {
-    clearMainChart();
     return;
   }
 
@@ -2915,7 +2917,7 @@ function buildMainChart(company, range) {
           min: minYear - 0.3,
           max: maxYear + 0.3,
           ticks: {
-            color: '#4a4845',
+            color: 'var(--text2, #555555)',
             font: { family: "'JetBrains Mono', monospace", size: 10 },
             stepSize: 1,
             callback: v => Number.isInteger(v) ? v : '',
@@ -2927,7 +2929,7 @@ function buildMainChart(company, range) {
           type: 'linear',
           position: 'left',
           ticks: {
-            color: '#4a4845',
+            color: 'var(--text2, #555555)',
             font: { family: "'JetBrains Mono', monospace", size: 10 },
             callback: v => (v >= 1000 ? v.toLocaleString('ja-JP') : v) + '人',
           },
@@ -3078,8 +3080,13 @@ function updateMetrics(company) {
   const roundsEl = document.getElementById('metric-rounds');
 
   if (!company) {
-    titleEl.textContent = apiState.status === 'error' ? 'データ取得エラー' : 'データ読込中…';
-    subEl.textContent = apiState.status === 'error' ? (apiState.error || '企業データの取得に失敗しました') : '企業データを読み込んでいます';
+    if (apiState.status === 'error') {
+      titleEl.textContent = 'データ取得エラー';
+      subEl.textContent = apiState.error || '企業データの取得に失敗しました';
+    } else {
+      titleEl.textContent = 'データ読込中…';
+      subEl.textContent = 'GAS APIから企業データを取得しています（初回は20〜30秒かかる場合があります）';
+    }
     if (missionEl) {
       missionEl.textContent = '';
       missionEl.style.display = 'none';
@@ -3272,6 +3279,8 @@ function selectCompany(idx) {
   if (activePane && activePane.id === 'pane-charm') {
     renderCharmTab(safeIdx);
   }
+  // 前/次ボタンのdisabled状態を更新
+  if (typeof updatePrevNextBtns === 'function') updatePrevNextBtns();
 }
 
 function renderServiceSection(company) {
@@ -3350,15 +3359,26 @@ async function loadSiteData() {
   apiState.loaded = false;
   apiState.payload = null;
 
-  try {
-    showLoadingState('JSON APIからデータを準備しています…');
+  const MAX_RETRY = 3;        // 最大3回試行
+  const TIMEOUT_MS = 30000;   // 1回30秒（コールドスタート対応）
 
-    const _ctrl = new AbortController();
-    const _tid = setTimeout(() => _ctrl.abort(), 12000);
-    let res;
+  let lastError = null;
+  for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
     try {
-      res = await fetch(`${API_URL}?t=${Date.now()}`, { cache:'no-store', redirect:'follow', signal:_ctrl.signal });
-    } finally { clearTimeout(_tid); }
+      const msg = attempt === 1
+        ? 'GAS APIからデータを取得しています…'
+        : `再試行中 (${attempt}/${MAX_RETRY})… GASサーバー起動待ち`;
+      showLoadingState(msg);
+      // main-titleにも進捗を反映
+      const titleEl = document.getElementById('main-title');
+      if (titleEl) titleEl.textContent = attempt === 1 ? 'データ読込中…' : `データ読込中… (${attempt}回目)`;
+
+      const _ctrl = new AbortController();
+      const _tid = setTimeout(() => _ctrl.abort(), TIMEOUT_MS);
+      let res;
+      try {
+        res = await fetch(`${API_URL}?t=${Date.now()}`, { cache:'no-store', redirect:'follow', signal:_ctrl.signal });
+      } finally { clearTimeout(_tid); }
 
     if (!res.ok) {
       throw new Error(`APIの読み込みに失敗しました（HTTP ${res.status}）`);
@@ -3403,36 +3423,50 @@ async function loadSiteData() {
       metaEl.innerHTML = `<strong>${payload.meta.companyCount}</strong> 企業 &nbsp;·&nbsp; 更新: <strong>${updated}</strong>`;
     }
 
-    showLoadingState('');
-    // 検索プレースホルダーを実際の企業数で更新
-    const si = document.getElementById('search-input');
-    if (si) si.placeholder = `企業名・業種で検索… (${COMPANIES.length}社)`;
-    // APIデータ取得成功時はバナーを非表示に + live-dot を緑にして最終更新時刻を表示
-    const mb = document.getElementById('mock-banner'); if(mb) mb.style.display='none';
-    const ld = document.getElementById('shared-live-dot');
-    if (ld) { ld.style.background = '#2ea86e'; ld.title = 'データ取得完了 (' + new Date().toLocaleTimeString('ja-JP') + ')'; }
-  } catch (e) {
-    apiState.status = 'error';
-    // AbortError（タイムアウト）とネットワークエラーを区別
-    if (e?.name === 'AbortError') {
-      apiState.error = '接続タイムアウト（12秒）。GASサーバーの起動を待って再読み込みしてください。';
-      // スケルトンを消去してエラー表示に切り替え
-      ['co-cards-list','funding-cards','biz-topics','org-topics'].forEach(id=>{
-        const el=document.getElementById(id);
-        if(el&&el.querySelector&&el.querySelector('.skeleton')){
-          el.innerHTML='<div class="empty-hint" style="color:var(--text3)">読み込みタイムアウト</div>';
-        }
-      });
-    } else {
-      apiState.error = e?.message || '不明なエラー';
+      showLoadingState('');
+      // 検索プレースホルダーを実際の企業数で更新
+      const si = document.getElementById('search-input');
+      if (si) si.placeholder = `企業名・業種で検索… (${COMPANIES.length}社)`;
+      // APIデータ取得成功時はバナーを非表示に + live-dot を緑にして最終更新時刻を表示
+      const mb = document.getElementById('mock-banner'); if(mb) mb.style.display='none';
+      const ld = document.getElementById('shared-live-dot');
+      if (ld) { ld.style.background = '#2ea86e'; ld.title = 'データ取得完了 (' + new Date().toLocaleTimeString('ja-JP') + ')'; }
+      return; // 成功 → ループ終了
+    } catch (e) {
+      lastError = e;
+      const isTimeout = e?.name === 'AbortError';
+      // 最終試行でなければ再試行（タイムアウトの場合のみリトライ）
+      if (attempt < MAX_RETRY && isTimeout) {
+        console.warn(`loadSiteData attempt ${attempt} timed out, retrying...`);
+        await new Promise(r => setTimeout(r, 2000)); // 2秒待ってから再試行
+        continue;
+      }
+      // 全試行失敗 or タイムアウト以外のエラー → エラー表示
+      apiState.status = 'error';
+      if (isTimeout) {
+        apiState.error = `接続タイムアウト（${MAX_RETRY}回試行・計${Math.round(MAX_RETRY * TIMEOUT_MS/1000)}秒）。GASサーバーが起動していない可能性があります。しばらく待ってから再読み込みしてください。`;
+        ['co-cards-list','funding-cards','biz-topics','org-topics'].forEach(id=>{
+          const el=document.getElementById(id);
+          if(el&&el.querySelector&&el.querySelector('.skeleton')){
+            el.innerHTML='<div class="empty-hint" style="color:var(--text3)">読み込みタイムアウト（GASサーバー起動待ち）</div>';
+          }
+        });
+      } else {
+        apiState.error = e?.message || '不明なエラー';
+      }
+      apiState.loaded = false;
+      apiState.payload = null;
+      showLoadingState('');
+      ['strip-biz','strip-org'].forEach(id=>{const el=document.getElementById(id);if(el){const e2=el.querySelector('.events-empty');if(e2)e2.textContent='データの取得に失敗しました';}});
+      ['biz-topics','org-topics'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.innerHTML.trim())el.innerHTML='<div class="events-empty">データの取得に失敗しました</div>';});
+      const chartArea = document.getElementById('mainChart');
+      if (chartArea) {
+        const wrapper = chartArea.closest('.chart-area') || chartArea.parentElement;
+        if (wrapper) wrapper.innerHTML = '<div class="empty-hint" style="padding:32px;text-align:center">データを取得できませんでした。<br><small>ページを再読み込みしてください。</small></div>';
+      }
+      throw e;
     }
-    apiState.loaded = false;
-    apiState.payload = null;
-    showLoadingState('');
-    ['strip-biz','strip-org'].forEach(id=>{const el=document.getElementById(id);if(el){const e2=el.querySelector('.events-empty');if(e2)e2.textContent='データの取得に失敗しました';}});
-    ['biz-topics','org-topics'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.innerHTML.trim())el.innerHTML='<div class="events-empty">データの取得に失敗しました</div>';});
-    throw e;
-  }
+  } // end retry loop
 }
 
 function naturalCompare(a, b) {
@@ -3862,6 +3896,7 @@ function showSkeletonCards(containerId, count=3){
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
+  apiState.status = 'loading'; // 最初から'loading'状態にしてupdateMetricsに正確な状態を伝える
   updateMetrics(null);
   // APIロード中にスケルトンUIを表示
   showSkeletonCards('co-cards-list', 3);
@@ -3872,6 +3907,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     await loadSiteData();
   } catch (e) {
     console.warn('loadSiteData failed:', e?.message||e);
+    // エラー状態でupdateMetrics(null)を再呼び出し
+    // → apiState.status='error' のとき main-title を「データ取得エラー」に更新
+    updateMetrics(null);
   }
 
   // COMPANIES が空なら mockPayload を使う
@@ -3881,7 +3919,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) return;
+  if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
+    // APIエラーでも個別企業ページを「エラー状態」に切り替える
+    showLoadingState('');
+    return;
+  }
 
   buildSparklines();
   selectCompany(Math.min(currentCompanyIndex, COMPANIES.length - 1));
@@ -4153,7 +4195,7 @@ function buildSalarySection(company, api) {
   sec.className = 'pt-sec';
   sec.innerHTML = '<div class="pt-sec-head"><span class="pt-sec-label">給与レンジ</span></div>';
 
-  const SERIES_COLOR = { hi:'#5B8FCC', std:'#3BAA90', single:'#3BAA90', Discovery:'#5B8FCC', UCS:'#3BAA90' };
+  const SERIES_COLOR = { hi:'#2663AC', std:'#1A8870', single:'#1A8870', Discovery:'#2663AC', UCS:'#1A8870' };
   const legendItems = uniqBy(rows.map(r => ({
     series: r.series || 'single',
     color:  r.color || SERIES_COLOR[r.series] || company.color || '#5A6A80'
@@ -4273,7 +4315,7 @@ function buildJobsSection(api) {
   const body = document.createElement('div');
   body.style.cssText = 'padding:8px 16px 16px';
 
-  const catColor = { eng:'#5B8FCC', biz:'#3BAA90', prd:'#8246b4', dat:'#5A6A80', cop:'#8d6e63' };
+  const catColor = { eng:'#2663AC', biz:'#1A8870', prd:'#8246b4', dat:'#5A6A80', cop:'#8d6e63' };
   const maxSalary = Math.max(...jobs.map(j => Number(j.salaryMax) || Number(j.salaryMin) || 0), 1);
 
   const table = document.createElement('table');
@@ -4281,12 +4323,12 @@ function buildJobsSection(api) {
   table.innerHTML = `
     <thead>
       <tr style="border-bottom:1px solid var(--line)">
-        <th class="tbl-th-cell">カテゴリ</th>
-        <th class="tbl-th-cell">ポジション</th>
-        <th class="tbl-th-cell">レイヤー</th>
-        <th class="tbl-th-cell">概要</th>
-        <th style="width:124px;text-align:left;padding:8px 6px;color:var(--text3);font-weight:500">年収</th>
-        <th style="width:112px;text-align:left;padding:8px 6px;color:var(--text3);font-weight:500">参照元</th>
+        <th scope="col" class="tbl-th-cell">カテゴリ</th>
+        <th scope="col" class="tbl-th-cell">ポジション</th>
+        <th scope="col" class="tbl-th-cell">レイヤー</th>
+        <th scope="col" class="tbl-th-cell">概要</th>
+        <th scope="col" class="tbl-th-cell" style="width:124px">年収</th>
+        <th scope="col" class="tbl-th-cell" style="width:112px">参照元</th>
       </tr>
     </thead>
     <tbody>
@@ -4428,7 +4470,7 @@ function buildCharmScoreSection(company, api) {
           barSec.appendChild(row);
         });
       };
-      if (owScores.length) drawBars('OpenWork', owScores, '#3BAA90');
+      if (owScores.length) drawBars('OpenWork', owScores, '#1A8870');
       if (enScores.length) drawBars('en転職',    enScores, '#5A6A80');
       el.appendChild(barSec);
     }
@@ -4496,7 +4538,12 @@ function showPage(page, companyId) {
     el.style.display = 'grid';
     el.classList.add('visible');
     el.classList.remove('page-fade-in');
-    requestAnimationFrame(() => el.classList.add('page-fade-in'));
+    requestAnimationFrame(() => {
+      el.classList.add('page-fade-in');
+      // ページ遷移後フォーカスを個別企業見出しへ（アクセシビリティ）
+      const heading = document.getElementById('main-title');
+      if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); }
+    });
     document.getElementById('nav-company').classList.add('active');
 
     if (typeof renderSidebar === 'function' && COMPANIES.length > 0) {
