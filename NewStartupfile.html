@@ -170,6 +170,9 @@ body.sidebar-collapsed {
   overflow-y: auto;
   align-self: start;
   transition: width .18s ease, padding .18s ease;
+
+  overscroll-behavior: contain;
+  will-change: transform;
 }
 .sidebar-head {
   display: flex;
@@ -2176,7 +2179,7 @@ button:focus-visible,
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous" defer></script>
 
 </head>
 
@@ -2634,7 +2637,7 @@ function bindSyncScroll() {
       if (_syncScrolling) return;
       _syncScrolling = true;
       const x = this.scrollLeft;
-      all.forEach(dst => { if (dst !== this) dst.scrollLeft = x; });
+      all.forEach(dst => { if (dst !== this) dst.scrollLeft = x; }, { passive: true });
       // タッチ操作でのスクロール後もフラグを確実にリセット（rAF×2でフレーム確定後に解放）
       requestAnimationFrame(() => requestAnimationFrame(() => { _syncScrolling = false; }));
     }, { passive: true });
@@ -2916,6 +2919,7 @@ function buildMainChart(company, range) {
 
   const maxFund = showFundingBars ? Math.max(...fundingInRange.map(f => f.amount || 0), 1) : 10;
 
+  if (mainChart) { try { mainChart.destroy(); } catch(_) {} mainChart = null; }
   mainChart = new Chart(ctx, {
     type: 'line',
     data: { datasets },
@@ -3581,7 +3585,7 @@ function applyApiData(payload) {
   const rawCompanies = Array.isArray(payload?.companies) ? payload.companies.slice() : [];
   const normalized = rawCompanies.map((api, idx) => ({
     ...api,
-    displayOrder: Number.isFinite(Number(api?.displayOrder)) ? Number(api.displayOrder) : (idx + 1)
+    displayOrder: !isNaN(Number(api?.displayOrder)) ? Number(api.displayOrder) : (idx + 1)
   })).sort((a, b) => {
     const diff = (a.displayOrder || 999999) - (b.displayOrder || 999999);
     if (diff !== 0) return diff;
@@ -4710,7 +4714,7 @@ function coCardHtml(c,i){ return `<div class="co-card" data-id="${c.id}" data-na
 
 function navigateFromCard(card){ const id=card.dataset.id; const name=card.dataset.name; const co=findCompany(id, name); showPage('company',co?co.id:id||name); }
 
-var _coCardLimit=10;
+var _coCardLimit = APP_CONFIG.CARD_PAGE_SIZE;
 function renderCoCards(metric,limit){
   let pool=buildTopPool();
   // サイドバーフィルターを企業ランキングカードに連動
@@ -4843,7 +4847,7 @@ function renderSearch(query,sector){
       return bh-ah;
     });
   }
-  el.innerHTML=countHtml+filtered.slice(0,12).map(c=>`<div class="sr-row" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細を見る"><span class="sr-dot" style="background:${c.color}"></span><span class="sr-name">${escapeHtml(c.name)}</span><span class="sr-sector">${escapeHtml(c.sector||'')}</span><span class="sr-series">${escapeHtml(c.series||'—')}</span><span class="sr-hc">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</span><span class="sr-arrow" style="color:var(--slate)">›</span></div>`).join('');
+  el.innerHTML=countHtml+filtered.slice(0, APP_CONFIG.SEARCH_LIMIT).map(c=>`<div class="sr-row" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細を見る"><span class="sr-dot" style="background:${c.color}"></span><span class="sr-name">${escapeHtml(c.name)}</span><span class="sr-sector">${escapeHtml(c.sector||'')}</span><span class="sr-series">${escapeHtml(c.series||'—')}</span><span class="sr-hc">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</span><span class="sr-arrow" style="color:var(--slate)">›</span></div>`).join('');
   el.querySelectorAll('.sr-row').forEach(row=>{ const handler=()=>{ const co=findCompany(row.dataset.id, row.dataset.name); showPage('company',co?co.id:row.dataset.id); }; row.addEventListener('click',handler); row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handler();}}); });
   updateSidebarFilterBadges(pool,sector);
 }
@@ -4952,7 +4956,7 @@ function renderCoCardsDynamic(metric,limit){
   const el=document.getElementById('co-cards');if(!el)return;
   const pool=buildChPool();const sorted=[...pool].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);
   if(!sorted.length){el.innerHTML='<div style="padding:24px;color:var(--text3);font-size:12px;text-align:center">データを準備しています…</div>';return;}
-  const show=limit||15;
+  const show = limit || APP_CONFIG.RANK_TOP_N;
   const remaining=sorted.length-show;
   el.innerHTML=sorted.slice(0,show).map((c,i)=>chCoCardHtml(c,i)).join('');
   if(remaining>0){
