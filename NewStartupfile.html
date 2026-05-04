@@ -2575,8 +2575,14 @@ button:focus-visible,
 <script>
 
 var EVENTS = {};
+var COMPANIES = []; // 企業データ配列（applyApiData で初期化）
 
 var currentCompanyIndex = 0;
+
+// フィルター状態（ブロック2でも宣言するが、ブロック1からも参照されるためここで初期化）
+var activeFilter = 'すべて';
+var activeSeriesFilter = 'すべて';
+var activeFoundingFilter = 'すべて';
 
 let currentRange = 'all';
 let showFunding = true;
