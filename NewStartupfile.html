@@ -523,6 +523,9 @@ h1.company-title, .company-title {
 .topics-cards-wrap {
   padding: 0 32px;
   overflow: hidden;
+  background: var(--bg2);
+  border-radius: var(--r-md);
+  margin: 4px 0;
 }
 .topics-cards-inner {
   display: flex;
@@ -530,7 +533,7 @@ h1.company-title, .company-title {
   gap: 0;
   overflow-x: scroll;
   overflow-y: visible;
-  padding: 6px 0 8px;
+  padding: 10px 0 12px;
   scroll-behavior: smooth;
 }
 /* biz/org は年軸スクロールバーで操作するため自身のバーは非表示 */
@@ -594,14 +597,15 @@ h1.company-title, .company-title {
 }
 .event-year-label {
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--slate-dark);
-  letter-spacing: 0.04em;
-  padding: 0 0 8px 4px;
-  border-bottom: 2px solid var(--slate-dark);
+  letter-spacing: 0.06em;
+  padding: 2px 0 8px 4px;
+  border-bottom: 3px solid var(--slate);
   display: inline-block;
   margin-bottom: 10px;
+  min-width: 40px;
 }
 .event-year-col
 .event-cards-col {
@@ -616,12 +620,12 @@ h1.company-title, .company-title {
   margin-right: 20px;
 }
 .event-card {
-  padding: 10px 12px 10px 14px;
+  padding: 10px 12px 10px 15px;
   border: 1px solid var(--line);
-  border-left: 3px solid transparent;
+  border-left: 4px solid #e0e0e0;
   border-radius: var(--r-md);
   cursor: default;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.15s;
   position: relative;
   overflow: hidden;
   min-height: 90px;
@@ -629,12 +633,20 @@ h1.company-title, .company-title {
   display: flex;
   flex-direction: column;
   background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
+/* タイプ別の border-left カラーと背景 */
+.event-card.founder   { border-left-color: #3BB08F; background: rgba(59,176,143,0.03); }
+.event-card.business  { border-left-color: #F59E0B; background: rgba(245,158,11,0.03); }
+.event-card.org       { border-left-color: #5A6A80; background: rgba(90,106,128,0.03); }
+.event-card.workstyle { border-left-color: #3BB08F; background: rgba(59,176,143,0.03); }
+.event-card.award     { border-left-color: #8B5CF6; background: rgba(139,92,246,0.04); }
+.event-card.turning   { border-left-color: #EF4444; background: rgba(239,68,68,0.03); }
+.event-card.has-url { cursor: pointer; }
 .event-card.has-url { cursor: pointer; }
 .event-card.has-url:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  transform: translateY(-1px);
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  transform: translateY(-2px);
 }
 /* max-height超えの内容をfade-outで処理 */
 .event-card::after {
@@ -674,15 +686,20 @@ h1.company-title, .company-title {
   overflow: hidden;
 }
 .event-card-type {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 2px 7px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
   border-radius: var(--r-pill);
   display: inline-block;
   flex-shrink: 0;
 }
+/* タイプ別バッジ色 */
+.event-card-type.founder   { background: #ECFDF5; color: #065F46; border: 1px solid #6EE7B7; }
+.event-card-type.business  { background: #FFFBEB; color: #92400E; border: 1px solid #FCD34D; }
+.event-card-type.turning   { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; }
+.event-card-type.award     { background: #F5F3FF; color: #5B21B6; border: 1px solid #C4B5FD; }
 .event-card-type
 .event-card-type
 .event-card-type.org       { background: var(--bg3); color: var(--slate-dark); border: 1px solid var(--line2); }
@@ -717,12 +734,14 @@ h1.company-title, .company-title {
 .event-card-speaker {
   font-family: var(--font-sans);
   font-size: 10px;
-  color: var(--text2);
+  color: var(--text3);
   font-style: italic;
   margin: 0 0 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding-left: 8px;
+  border-left: 2px solid var(--line2);
 }
 /* 説明文 */
 .event-card-desc {
@@ -741,17 +760,18 @@ h1.company-title, .company-title {
 .event-card-link {
   font-family: var(--font-sans);
   font-size: 10px;
-  font-weight: 500;
-  color: var(--blue);
+  font-weight: 600;
+  color: var(--slate);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   margin-top: auto;
-  padding-top: 6px;
-  transition: color 0.12s;
+  padding-top: 8px;
+  transition: color 0.12s, gap 0.12s;
+  border-top: 1px solid var(--line);
 }
-.event-card-link:hover { color: var(--slate-dark); }
+.event-card-link:hover { color: var(--slate-dark); gap: 6px; }
 /* URLなしの場合 */
 .event-card-no-url { display: none; }
 /* .events-empty は下部で統合定義 */
@@ -1454,9 +1474,6 @@ button:focus-visible,
 .logo span { display: none; }
 
   .metric-val[style*="font-size:22px"] { font-size: 16px !important; }
-
-  
-  .event-card-title { font-size: 10px; }
 
   .data-table-wrap { padding: 0 12px; }
 
@@ -2277,16 +2294,38 @@ select:focus-visible {
 
 .search-mark { background: rgba(255,193,7,0.35); border-radius: 2px; padding: 0 1px; }
 
-/* ── トピックスカード横スクロールインジケーター ── */
+/* ── カード右端のフェードアウト（続きがあることを示す）── */
+.topics-cards-wrap-outer {
+  position: relative;
+}
+.topics-cards-wrap-outer::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 80px;
+  background: linear-gradient(to right, transparent, var(--bg2));
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── スクロールインジケーター 刷新 ── */
 .topics-scroll-wrap {
-  margin: 10px 32px 0;
+  margin: 8px 32px 4px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+.topics-scroll-label {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
 }
 .topics-scroll-track {
   flex: 1;
-  height: 4px;
+  height: 5px;
   background: var(--line);
   border-radius: var(--r-pill);
   position: relative;
@@ -2299,23 +2338,22 @@ select:focus-visible {
   border-radius: var(--r-pill);
   position: absolute;
   left: 0; top: 0;
-  transition: background 0.15s;
   cursor: grab;
   min-width: 40px;
-  opacity: 0.6;
+  opacity: 0.7;
+  transition: opacity 0.15s;
 }
 .topics-scroll-thumb:hover,
-.topics-scroll-thumb:active { background: var(--slate-dark); opacity: 1; cursor: grabbing; }
+.topics-scroll-thumb:active { opacity: 1; cursor: grabbing; }
 .topics-scroll-hint {
   font-size: 10px;
   color: var(--text3);
   font-family: var(--font-mono);
-  white-space: nowrap;
-  letter-spacing: 0.03em;
   flex-shrink: 0;
-  transition: opacity 0.3s;
+  white-space: nowrap;
 }
 .topics-scroll-hint.at-end { opacity: 0.3; }
+
 
 .ch-nav-card-link {
   font-size: 10px;
@@ -2343,6 +2381,69 @@ select:focus-visible {
   .sidebar { top: 40px; max-height: calc(100vh - 40px); }
   .main { padding-top: 40px; }
 }
+
+/* ══ トピックス横スクロールナビゲーター（上部・大型）══ */
+.topics-scroll-nav {
+  padding: 10px 32px 6px;
+  background: linear-gradient(to bottom, var(--bg2) 0%, #fff 100%);
+  border-bottom: 1px solid var(--line);
+}
+.topics-scroll-nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topics-scroll-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line2);
+  background: #fff;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+  padding: 0;
+}
+.topics-scroll-btn:hover {
+  background: var(--slate-dark); color: #fff;
+  border-color: var(--slate-dark); transform: scale(1.05);
+}
+.topics-scroll-btn:disabled { opacity: 0.3; cursor: default; transform: none; }
+.topics-scroll-track-wrap { flex: 1; }
+.topics-scroll-track {
+  width: 100%; height: 8px;
+  background: var(--line);
+  border-radius: var(--r-pill);
+  position: relative; overflow: hidden; cursor: pointer;
+}
+.topics-scroll-thumb {
+  height: 100%;
+  background: var(--slate);
+  border-radius: var(--r-pill);
+  position: absolute; left: 0; top: 0;
+  cursor: grab; min-width: 50px;
+  transition: background 0.15s;
+}
+.topics-scroll-thumb:hover,
+.topics-scroll-thumb:active { background: var(--slate-dark); cursor: grabbing; }
+.topics-scroll-years {
+  display: flex; padding: 4px 0 0; overflow: hidden;
+}
+.topics-year-dot {
+  flex: 0 0 auto;
+  font-size: 10px; color: var(--text3);
+  font-family: var(--font-mono); font-weight: 600;
+  letter-spacing: 0.04em; cursor: pointer;
+  transition: color 0.12s; white-space: nowrap; text-align: center;
+}
+.topics-year-dot:hover,
+.topics-year-dot.active { color: var(--slate-dark); }
+/* 旧スライダー非表示 */
+.topics-scroll-wrap { display: none !important; }
+.topics-scroll-hint { display: none !important; }
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
@@ -2584,6 +2685,20 @@ select:focus-visible {
       </div>
     </div>
 
+    <!-- 横スクロールナビゲーター（年軸上部） -->
+    <div class="topics-scroll-nav" id="topics-scroll-nav">
+      <div class="topics-scroll-nav-inner">
+        <button class="topics-scroll-btn" id="topics-scroll-left" aria-label="左にスクロール">‹</button>
+        <div class="topics-scroll-track-wrap">
+          <div class="topics-scroll-track" id="topics-scroll-track">
+            <div class="topics-scroll-thumb" id="topics-scroll-thumb"></div>
+          </div>
+        </div>
+        <button class="topics-scroll-btn" id="topics-scroll-right" aria-label="右にスクロール">›</button>
+      </div>
+      <div class="topics-scroll-years" id="topics-scroll-years"></div>
+    </div>
+
     <!-- 共通年軸＋スクロールバー -->
     <div class="topics-axis-wrap">
       <div class="topics-axis-inner" id="strip-axis"></div>
@@ -2623,14 +2738,7 @@ select:focus-visible {
       </div>
     </div>
 
-    <!-- トピックス横スクロールインジケーター -->
-    <div class="topics-scroll-wrap">
-      <span class="topics-scroll-hint" id="topics-scroll-hint">← スクロール</span>
-      <div class="topics-scroll-track" id="topics-scroll-track">
-        <div class="topics-scroll-thumb" id="topics-scroll-thumb"></div>
-      </div>
-      <span style="font-size:10px;color:var(--text3);flex-shrink:0">→</span>
-    </div>
+
 
     <!-- サービスセクション（データが入るまで非表示） -->
     <div id="svc-section-header" style="padding:14px 32px 0;display:none">
@@ -2842,6 +2950,7 @@ function renderEventsStrip(company) {
     if (typeof bindSyncScroll === 'function') bindSyncScroll();
   initScrollIndicator();
   initSwipeScroll();
+  if (typeof buildYearDots === 'function') buildYearDots(allYears);
     return;
   }
   const BIZ_TYPES = ['business', 'award', 'turning', 'founder'];
@@ -4218,49 +4327,94 @@ var _chPoolCache = null, _topPoolCache = null;
 function initScrollIndicator() {
   const track = getEl('topics-scroll-track');
   const thumb = getEl('topics-scroll-thumb');
-  const hint  = getEl('topics-scroll-hint');
   const biz   = getEl('strip-biz');
+  const btnL  = getEl('topics-scroll-left');
+  const btnR  = getEl('topics-scroll-right');
+  const yearsEl = getEl('topics-scroll-years');
   if (!track || !thumb || !biz) return;
 
+  // スクロール量でサムネイルを更新
   function updateThumb() {
     const scrollW = biz.scrollWidth;
     const clientW = biz.clientWidth;
-    if (scrollW <= clientW) { track.style.display = 'none'; if(hint) hint.style.display='none'; return; }
-    track.style.display = '';
-    const ratio = clientW / scrollW;
-    const thumbW = Math.max(30, track.clientWidth * ratio);
+    if (scrollW <= clientW) {
+      const nav = document.getElementById('topics-scroll-nav');
+      if (nav) nav.style.display = 'none';
+      return;
+    }
+    const ratio    = clientW / scrollW;
+    const thumbW   = Math.max(50, track.clientWidth * ratio);
     const maxScroll = scrollW - clientW;
+    const maxLeft  = track.clientWidth - thumbW;
     const scrollRatio = biz.scrollLeft / maxScroll;
-    const maxLeft = track.clientWidth - thumbW;
     thumb.style.width = thumbW + 'px';
     thumb.style.left  = (scrollRatio * maxLeft) + 'px';
-    // スクロールヒント
-    if (hint) hint.classList.toggle('at-end', biz.scrollLeft >= maxScroll - 4);
+    // ボタンのdisabled
+    if (btnL) btnL.disabled = biz.scrollLeft <= 0;
+    if (btnR) btnR.disabled = biz.scrollLeft >= maxScroll - 4;
+    // 年ドットのアクティブ
+    if (yearsEl) {
+      const dots = yearsEl.querySelectorAll('.topics-year-dot');
+      dots.forEach(dot => {
+        const x = parseFloat(dot.dataset.x || 0);
+        dot.classList.toggle('active',
+          biz.scrollLeft >= x - 20 && biz.scrollLeft < x + 240);
+      });
+    }
   }
 
   biz.addEventListener('scroll', updateThumb, {passive: true});
   window.addEventListener('resize', updateThumb, {passive: true});
 
-  // サムネイルドラッグでスクロール
+  // 矢印ボタンでスクロール
+  const STEP = 260;
+  if (btnL) btnL.addEventListener('click', () => {
+    biz.scrollBy({left: -STEP, behavior: 'smooth'});
+  });
+  if (btnR) btnR.addEventListener('click', () => {
+    biz.scrollBy({left: STEP, behavior: 'smooth'});
+  });
+
+  // サムネイルドラッグ
   let _dragging = false, _startX = 0, _startScroll = 0;
   thumb.addEventListener('pointerdown', e => {
-    _dragging = true; _startX = e.clientX;
-    _startScroll = biz.scrollLeft;
+    _dragging = true; _startX = e.clientX; _startScroll = biz.scrollLeft;
     thumb.setPointerCapture(e.pointerId);
   });
   thumb.addEventListener('pointermove', e => {
     if (!_dragging) return;
     const dx = e.clientX - _startX;
-    const scrollW = biz.scrollWidth;
-    const clientW = biz.clientWidth;
-    const trackW  = track.clientWidth;
-    const thumbW  = thumb.offsetWidth;
-    const ratio   = (scrollW - clientW) / (trackW - thumbW);
-    biz.scrollLeft = Math.max(0, _startScroll + dx * ratio);
+    const scrollW = biz.scrollWidth, clientW = biz.clientWidth;
+    const maxScroll = scrollW - clientW;
+    const maxLeft   = track.clientWidth - thumb.offsetWidth;
+    biz.scrollLeft = Math.max(0, _startScroll + dx * (maxScroll / maxLeft));
   });
   thumb.addEventListener('pointerup', () => { _dragging = false; });
 
+  // トラッククリックでジャンプ
+  track.addEventListener('click', e => {
+    if (e.target === thumb) return;
+    const rect = track.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    biz.scrollLeft = ratio * (biz.scrollWidth - biz.clientWidth);
+  });
+
   updateThumb();
+}
+
+// 年ドットを生成（renderEventsStrip後に呼ぶ）
+function buildYearDots(allYears) {
+  const yearsEl = getEl('topics-scroll-years');
+  const biz     = getEl('strip-biz');
+  if (!yearsEl || !biz || !allYears || !allYears.length) return;
+  const COL_W = 260; // カード列幅 + マージン
+  yearsEl.innerHTML = allYears.map((yr, i) => {
+    const x = i * COL_W;
+    return `<span class="topics-year-dot" data-x="${x}" data-year="${yr}"
+      style="width:${COL_W}px;text-align:center"
+      onclick="getEl('strip-biz').scrollTo({left:${x},behavior:'smooth'})"
+    >${yr}</span>`;
+  }).join('');
 }
 
 
