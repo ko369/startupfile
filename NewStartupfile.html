@@ -21,8 +21,8 @@
 <meta name="theme-color" content="#3A4A5C">
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap">
 <!-- フォント: display=swap でFOIT防止、必要ウェイトのみ読み込み -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
@@ -1077,7 +1077,6 @@ canvas { transition: opacity 0.3s; }
 .co-cards-list{display:flex;flex-direction:column;gap:10px}
 .skeleton{
   will-change: opacity;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);animation:none;border-radius:var(--r-sm)}
-@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 @media (max-width: 1100px) {
 /* 注目一覧：2カラムランキングの業種テキストを省略 */
   .rsec { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
@@ -2461,6 +2460,7 @@ select:focus-visible {
             <button class="page-nav-btn" id="nav-chumoku" type="button" onclick="showPage('chumoku')" aria-label="注目一覧ページへ">注目一覧</button>
           </nav>
           <div class="live-dot" id="shared-live-dot" title="APIステータス: 緑=接続済 黄=接続中 赤=エラー" aria-label="APIステータスインジケーター"></div>
+        <div id="page-announcer" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap"></div>
         </div>
       </header>
 
@@ -2589,7 +2589,7 @@ select:focus-visible {
     <div class="main-header">
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <h2 class="company-title" id="main-title" aria-live="polite">データ読込中…</h2>
+          <h2 class="company-title" id="main-title">データ読込中…</h2>
           <button type="button" class="copy-url-btn" id="copy-url-btn" onclick="copyCompanyUrl()" aria-label="企業ページURLをコピー">URLコピー</button>
         </div>
         <div class="company-subtitle" id="main-sub">企業データを読み込んでいます</div>
@@ -3685,6 +3685,9 @@ function selectCompany(idx) {
     return;
   }
   updateMetrics(company);
+  // アクセシビリティ: 企業切り替えをスクリーンリーダーに通知
+  const _ann = document.getElementById('page-announcer');
+  if (_ann && company?.name) _ann.textContent = company.name + ' に移動しました';
   // はたらく環境タブ: APIデータがある場合のみ表示
   const _api = company.api || {};
   const _hasCharm = !!(_api.links || _api.salary || _api.score || _api.info || _api.jobs);
@@ -3783,7 +3786,7 @@ const APP_CONFIG = {
   SEARCH_LIMIT:  12,   // 検索結果表示件数
   RANK_TOP_N:    15,   // ランキング表示件数
   CARD_PAGE_SIZE:10,   // 企業カード初期表示件数
-  TIMEOUT_MS:    30000,// APIタイムアウト（ミリ秒）
+  TIMEOUT_MS:    12000,// APIタイムアウト（ミリ秒）※12秒×3回=最大36秒
   MAX_RETRY:     3,
   SIDEBAR_LIMIT: 30,   // サイドバー初期表示件数    // APIリトライ上限
 };
@@ -4015,7 +4018,7 @@ function normalizeEnvScores(items) {
   });
 }
 function applyApiData(payload) {
-  _chPoolCache = null; _topPoolCache = null; // メモ化キャッシュを無効化（データ更新時）
+  _chPoolCache = null; _topPoolCache = null; _sectorDefsCache = null; // メモ化キャッシュを無効化（データ更新時）
   const rawCompanies = Array.isArray(payload?.companies) ? payload.companies.slice() : [];
   const normalized = rawCompanies.map((api, idx) => ({
     ...api,
@@ -4356,7 +4359,7 @@ function showSkeletonCards(containerId, count=3){
 // メモ化キャッシュ（複数scriptブロックからアクセスするためここで宣言）
 
 // メモ化キャッシュ変数（applyApiDataより前に宣言が必要）
-var _chPoolCache = null, _topPoolCache = null;
+var _chPoolCache = null, _topPoolCache = null, _sectorDefsCache = null;
 
 
 // ── トピックスカードスクロールインジケーター ──
@@ -4598,17 +4601,9 @@ function copyCompanyUrl() {
     navigator.clipboard.writeText(url).then(() => {
       const btn = document.getElementById('copy-url-btn');
       if (btn) { btn.textContent = '✓ コピー済'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'URLコピー'; btn.classList.remove('copied'); }, 2000); }
-    }).catch(() => {
-      try { document.execCommand('copy'); showCopied(); } catch(_) {}
-    });
+    }).catch(() => { window.prompt('URLをコピーしてください', url); });
   } else {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
-      showCopied();
-    } catch(_) {}
+    window.prompt('URLをコピーしてください', url);
   }
 }
 
@@ -5368,7 +5363,48 @@ function syncQuickFilter(label){ const qfEl=document.getElementById('search-quic
 // ── 注目企業カード ──
 function miniBarHtml(vals,color){ if(!vals||!vals.length)return '<span style="color:var(--text3);font-size:9px">データなし</span>'; const mx=Math.max(...vals,1); return vals.map((v,i)=>{ const h=Math.round(v/mx*34); const op=(0.35+0.65*(i/Math.max(vals.length-1,1))).toFixed(2); return `<div class="mbar" style="height:${h}px;background:${color};opacity:${op}"></div>`; }).join(''); }
 
-function coCardHtml(c,i){ return `<div class="co-card" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細へ"><div class="co-card-head"><span class="co-rank">${i+1}</span><span class="co-dot" style="background:${c.color}"></span><span class="co-name">${escapeHtml(c.name)}</span><span class="co-sector-badge">${escapeHtml(c.sector)}</span><span class="co-founded">${c.founded?'設立 '+c.founded+'年':''}</span></div><div class="co-desc">${escapeHtml(c.desc)}</div><div class="co-info-grid"><div class="co-info-item"><div class="co-info-label">累計調達額</div><div class="co-info-val">${c.funding>0?c.funding.toLocaleString(JA)+'億円':'未公開'}</div></div><div class="co-info-item"><div class="co-info-label">現シリーズ</div><div class="co-info-val">${escapeHtml(c.series)}</div></div><div class="co-info-item"><div class="co-info-label">現社員数</div><div class="co-info-val">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}${c.hcGrowth&&c.headcount?'<span class="cogd" style="font-size:9px;margin-left:3px">'+((c.hcGrowth>0?'+':'')+c.hcGrowth)+'</span>':''}</div></div><div class="co-info-item"><div class="co-info-label">導入社数</div><div class="co-info-val">${c.smVal||'—'}</div></div><div class="co-info-item"><div class="co-info-label">サービス評価</div><div class="co-info-val">${c.svcVal||'—'}</div></div></div><div class="co-graphs"><div class="co-graph-box"><div class="co-graph-title">社員数推移</div><div class="mini-bars" role="img" aria-label="社員数推移グラフ">${miniBarHtml(c.hc5y,c.color)}</div><div class="co-graph-foot"><span class="co-graph-val">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</span><span class="co-graph-delta">${c.hcGrowth>0?'+'+c.hcGrowth+'人':c.hcGrowth<0?c.hcGrowth+'人（減少）':''}</span></div></div><div class="co-graph-box"><div class="co-graph-title">資金調達推移</div><div class="mini-bars" role="img" aria-label="資金調達推移グラフ">${miniBarHtml(c.f5y,c.color)}</div><div class="co-graph-foot"><span class="co-graph-val">${c.funding>0?c.funding.toLocaleString(JA)+'億円':'未公開'}</span><span class="co-graph-delta">${c.funding>0?'累計':''}</span></div></div></div></div>`; }
+// ── 企業カード共通レンダラー（coCardHtml / chCoCardHtml を統合）──
+function renderCompanyCard(c, i, variant) {
+  const isCh = variant === 'chumoku';
+  const bg18 = c.color + '18';
+  const hcDelta = c.hcGrowth > 0 ? '+' + c.hcGrowth + '人' : c.hcGrowth < 0 ? c.hcGrowth + '人（減少）' : '';
+  const infoRows = [
+    ['累計調達額', c.funding > 0 ? c.funding.toLocaleString(JA) + '億円' : '未公開'],
+    ['現シリーズ', escapeHtml(c.series)],
+    ['現社員数',   c.headcount ? c.headcount.toLocaleString(JA) + '人' : '—'],
+    ['導入社数',   c.smVal || '—'],
+    ['サービス評価', c.svcVal || '—'],
+  ].map(([l, v]) => isCh
+    ? `<div class="coii"><div class="coil">${l}</div><div class="coiv">${v}</div></div>`
+    : `<div class="co-info-item"><div class="co-info-label">${l}</div><div class="co-info-val">${v}</div></div>`
+  ).join('');
+  const graphRows = [
+    ['社員数推移',   miniBarHtml(c.hc5y, c.color), c.headcount ? c.headcount.toLocaleString(JA) + '人' : '—', hcDelta],
+    ['資金調達推移', miniBarHtml(c.f5y,  c.color), c.funding > 0 ? c.funding.toLocaleString(JA) + '億円' : '未公開', c.funding > 0 ? '累計' : ''],
+  ].map(([t, bars, val, delta]) => isCh
+    ? `<div class="cogb"><div class="cogt">${t}</div><div class="mbars" role="img" aria-label="${t}">${bars}</div><div class="cogf"><span class="cogv">${val}</span><span class="cogd">${delta}</span></div></div>`
+    : `<div class="co-graph-box"><div class="co-graph-title">${t}</div><div class="mini-bars" role="img" aria-label="${t}グラフ">${bars}</div><div class="co-graph-foot"><span class="co-graph-val">${val}</span><span class="co-graph-delta">${delta}</span></div></div>`
+  ).join('');
+
+  if (isCh) {
+    return `<div class="cocard ch-nav-card" data-id="${c.id}" data-name="${escapeHtml(c.name)}" role="button" tabindex="0" style="cursor:pointer;--card-accent:${c.color}">
+      <div class="coch"><div class="cork" style="background:${bg18};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded ? '設立 ' + c.founded + '年' : ''}</div></div>
+      <div class="codesc">${escapeHtml(c.desc)}</div>
+      <div class="coig">${infoRows}</div>
+      <div class="cogs">${graphRows}</div>
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div>
+    </div>`;
+  }
+  return `<div class="co-card" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細へ">
+    <div class="co-card-head"><span class="co-rank">${i+1}</span><span class="co-dot" style="background:${c.color}"></span><span class="co-name">${escapeHtml(c.name)}</span><span class="co-sector-badge">${escapeHtml(c.sector)}</span><span class="co-founded">${c.founded ? '設立 ' + c.founded + '年' : ''}</span></div>
+    <div class="co-desc">${escapeHtml(c.desc)}</div>
+    <div class="co-info-grid">${infoRows}</div>
+    <div class="co-graphs">${graphRows}</div>
+  </div>`;
+}
+// 後方互換エイリアス
+function coCardHtml(c, i)   { return renderCompanyCard(c, i, 'top'); }
+function chCoCardHtml(c, i) { return renderCompanyCard(c, i, 'chumoku'); }
 
 function navigateFromCard(card){ const id=card.dataset.id; const name=card.dataset.name; const co=findCompany(id, name); showPage('company',co?co.id:id||name); }
 
@@ -5591,9 +5627,8 @@ var _arInit=false,_srInit=false; // タブ遅延初期化フラグ（グロー�
 
 function buildChPool(){ if(_chPoolCache)return _chPoolCache; if(!Array.isArray(window.COMPANIES)||!COMPANIES.length)return []; return (_chPoolCache = COMPANIES.map(co=>{ const api=co.api||{},data=Array.isArray(co.data)?co.data:[],funding=Array.isArray(co.funding)?co.funding:[]; const totalFunding=(()=>{const f=api.totalFunding;if(f==null)return null;const n=Number(f);return isNaN(n)?(parseFloat(String(f).replace(/[^\d.]/g,''))||0):n;})(); const headcount=data.length?data.at(-1).count:0; const _recentData=data.slice(-4); const hcGrowth=_recentData.length>=2?_recentData.at(-1).count-_recentData[0].count:0; const smList=Array.isArray(co.serviceMetrics)?co.serviceMetrics:[]; const smItem=smList.find(m=>/導入|契約|顧客|社数/i.test(m.label)); const svcScores=Array.isArray(co.serviceScores)?co.serviceScores:[]; const topScore=svcScores.length?svcScores[0]:null; return {id:co.id,name:co.name,color:co.color||'#5A6A80',sector:co.sector||'その他',series:String(api.totalRounds||'—').trim()||'—',funding:totalFunding||0,fundingNull:totalFunding===null,hcGrowth,founded:co.foundingYear||0,headcount,desc:api.mission||co.mission||'',hc5y:data.slice(-7).map(d=>d.count),f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),smVal:smItem?(smItem.value+(smItem.unit||'')):null,svcVal:topScore?topScore.total+'/'+(topScore.maxScore||5):null}; })); }
 
-function buildSectorDefs(pool){ const map={}; pool.forEach(c=>{const sec=c.sector||'その他';if(!map[sec])map[sec]={name:sec,funding:0,growth:0,count:0};map[sec].funding+=c.funding||0;map[sec].growth+=c.hcGrowth||0;map[sec].count+=1;}); const palette=['#3A5A8C','#3A7A6A','#5A4A8C','#7A4A6A','#3A6A7A','#7A5A3A','#4A7A4A','#6A4A5A','#4A5A7A','#6A6A3A','#5A7A5A','#7A7A7A']; let pi=0; return Object.values(map).sort((a,b)=>b.funding-a.funding).map(s=>({...s,color:palette[pi++%palette.length]})); }
+function buildSectorDefs(pool){ if(_sectorDefsCache)return _sectorDefsCache; const map={}; pool.forEach(c=>{const sec=c.sector||'その他';if(!map[sec])map[sec]={name:sec,funding:0,growth:0,count:0};map[sec].funding+=c.funding||0;map[sec].growth+=c.hcGrowth||0;map[sec].count+=1;}); const palette=['#3A5A8C','#3A7A6A','#5A4A8C','#7A4A6A','#3A6A7A','#7A5A3A','#4A7A4A','#6A4A5A','#4A5A7A','#6A6A3A','#5A7A5A','#7A7A7A']; let pi=0; return (_sectorDefsCache=Object.values(map).sort((a,b)=>b.funding-a.funding).map(s=>({...s,color:palette[pi++%palette.length]}))); }
 
-function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" role="button" tabindex="0" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding.toLocaleString(JA)+'億円':'未公開'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${miniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':c.hcGrowth<0?c.hcGrowth+'人（減少）':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${miniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding.toLocaleString(JA)+'億円':'未公開'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div><div class=\"ch-nav-card-link\">詳細を見る ›</div></div>`;}
 
 function renderRankList(id,key){
   const el=document.getElementById(id);if(!el)return;
@@ -5640,7 +5675,7 @@ function renderSelectedCards(type){const pool=buildChPool();const outputId=type=
 function renderDynamicTopicsChu(){const allTopics=[];Object.entries(EVENTS||{}).forEach(([coId, evList])=>{const co=findCompany(coId, coId);(evList||[]).forEach(t=>allTopics.push({...t,coName:co?co.name:coId,coColor:co?co.color:'#5A6A80',coId:coId}));});allTopics.sort((a,b)=>b.year-a.year||(b.date||'').localeCompare(a.date||''));const bizTopics=allTopics.filter(t=>/prd|biz|product|service|プロダクト|事業|調達|funding|award|受賞|partner|パートナー/i.test(t.type));const orgTopics=allTopics.filter(t=>/org|workstyle|culture|hiring|採用|組織|カルチャー|環境/i.test(t.type));function topicHtml(t){return `<div class="ev-item" style="border-left:2px solid ${t.coColor}"><div style="display:flex;gap:6px;align-items:center;margin-bottom:3px"><span style="font-size:9px;background:${t.coColor}20;color:${t.coColor};padding:1px 6px;border-radius:10px;font-weight:500">${escapeHtml(t.coName)}</span><span style="font-size:9px;color:var(--text3)">${t.date||t.year+'年'}</span><span style="font-size:9px;color:var(--text3)">${escapeHtml(t.type)}</span></div><div style="font-size:11px;font-weight:500;line-height:1.4">${t.url?'<a href="'+escapeHtml(t.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+escapeHtml(t.title)+'</a>':escapeHtml(t.title)}</div>${t.desc?'<div style="font-size:10px;color:var(--text2);margin-top:2px">'+escapeHtml(t.desc)+'</div>':''}</div>`;}const bizEl=document.getElementById('biz-topics');const orgEl=document.getElementById('org-topics');if(bizEl)bizEl.innerHTML=bizTopics.length?bizTopics.slice(0,10).map(topicHtml).join(''):'<div class="events-empty">事業トピックスデータなし</div>';if(orgEl)orgEl.innerHTML=orgTopics.length?orgTopics.slice(0,10).map(topicHtml).join(''):'<div class="events-empty">組織トピックスデータなし</div>';}
 
 function refreshChumokuPage(){
-  _chPoolCache = null; _topPoolCache = null; // フィルター変更時にキャッシュをリセット
+  _chPoolCache = null; _topPoolCache = null; _sectorDefsCache = null; // フィルター変更時にキャッシュをリセット
   const pool=buildChPool();if(!pool.length)return;
   // データ更新後はタブの遅延描画フラグをリセット（再描画保証）
   _arInit=false; _srInit=false;const defs=buildSectorDefs(pool);if(!chActiveAreaGroup&&defs.length)chActiveAreaGroup=defs[0].name;if(!chActiveSeriesGroup){const ex=[...new Set(pool.map(c=>c.series).filter(s=>s&&s!=='—'))];chActiveSeriesGroup=chSeriesOrder.find(s=>ex.includes(s))||ex[0]||'';}renderRankList('rfunding','funding');renderRankList('rheadcount','hcGrowth');renderCoCardsDynamic(chGlobalMetric);renderGroupCards('area');renderSelectedCards('area');renderDynamicTopicsChu();}
