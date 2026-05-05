@@ -3509,7 +3509,8 @@ var hideEl = function(el) { if (el) el.style.display = 'none'; }; // 要素非�
 
 // ── ページ全体再描画ヘルパー ──
 function refreshAllPages() {
-  refreshAllPages();
+  if (typeof refreshTopPage     === 'function') refreshTopPage();
+  if (typeof refreshChumokuPage === 'function') refreshChumokuPage();
 }
 
 const apiState = {
