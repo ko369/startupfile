@@ -2180,7 +2180,7 @@ button:focus-visible,
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-ZyhIeriAoIZxbb1v3al3d9k/XQqI3ufr5Yxjgl6fBSAWEsAb7A6kqsS1m7aeBe1J4pPf86/tOHPFpSd2N7tQ==" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous" defer></script>
 
 </head>
 
@@ -3281,7 +3281,7 @@ function selectCompany(idx) {
   const safeIdx = Math.max(0, Math.min(idx, COMPANIES.length - 1));
   currentCompanyIndex = safeIdx;
   // 企業切り替え時にスクロールをトップに戻す
-  const mainEl = _pcEl?.querySelector('.main');
+  const mainEl = document.getElementById('page-company')?.querySelector('.main');
   if (mainEl) mainEl.scrollTop = 0;
 
   // サイドバーのactive更新（DOM全再生成を避けて軽量更新）
@@ -3665,7 +3665,7 @@ function applyApiData(payload) {
   });
   COMPANIES.push(...companyList);
   companyList.forEach(company => {
-    EVENTS[company.id || company.name] = normalizeTopics(api.topics || []);
+    EVENTS[company.id || company.name] = normalizeTopics(company.api?.topics || []);
   });
 
   const defaultId = payload?.meta?.defaultCompanyId || '';
@@ -3771,6 +3771,7 @@ var _sbQuery='';
 
 function renderSidebarCards(query, limit) {
   if (!COMPANIES.length) return;
+  const companyIndexCache = new Map(COMPANIES.map((c, i) => [c, i]));
   const body = document.querySelector('#page-company .sidebar-body') || document.querySelector('.sidebar-body');
   if (!body) return;
   const q = (query||'').trim().toLowerCase();
