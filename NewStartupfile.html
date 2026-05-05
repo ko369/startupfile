@@ -3513,6 +3513,8 @@ function _bindSortHeaders() {
     });
   });
 }
+
+function updateMetrics(company) {
   // ローディング中はスケルトン表示
   if (!company && apiState.status === 'loading') {
     const titleEl = getEl('main-title');
