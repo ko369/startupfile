@@ -3463,18 +3463,14 @@ async function loadSiteData() {
         throw new Error(`APIの読み込みに失敗しました（HTTP ${res.status}）`);
       }
 
-      const contentType = (res.headers.get('content-type') || '').toLowerCase();
       const rawText = await res.text();
 
-      if (!contentType.includes('application/json')) {
-        throw new Error('APIがJSONではないレスポンスを返しました');
-      }
-
+      // content-typeはGASのリダイレクト後に変わることがあるためチェックせずJSONパースを試みる
       let payload;
       try {
         payload = JSON.parse(rawText);
       } catch (err) {
-        throw new Error('APIレスポンスのJSON解析に失敗しました');
+        throw new Error('APIレスポンスのJSON解析に失敗しました（JSONではないレスポンス）');
       }
 
       if (!payload || !Array.isArray(payload.companies)) {
@@ -3979,7 +3975,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     await loadSiteData();
   } catch (e) {
-    if(DEBUG) console.warn('loadSiteData failed:', e?.message||e);
+    console.warn('[StartupFile] loadSiteData failed:', e?.message||e);
         updateMetrics(null);
   }
 
