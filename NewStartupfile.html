@@ -2619,7 +2619,9 @@ let currentRange = 'all';
 let showFunding = true;
 let mainChart = null;
 var COMPANY_MAP = new Map();
-var _htmlCache = {}; // 企業別HTMLキャッシュ {id: {table, events, service}} // 仮想化canvas参照（_virtの正規化）
+var _sbIndexCache = null; // renderSidebarCards用インデックスキャッシュ
+var _htmlCache = {}; // 企業別HTMLキャッシュ
+const _HTML_CACHE_MAX = 50; // 最大キャッシュ企業数 // 企業別HTMLキャッシュ {id: {table, events, service}} // 仮想化canvas参照（_virtの正規化）
 
 
 // 連動スクロール — グローバルで1度だけ登録
@@ -3132,6 +3134,15 @@ function updateTable(company) {
         </td>
       </tr>`;
   }).join('');
+  // HTMLキャッシュ保存（サイズ上限チェック付き）
+  if (_cid) {
+    const _cKeys = Object.keys(_htmlCache);
+    if (_cKeys.length >= _HTML_CACHE_MAX) delete _htmlCache[_cKeys[0]];
+    _htmlCache[_cid] = _htmlCache[_cid] || {};
+    const _tbody = document.getElementById('data-tbody');
+    _htmlCache[_cid].table = _tbody ? _tbody.innerHTML : '';
+    _htmlCache[_cid].tableSort = _sortKey;
+  }
   // aria-sort を現在のソート状態に合わせて更新
   document.querySelectorAll('[data-sort]').forEach(th => {
     th.setAttribute('aria-sort',
@@ -3656,6 +3667,7 @@ function applyApiData(payload) {
   COMPANIES.length = 0;
   Object.keys(EVENTS).forEach(key => delete EVENTS[key]);
   _htmlCache = {}; // APIデータ更新時にHTMLキャッシュをクリア
+  _sbIndexCache = null; // インデックスキャッシュもリセット
 
   const companyList = normalized.map(api => {
     const company = {
@@ -3685,6 +3697,7 @@ function applyApiData(payload) {
   COMPANIES.push(...companyList);
   companyList.forEach(company => {
     EVENTS[company.id || company.name] = normalizeTopics(company.api?.topics || []);
+    delete company.api; // EVENTS設定後は不要なので元データ参照を解放
   });
 
   const defaultId = payload?.meta?.defaultCompanyId || '';
@@ -3790,7 +3803,10 @@ var _sbQuery='';
 
 function renderSidebarCards(query, limit) {
   if (!COMPANIES.length) return;
-  const companyIndexCache = new Map(COMPANIES.map((c, i) => [c, i]));
+  if (!_sbIndexCache || _sbIndexCache.size !== COMPANIES.length) {
+    _sbIndexCache = new Map(COMPANIES.map((c, i) => [c, i]));
+  }
+  const companyIndexCache = _sbIndexCache;
   const body = document.querySelector('#page-company .sidebar-body') || document.querySelector('.sidebar-body');
   if (!body) return;
   const q = (query||'').trim().toLowerCase();
@@ -4834,7 +4850,7 @@ function buildFilterTags() {
   if(qfEl){ qfEl.innerHTML=['すべて',...sectors].map((s,i)=>`<span role="button" tabindex="0" class="ftag${i===0?' active':''}">${escapeHtml(s||'')}</span>`).join('');
     qfEl.querySelectorAll('.ftag').forEach(tag=>{ tag.addEventListener('click',function(){ qfEl.querySelectorAll('.ftag').forEach(t=>t.classList.remove('active')); this.classList.add('active'); activeFilter=this.textContent.trim(); saveFilterState(); syncSbTag('業種',activeFilter); const inp=document.getElementById('search-input'); if(inp)renderSearch(inp.value,activeFilter); }); }); }
 }
-function bindSbTags(container,groupLabel){ container.querySelectorAll('.sb-tag').forEach(tag=>{ tag.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();this.click();}}); tag.addEventListener('click',function(){ container.querySelectorAll('.sb-tag').forEach(t=>t.classList.remove('active')); this.classList.add('active'); const label=this.textContent.replace(/\s*\d+社$/,'').trim(); const inp=document.getElementById('search-input'); if(groupLabel==='業種'){ activeFilter=label; syncQuickFilter(label); if(inp)renderSearch(inp.value,activeFilter); if(typeof renderCoCards==='function'){_coCardLimit=10;renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding');} } else if(groupLabel==='シリーズ'){ activeSeriesFilter=label; if(inp)renderSearch(inp.value,activeFilter); if(typeof renderCoCards==='function'){_coCardLimit=10;renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding');} } // フィルター変更時にランキングカードも更新
+function bindSbTags(container,groupLabel){ container.querySelectorAll('.sb-tag').forEach(tag=>{ tag.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();this.click();}}); tag.addEventListener('click',function(){ container.querySelectorAll('.sb-tag').forEach(t=>t.classList.remove('active')); this.classList.add('active'); const label=this.textContent.replace(/\s*\d+社$/,'').trim(); const inp=document.getElementById('search-input'); if(groupLabel==='業種'){ activeFilter=label; syncQuickFilter(label); if(inp)renderSearch(inp.value,activeFilter); if(typeof renderCoCards==='function'){_coCardLimit=10;renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding');} } else if(groupLabel==='シリーズ'){ activeSeriesFilter=label; saveFilterState(); if(inp)renderSearch(inp.value,activeFilter); if(typeof renderCoCards==='function'){_coCardLimit=10;renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding');} } // フィルター変更時にランキングカードも更新
 if(typeof renderCoCards==='function') renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding'); }); }); }
 function syncSbTag(groupLabel,label){ document.querySelectorAll('.sb-tag').forEach(tag=>{ const grp=tag.closest('.sbsec'); const lbl=grp&&grp.querySelector('.sbsl'); if(lbl&&lbl.textContent.includes(groupLabel))tag.classList.toggle('active',tag.textContent.trim()===label); }); }
 function syncQuickFilter(label){ const qfEl=document.getElementById('search-quick-filters'); if(qfEl)qfEl.querySelectorAll('.ftag').forEach(t=>t.classList.toggle('active',t.textContent.trim()===label)); }
@@ -4944,7 +4960,7 @@ function bindFoundingYearFilter() {
     tag.addEventListener('click', function() {
       el.querySelectorAll('.sb-tag').forEach(t => t.classList.remove('active'));
       this.classList.add('active');
-      activeFoundingFilter = this.textContent.trim();
+      activeFoundingFilter = this.textContent.trim(); saveFilterState();
       const inp = document.getElementById('search-input');
       if (inp) renderSearch(inp.value, activeFilter);
       if(typeof renderCoCards==='function') renderCoCards('funding');
@@ -5045,7 +5061,7 @@ if(searchInput){
 }
 if(searchClear){
   searchClear.addEventListener('click',function(){
-    if(searchInput){searchInput.value='';searchInput.focus();}
+    if(searchInput){searchInput.value=''; searchInput.focus();;searchInput.focus();}
     renderSearch('',activeFilter);
     this.style.display='none';
   });
