@@ -92,6 +92,9 @@
   --color-funding:     var(--amber);
   --color-funding-light: rgba(232,160,32,0.75);
   --amber-text:        var(--amber2);
+  /* ─ 推算タグ（tag-est-c は既存、bg/b を補完） ─ */
+  --tag-est-bg: #FFFBEB;
+  --tag-est-b:  #F0D080;
 }
 
 html, body {
@@ -1967,7 +1970,6 @@ button:focus-visible,
   #page-top .funding-cards {
     grid-template-columns: 1fr 1fr;
   }
-  #page-top
 
   /* 注目一覧 */
   #page-chumoku.visible {
@@ -2882,6 +2884,10 @@ function _safeHistoryReplace(state, title, url) {
   try { history.replaceState(state, title, url); } catch(_) {}
 }
 
+// ── サイドバー初期化フラグ ──
+var _sidebarBuilt = false;           // renderSidebar の初回のみ全構築ガード
+var _sidebarStateApplied = false;    // localStorage のサイドバー折り畳み状態を1回だけ適用
+
 var currentCompanyIndex = 0;
 
 // フィルター状態（ブロック2でも宣言するが、ブロック1からも参照されるためここで初期化）
@@ -3003,12 +3009,12 @@ function renderEventsStrip(company) {
       <div class="event-card ${primaryType}${hasUrl ? ' has-url' : ''}" data-year="${yr}">
         <div class="event-card-header">
           ${typeTags}
-          <span class="event-card-source${hasUrl ? ' verified' : ''}">${e.source || '出典不明'}</span>
+          <span class="event-card-source${hasUrl ? ' verified' : ''}">${escapeHtml(e.source || '出典不明')}</span>
           ${e.date ? `<span class="event-card-date">${formatEventDate(e.date)}</span>` : ''}
         </div>
-        <div class="event-card-title">${e.title}</div>
-        ${e.speaker ? `<div class="event-card-speaker">― ${e.speaker}</div>` : ''}
-        <div class="event-card-desc">${e.desc}</div>
+        <div class="event-card-title">${escapeHtml(e.title||'')}</div>
+        ${e.speaker ? `<div class="event-card-speaker">― ${escapeHtml(e.speaker)}</div>` : ''}
+        <div class="event-card-desc">${escapeHtml(e.desc||'')}</div>
         ${hasUrl
           ? `<a class="event-card-link" href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(e.title||'外部リンク')}（外部サイト）">一次情報を読む →</a>`
           : ``}
@@ -3276,7 +3282,11 @@ function buildMainChart(company, range) {
       mainChart.data.datasets = datasets;
       mainChart.options.scales.x.min = minYear - 0.5;
       mainChart.options.scales.x.max = maxYear + 0.5;
+      mainChart.options.scales.yFund.display = showFundingBars;
+      if (showFundingBars) mainChart.options.scales.yFund.max = maxFund * 2.5;
       mainChart.update('none');
+      // chart-latest ラベルも更新
+      _updateChartLatestLabel(company, filtered.at(-1));
       return;
     } catch(_) {}
   }
@@ -3351,16 +3361,29 @@ function buildMainChart(company, range) {
     }
   });
 
-  // 最新値ラベル更新
-  const latestHc = filtered.at(-1);
-  const hcEl = getEl('chart-latest-hc');
+  // 最新値ラベル更新（共通ヘルパー）
+  _updateChartLatestLabel(company, filtered.at(-1));
+}
+
+function _updateChartLatestLabel(company, latestHc) {
+  const hcEl   = getEl('chart-latest-hc');
   const yearEl = getEl('chart-latest-year');
-  const labelEl = getEl('chart-latest-label');
-  if (hcEl) hcEl.textContent = latestHc.count.toLocaleString(JA);
-  if (yearEl) yearEl.textContent = latestHc.year + '年';
-  if (labelEl) labelEl.style.display = 'flex';
-  const dotEl = getEl('chart-latest-dot');
+  const labelEl= getEl('chart-latest-label');
+  const dotEl  = getEl('chart-latest-dot');
+  if (!labelEl) return;
+  if (!latestHc) { labelEl.style.display = 'none'; return; }
+  const col = company.color || 'var(--teal)';
   if (dotEl) dotEl.style.background = col;
+  if (hcEl) { hcEl.textContent = latestHc.count.toLocaleString(JA); hcEl.style.color = col; }
+  if (yearEl) yearEl.textContent = latestHc.year + '年';
+  const totalFunding = company?.api?.totalFunding;
+  const fundWrap = document.getElementById('chart-latest-fund-wrap');
+  const fundEl   = document.getElementById('chart-latest-fund');
+  if (fundWrap && fundEl) {
+    if (totalFunding) { fundEl.textContent = totalFunding; fundWrap.style.display = 'flex'; }
+    else { fundWrap.style.display = 'none'; }
+  }
+  labelEl.style.display = 'flex';
 }
 
 // ── データテーブル列ソート ──
@@ -3371,14 +3394,20 @@ function updateTable(company) {
   const _cid = company.id;
   const _sortKey = `${_tableSortKey}_${_tableSortDir}`;
   if (_cid && _htmlCache[_cid]?.table && _htmlCache[_cid].tableSort === _sortKey) {
-    const el = document.getElementById('data-table-body');
-    if (el) { el.innerHTML = _htmlCache[_cid].table; bindTableEvents(); return; }
+    const el = document.getElementById('data-tbody');
+    if (el) { el.innerHTML = _htmlCache[_cid].table; _bindSortHeaders(); return; }
   }
   const tbody = getEl('data-tbody');
   // ソートキー/方向に従う
   let rows = [...getCompanyData(company)];
   if (_tableSortKey === 'count') {
     rows.sort((a,b) => _tableSortDir==='desc' ? b.count-a.count : a.count-b.count);
+  } else if (_tableSortKey === 'funding') {
+    rows.sort((a,b) => {
+      const fa = (company.funding||[]).find(f=>f.year===a.year)?.amount || 0;
+      const fb = (company.funding||[]).find(f=>f.year===b.year)?.amount || 0;
+      return _tableSortDir==='desc' ? fb-fa : fa-fb;
+    });
   } else {
     rows = rows.reverse(); // デフォルト: 年度降順
   }
@@ -3468,7 +3497,22 @@ function updateTable(company) {
   });
 }
 
-function updateMetrics(company) {
+function _bindSortHeaders() {
+  document.querySelectorAll('.sortable-th').forEach(th => {
+    if (th.dataset.sortBound) return;
+    th.dataset.sortBound = '1';
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (_tableSortKey === key) {
+        _tableSortDir = _tableSortDir === 'desc' ? 'asc' : 'desc';
+      } else {
+        _tableSortKey = key; _tableSortDir = 'desc';
+      }
+      const company = COMPANIES[currentCompanyIndex];
+      if (company) updateTable(company);
+    });
+  });
+}
   // ローディング中はスケルトン表示
   if (!company && apiState.status === 'loading') {
     const titleEl = getEl('main-title');
@@ -3565,45 +3609,20 @@ function updateMetrics(company) {
   } else {
     roundsEl.textContent = '—';
   }
-  // チャート最新値ラベル更新
-  const latestLbl = getEl('chart-latest-label');
-  if (latestLbl) {
-    if (company && getCompanyData(company).length) {
-      const latest = company.data[getCompanyData(company).length - 1];
-      const dot = getEl('chart-latest-dot');
-      const hcEl = getEl('chart-latest-hc');
-      const yrEl = getEl('chart-latest-year');
-      if (dot) dot.style.background = company.color || 'var(--teal)';
-      if (hcEl) hcEl.textContent = latest.count.toLocaleString(JA);
-      if (hcEl) hcEl.style.color = company.color || 'var(--teal)';
-      if (yrEl) yrEl.textContent = latest.year + '年';
-      const totalFunding = company.api?.totalFunding;
-      const fundWrap = document.getElementById('chart-latest-fund-wrap');
-      const fundEl = document.getElementById('chart-latest-fund');
-      if (fundWrap && fundEl) {
-        if (totalFunding) {
-          fundEl.textContent = totalFunding;
-          fundWrap.style.display = 'flex';
-        } else {
-          fundWrap.style.display = 'none';
-        }
-      }
-      latestLbl.style.display = 'flex';
-    } else {
-      latestLbl.style.display = 'none';
-    }
-  }
-
+  // chart-latest ラベルの更新は buildMainChart に一本化（重複更新を廃止）
 }
 
 function selectCompany(idx) {
   // サイドバー折りたたみ状態を復元（初回のみ）
-  try {
-    if (localStorage.getItem(STORAGE_KEYS.SIDEBAR) === '1') {
-      document.body.classList.add('sidebar-collapsed');
-      updateSidebarToggle();
-    }
-  } catch(_) {}
+  if (!_sidebarStateApplied) {
+    _sidebarStateApplied = true;
+    try {
+      if (localStorage.getItem(STORAGE_KEYS.SIDEBAR) === '1') {
+        document.body.classList.add('sidebar-collapsed');
+        updateSidebarToggle();
+      }
+    } catch(_) {}
+  }
   // 前/次企業ナビゲーション（初回のみ登録）
   const prevBtn = document.getElementById('btn-prev-co');
   const nextBtn = document.getElementById('btn-next-co');
@@ -3702,10 +3721,7 @@ function selectCompany(idx) {
 
 function renderServiceSection(company) {
   const _cid = company?.id;
-  if (_cid && _htmlCache[_cid]?.service) {
-    const el = document.getElementById('service-section');
-    if (el) { el.innerHTML = _htmlCache[_cid].service; return; }
-  }
+  // ※ service セクションはキャッシュなし（毎回レンダリング）
   const metricsGrid  = document.getElementById('svc-metrics-grid');
   const clientsBlock = document.getElementById('svc-clients-block');
   const divider      = document.getElementById('svc-divider');
@@ -4014,6 +4030,7 @@ function applyApiData(payload) {
   Object.keys(EVENTS).forEach(key => delete EVENTS[key]);
   _htmlCache = {}; // APIデータ更新時にHTMLキャッシュをクリア
   _sbIndexCache = null; // インデックスキャッシュもリセット
+  _sidebarBuilt = false; // サイドバーをデータ更新時に再構築させる
 
   const companyList = normalized.map(api => {
     const company = {
@@ -4228,6 +4245,12 @@ function renderSidebar() {
   const sidebar = document.querySelector('.sidebar');
   if (!sidebar) return;
 
+  // 初回のみフル構築（以降はselectCompany内のactive更新のみ）
+  if (_sidebarBuilt && COMPANIES.length > 0) {
+    updateSidebarToggle();
+    return;
+  }
+
   if (COMPANIES.length === 0) {
     const emptyLabel = apiState.status === 'error'
       ? `企業一覧を取得できませんでした: ${escapeHtml(apiState.error || '不明なエラー')}`
@@ -4264,6 +4287,7 @@ function renderSidebar() {
       renderSidebarCards(this.value, APP_CONFIG.SIDEBAR_LIMIT);
     });
   }
+  _sidebarBuilt = true;
   updateSidebarToggle();
 }
 
@@ -4336,7 +4360,12 @@ var _chPoolCache = null, _topPoolCache = null;
 
 
 // ── トピックスカードスクロールインジケーター ──
+var _scrollIndicatorAC = null;
 function initScrollIndicator() {
+  if (_scrollIndicatorAC) _scrollIndicatorAC.abort();
+  _scrollIndicatorAC = new AbortController();
+  const sig = _scrollIndicatorAC.signal;
+
   const track = getEl('topics-scroll-track');
   const thumb = getEl('topics-scroll-thumb');
   const biz   = getEl('strip-biz');
@@ -4363,7 +4392,6 @@ function initScrollIndicator() {
     thumb.style.transform = 'translateX(' + pos + 'px)';
     if (btnL) btnL.disabled = biz.scrollLeft <= 0;
     if (btnR) btnR.disabled = biz.scrollLeft >= maxScroll - 2;
-    // 年ドットのアクティブ
     const yearsEl = getEl('topics-scroll-years');
     if (yearsEl) {
       yearsEl.querySelectorAll('.topics-year-dot').forEach(dot => {
@@ -4373,61 +4401,46 @@ function initScrollIndicator() {
     }
   }
 
-  // スクロール同期
-  biz.addEventListener('scroll', updateThumb, {passive: true});
-  window.addEventListener('resize', updateThumb, {passive: true});
+  biz.addEventListener('scroll', updateThumb, {passive: true, signal: sig});
+  window.addEventListener('resize', updateThumb, {passive: true, signal: sig});
 
-  // 矢印ボタン
   const STEP = 260;
-  if (btnL) btnL.addEventListener('click', () => { biz.scrollBy({left:-STEP, behavior:'smooth'}); });
-  if (btnR) btnR.addEventListener('click', () => { biz.scrollBy({left:STEP,  behavior:'smooth'}); });
+  if (btnL) btnL.addEventListener('click', () => { biz.scrollBy({left:-STEP, behavior:'smooth'}); }, {signal: sig});
+  if (btnR) btnR.addEventListener('click', () => { biz.scrollBy({left:STEP,  behavior:'smooth'}); }, {signal: sig});
 
-  // トラッククリックでジャンプ
   track.addEventListener('click', function(e) {
     if (e.target === thumb) return;
     const rect = track.getBoundingClientRect();
     const ratio = (e.clientX - rect.left) / rect.width;
     const maxScroll = biz.scrollWidth - biz.clientWidth;
     biz.scrollTo({left: ratio * maxScroll, behavior: 'smooth'});
-  });
+  }, {signal: sig});
 
-  // サムネイルドラッグ（mouse + touch 両対応）
   var _drag = false, _startX = 0, _startScroll = 0;
-
   function onDragStart(clientX) {
-    _drag = true;
-    _startX = clientX;
-    _startScroll = biz.scrollLeft;
-    thumb.style.transition = 'none';
-    document.body.style.userSelect = 'none';
+    _drag = true; _startX = clientX; _startScroll = biz.scrollLeft;
+    thumb.style.transition = 'none'; document.body.style.userSelect = 'none';
   }
   function onDragMove(clientX) {
     if (!_drag) return;
     var dx = clientX - _startX;
-    var trackW = track.offsetWidth;
-    var thumbW = thumb.offsetWidth;
+    var trackW = track.offsetWidth; var thumbW = thumb.offsetWidth;
     var maxLeft = trackW - thumbW;
     var maxScroll = biz.scrollWidth - biz.clientWidth;
     var ratio = maxLeft > 0 ? maxScroll / maxLeft : 0;
     biz.scrollLeft = Math.max(0, Math.min(maxScroll, _startScroll + dx * ratio));
   }
-  function onDragEnd() {
-    _drag = false;
-    thumb.style.transition = '';
-    document.body.style.userSelect = '';
-  }
+  function onDragEnd() { _drag = false; thumb.style.transition = ''; document.body.style.userSelect = ''; }
 
-  // マウス
-  thumb.addEventListener('mousedown', function(e) { e.preventDefault(); onDragStart(e.clientX); });
-  document.addEventListener('mousemove', function(e) { onDragMove(e.clientX); });
-  document.addEventListener('mouseup', onDragEnd);
+  thumb.addEventListener('mousedown', function(e) { e.preventDefault(); onDragStart(e.clientX); }, {signal: sig});
+  document.addEventListener('mousemove', function(e) { onDragMove(e.clientX); }, {signal: sig});
+  document.addEventListener('mouseup', onDragEnd, {signal: sig});
 
-  // タッチ
-  thumb.addEventListener('touchstart', function(e) { onDragStart(e.touches[0].clientX); }, {passive:true});
-  document.addEventListener('touchmove', function(e) { if(_drag) { e.preventDefault(); onDragMove(e.touches[0].clientX); } }, {passive:false});
-  document.addEventListener('touchend', onDragEnd, {passive:true});
+  thumb.addEventListener('touchstart', function(e) { onDragStart(e.touches[0].clientX); }, {passive:true, signal: sig});
+  // passive:false は drag中のみ必要なため、状態チェックで代替
+  document.addEventListener('touchmove', function(e) { if(_drag) onDragMove(e.touches[0].clientX); }, {passive:true, signal: sig});
+  document.addEventListener('touchend', onDragEnd, {passive:true, signal: sig});
 
-  // 初期表示
   setTimeout(updateThumb, 100);
 }
 
@@ -4447,8 +4460,11 @@ function buildYearDots(allYears) {
 }
 
 
-// ── モバイル横スワイプでトピックスカードをスクロール ──
+var _swipeScrollAC = null;
 function initSwipeScroll() {
+  if (_swipeScrollAC) _swipeScrollAC.abort();
+  _swipeScrollAC = new AbortController();
+  const sig = _swipeScrollAC.signal;
   const strips = [getEl('strip-biz'), getEl('strip-org'), getEl('strip-axis')].filter(Boolean);
   strips.forEach(strip => {
     let _sx = 0, _sl = 0, _touching = false;
@@ -4456,36 +4472,22 @@ function initSwipeScroll() {
       _sx = e.touches[0].clientX;
       _sl = strip.scrollLeft;
       _touching = true;
-    }, {passive: true});
+    }, {passive: true, signal: sig});
     strip.addEventListener('touchmove', e => {
       if (!_touching) return;
       strip.scrollLeft = _sl + (_sx - e.touches[0].clientX);
-    }, {passive: true});
-    strip.addEventListener('touchend', () => { _touching = false; }, {passive: true});
+    }, {passive: true, signal: sig});
+    strip.addEventListener('touchend', () => { _touching = false; }, {passive: true, signal: sig});
   });
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
-  // モックバナーの非表示状態を復元
-  try {
-    if (localStorage.getItem('sf_mock_dismissed') === '1') {
-      const _mb = getEl('mock-banner');
-      if (_mb) _mb.style.display = 'none';
-    }
-  } catch(_) {}
-  try {
-  // カード表示形式の復元
-  try {
-    const _sv = localStorage.getItem('sf_card_view');
-    if (_sv && typeof setCoCardView === 'function') setCoCardView(_sv);
-  } catch(_) {}
-    const sf = localStorage.getItem(STORAGE_KEYS.FILTER);
-    const ss = localStorage.getItem(STORAGE_KEYS.SERIES);
-    const sfy = localStorage.getItem(STORAGE_KEYS.FOUNDING);
-    if (sf && sf !== 'すべて') activeFilter = sf;
-    if (ss && ss !== 'すべて') activeSeriesFilter = ss;
-    if (sfy && sfy !== 'すべて') activeFoundingFilter = sfy;
-  } catch(_) {}
+  // localStorage 復元（各操作を独立した try-catch に分離）
+  try { if (localStorage.getItem('sf_mock_dismissed') === '1') { const _mb = getEl('mock-banner'); if (_mb) _mb.style.display = 'none'; } } catch(_) {}
+  try { const _sv = localStorage.getItem('sf_card_view'); if (_sv && typeof setCoCardView === 'function') setCoCardView(_sv); } catch(_) {}
+  try { const sf = localStorage.getItem(STORAGE_KEYS.FILTER);   if (sf  && sf  !== 'すべて') activeFilter        = sf;  } catch(_) {}
+  try { const ss = localStorage.getItem(STORAGE_KEYS.SERIES);   if (ss  && ss  !== 'すべて') activeSeriesFilter   = ss;  } catch(_) {}
+  try { const sfy= localStorage.getItem(STORAGE_KEYS.FOUNDING); if (sfy && sfy !== 'すべて') activeFoundingFilter = sfy; } catch(_) {}
   // data-page属性を持つ要素のキーボードナビゲーション
   document.querySelectorAll('[data-page]').forEach(el => {
     el.addEventListener('keydown', e => {
@@ -4512,6 +4514,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   buildSparklines();
+  _bindSortHeaders(); // テーブルソートヘッダーのクリックリスナー登録
   // 初期URLハッシュに基づいてページを設定
   const _initHash = location.hash;
   if (_initHash.startsWith('#company/')) {
@@ -4530,7 +4533,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   } else {
     selectCompany(Math.min(currentCompanyIndex, COMPANIES.length - 1));
   }
-  refreshAllPages();
+  // refreshAllPages() は applyApiData 内で実行済みのため不要
 });
 
 // ══════════════════════════════════════════════════════
@@ -5121,7 +5124,7 @@ function buildCharmScoreSection(company) {
           const pct = Math.min(Math.round((score||0)/5*100), 100);
           const row = document.createElement('div');
           row.style.cssText = 'display:grid;grid-template-columns:72px 1fr 28px;align-items:center;gap:4px;font-size:8px';
-          row.innerHTML = `<div style="color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${axes[i]||''}</div><div style="height:4px;background:var(--line);border-radius:2px"><div style="width:${pct}%;height:100%;background:${color};border-radius:2px"></div></div><div style="color:var(--text);text-align:right">${(score||0).toFixed(1)}</div>`;
+          row.innerHTML = `<div style="color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(axes[i]||'')}</div><div style="height:4px;background:var(--line);border-radius:2px"><div style="width:${pct}%;height:100%;background:${color};border-radius:2px"></div></div><div style="color:var(--text);text-align:right">${(score||0).toFixed(1)}</div>`;
           barSec.appendChild(row);
         });
       };
@@ -5287,10 +5290,16 @@ window.addEventListener('popstate', function(e) {
   }
 });
 
-// FABボタン: スクロール量に応じて表示/非表示
+// FABボタン: スクロール量に応じて表示/非表示（rAF throttle）
+var _fabTick = false;
 window.addEventListener('scroll', function() {
-  const fab = getEl('fab-top');
-  if (fab) fab.classList.toggle('visible', window.scrollY > 300);
+  if (_fabTick) return;
+  _fabTick = true;
+  requestAnimationFrame(() => {
+    const fab = getEl('fab-top');
+    if (fab) fab.classList.toggle('visible', window.scrollY > 300);
+    _fabTick = false;
+  });
 }, { passive: true });
 
 // 初期ページ判定（#company/layerx 形式にも対応）
@@ -5620,7 +5629,7 @@ function renderCoCardsDynamic(metric,limit){
   }
 }
 
-function renderTreemap(metric){const tm=document.getElementById('treemap');if(!tm)return;const pool=buildChPool();const defs=buildSectorDefs(pool);if(!defs.length){setEmpty(tm, 'データなし');return;}const vals=defs.map(s=>metric==='funding'?(s.funding/s.count):(s.growth/s.count));const maxV=Math.max(...vals,1);tm.innerHTML=defs.map((s,i)=>{const avg=vals[i];const intensity=avg/maxV;const {r,g,b}=parseHex(s.color);const alpha=(0.18+0.72*intensity).toFixed(2);const bg_=`rgba(${r},${g},${b},${alpha})`;const textCol=intensity>0.45?'#fff':'#3A4A5C';const subCol=intensity>0.45?'rgba(255,255,255,0.78)':'#5A6A80';const disp=metric==='funding'?Math.round(avg)+'億円/社':'+'+Math.round(avg)+'人/社';const isSel=s.name===chActiveAreaGroup;return `<div class="tmc${isSel?' sel':''}" style="background:${bg_};flex-grow:${Math.max(avg,1)}${isSel?';outline:2px solid rgba(255,255,255,0.8)':''}" data-sector="${s.name}"><div class="tml" style="color:${textCol}">${escapeHtml(s.name)}</div><div class="tmv" style="color:${subCol}">${disp}</div><div class="tmc2" style="color:${subCol}">${s.count}社</div></div>`;}).join('');(document.getElementById('page-chumoku')||document).querySelectorAll('.tmc').forEach(cell=>{cell.addEventListener('click',function(){chActiveAreaGroup=this.dataset.sector;const htf=document.getElementById('ht-f');renderTreemap(htf&&htf.classList.contains('active')?'funding':'growth');renderGroupCards('area');renderSelectedCards('area');});});}
+function renderTreemap(metric){const tm=document.getElementById('treemap');if(!tm)return;const pool=buildChPool();const defs=buildSectorDefs(pool);if(!defs.length){setEmpty(tm, 'データなし');return;}const vals=defs.map(s=>metric==='funding'?(s.funding/s.count):(s.growth/s.count));const maxV=Math.max(...vals,1);tm.innerHTML=defs.map((s,i)=>{const avg=vals[i];const intensity=avg/maxV;const {r,g,b}=parseHex(s.color);const alpha=(0.18+0.72*intensity).toFixed(2);const bg_=`rgba(${r},${g},${b},${alpha})`;const textCol=intensity>0.45?'#fff':'#3A4A5C';const subCol=intensity>0.45?'rgba(255,255,255,0.78)':'#5A6A80';const disp=metric==='funding'?Math.round(avg)+'億円/社':'+'+Math.round(avg)+'人/社';const isSel=s.name===chActiveAreaGroup;return `<div class="tmc${isSel?' sel':''}" style="background:${bg_};flex-grow:${Math.max(avg,1)}${isSel?';outline:2px solid rgba(255,255,255,0.8)':''}" data-sector="${escapeHtml(s.name)}"><div class="tml" style="color:${textCol}">${escapeHtml(s.name)}</div><div class="tmv" style="color:${subCol}">${disp}</div><div class="tmc2" style="color:${subCol}">${s.count}社</div></div>`;}).join('');(document.getElementById('page-chumoku')||document).querySelectorAll('.tmc').forEach(cell=>{cell.addEventListener('click',function(){chActiveAreaGroup=this.dataset.sector;const htf=document.getElementById('ht-f');renderTreemap(htf&&htf.classList.contains('active')?'funding':'growth');renderGroupCards('area');renderSelectedCards('area');});});}
 
 function groupTop5Html(groupName,coList,metric){const sorted=[...coList].sort((a,b)=>metric==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);if(!sorted.length)return '<div style="padding:8px;color:var(--text3);font-size:10px">企業データなし</div>';return sorted.slice(0,5).map((c,i)=>{const val=metric==='funding'?(Number.isInteger(c.funding)?c.funding:c.funding.toFixed(1))+'億円':'+'+c.hcGrowth+'人';return `<div class="gc-row ch-nav-row cursor-pointer" data-name="${escapeHtml(c.name)}" data-id="${c.id}"><span class="gc-rank">${i+1}</span><span class="gc-dot" style="background:${c.color}"></span><span class="gc-n">${escapeHtml(c.name)}</span><span class="gc-v">${val}</span><span style="font-size:9px;color:var(--text3);margin-left:2px">›</span></div>`;}).join('');}
 
