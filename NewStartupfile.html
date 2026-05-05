@@ -173,7 +173,6 @@ body.sidebar-collapsed {
 
 /* Sidebar */
 .sidebar {
-  contain: layout style;
   border-right: 1px solid var(--line);
   padding: 12px 0;
   background: #fff;
@@ -272,7 +271,7 @@ body.sidebar-collapsed .sidebar-body {
 
 /* Main */
 .main {
-  contain: layout style; overflow-y: visible; overflow-x: hidden; display: flex; flex-direction: column; min-width: 0; }
+  overflow-y: visible; overflow-x: hidden; display: flex; flex-direction: column; min-width: 0; }
 
 /* Main header strip */
 .main-header {
@@ -520,7 +519,7 @@ h1.company-title, .company-title {
 
 .topics-cards-wrap {
   padding: 0 32px;
-  overflow: hidden;
+  overflow: visible;
 }
 .topics-cards-inner {
   display: flex;
@@ -1432,7 +1431,7 @@ button:focus-visible,
   .range-btn { min-width: 64px; }
   .chart-area { height: 216px; }
   .chart-wrap { height: 196px; }
-  .event-cards-col { min-width: 188px; max-width: 188px; }
+  .event-cards-col { min-width: 160px; max-width: 200px; }
   .data-table td { grid-template-columns: 58px minmax(0,1fr); gap: 8px; }
   .salary-chart-scroll > .salary-chart-canvas-wrap { min-width: 360px; }
 #page-top .funding-cards {
