@@ -628,12 +628,13 @@ h1.company-title, .company-title {
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.15s;
   position: relative;
   overflow: hidden;
-  min-height: 90px;
-  max-height: 230px;
+  height: 200px;
+  max-height: 200px;
   display: flex;
   flex-direction: column;
   background: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  flex-shrink: 0;
 }
 /* タイプ別の border-left カラーと背景 */
 .event-card.founder   { border-left-color: #3BB08F; background: rgba(59,176,143,0.03); }
@@ -725,10 +726,10 @@ h1.company-title, .company-title {
   font-weight: 600;
   margin-bottom: 5px;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-height: calc(1.45em * 3);
+  max-height: calc(1.45em * 2);
 }
 /* 発言者 */
 .event-card-speaker {
@@ -2418,6 +2419,7 @@ select:focus-visible {
   background: var(--line);
   border-radius: var(--r-pill);
   position: relative; overflow: hidden; cursor: pointer;
+  touch-action: none;
 }
 .topics-scroll-thumb {
   height: 100%;
@@ -4333,76 +4335,93 @@ function initScrollIndicator() {
   const biz   = getEl('strip-biz');
   const btnL  = getEl('topics-scroll-left');
   const btnR  = getEl('topics-scroll-right');
-  const yearsEl = getEl('topics-scroll-years');
   if (!track || !thumb || !biz) return;
 
-  // スクロール量でサムネイルを更新
   function updateThumb() {
     const scrollW = biz.scrollWidth;
     const clientW = biz.clientWidth;
-    if (scrollW <= clientW) {
-      const nav = document.getElementById('topics-scroll-nav');
-      if (nav) nav.style.display = 'none';
+    const maxScroll = Math.max(0, scrollW - clientW);
+    if (maxScroll < 10) {
+      thumb.style.width = '100%';
+      if (btnL) btnL.disabled = true;
+      if (btnR) btnR.disabled = true;
       return;
     }
-    const ratio    = clientW / scrollW;
-    const thumbW   = Math.max(50, track.clientWidth * ratio);
-    const maxScroll = scrollW - clientW;
-    const maxLeft  = track.clientWidth - thumbW;
-    const scrollRatio = biz.scrollLeft / maxScroll;
+    const trackW  = track.offsetWidth;
+    const ratio   = clientW / scrollW;
+    const thumbW  = Math.max(50, trackW * ratio);
+    const maxLeft = trackW - thumbW;
+    const pos     = (biz.scrollLeft / maxScroll) * maxLeft;
     thumb.style.width = thumbW + 'px';
-    thumb.style.left  = (scrollRatio * maxLeft) + 'px';
-    // ボタンのdisabled
+    thumb.style.transform = 'translateX(' + pos + 'px)';
     if (btnL) btnL.disabled = biz.scrollLeft <= 0;
-    if (btnR) btnR.disabled = biz.scrollLeft >= maxScroll - 4;
+    if (btnR) btnR.disabled = biz.scrollLeft >= maxScroll - 2;
     // 年ドットのアクティブ
+    const yearsEl = getEl('topics-scroll-years');
     if (yearsEl) {
-      const dots = yearsEl.querySelectorAll('.topics-year-dot');
-      dots.forEach(dot => {
+      yearsEl.querySelectorAll('.topics-year-dot').forEach(dot => {
         const x = parseFloat(dot.dataset.x || 0);
-        dot.classList.toggle('active',
-          biz.scrollLeft >= x - 20 && biz.scrollLeft < x + 240);
+        dot.classList.toggle('active', biz.scrollLeft >= x - 20 && biz.scrollLeft < x + 240);
       });
     }
   }
 
+  // スクロール同期
   biz.addEventListener('scroll', updateThumb, {passive: true});
   window.addEventListener('resize', updateThumb, {passive: true});
 
-  // 矢印ボタンでスクロール
+  // 矢印ボタン
   const STEP = 260;
-  if (btnL) btnL.addEventListener('click', () => {
-    biz.scrollBy({left: -STEP, behavior: 'smooth'});
-  });
-  if (btnR) btnR.addEventListener('click', () => {
-    biz.scrollBy({left: STEP, behavior: 'smooth'});
-  });
-
-  // サムネイルドラッグ
-  let _dragging = false, _startX = 0, _startScroll = 0;
-  thumb.addEventListener('pointerdown', e => {
-    _dragging = true; _startX = e.clientX; _startScroll = biz.scrollLeft;
-    thumb.setPointerCapture(e.pointerId);
-  });
-  thumb.addEventListener('pointermove', e => {
-    if (!_dragging) return;
-    const dx = e.clientX - _startX;
-    const scrollW = biz.scrollWidth, clientW = biz.clientWidth;
-    const maxScroll = scrollW - clientW;
-    const maxLeft   = track.clientWidth - thumb.offsetWidth;
-    biz.scrollLeft = Math.max(0, _startScroll + dx * (maxScroll / maxLeft));
-  });
-  thumb.addEventListener('pointerup', () => { _dragging = false; });
+  if (btnL) btnL.addEventListener('click', () => { biz.scrollBy({left:-STEP, behavior:'smooth'}); });
+  if (btnR) btnR.addEventListener('click', () => { biz.scrollBy({left:STEP,  behavior:'smooth'}); });
 
   // トラッククリックでジャンプ
-  track.addEventListener('click', e => {
+  track.addEventListener('click', function(e) {
     if (e.target === thumb) return;
     const rect = track.getBoundingClientRect();
     const ratio = (e.clientX - rect.left) / rect.width;
-    biz.scrollLeft = ratio * (biz.scrollWidth - biz.clientWidth);
+    const maxScroll = biz.scrollWidth - biz.clientWidth;
+    biz.scrollTo({left: ratio * maxScroll, behavior: 'smooth'});
   });
 
-  updateThumb();
+  // サムネイルドラッグ（mouse + touch 両対応）
+  var _drag = false, _startX = 0, _startScroll = 0;
+
+  function onDragStart(clientX) {
+    _drag = true;
+    _startX = clientX;
+    _startScroll = biz.scrollLeft;
+    thumb.style.transition = 'none';
+    document.body.style.userSelect = 'none';
+  }
+  function onDragMove(clientX) {
+    if (!_drag) return;
+    var dx = clientX - _startX;
+    var trackW = track.offsetWidth;
+    var thumbW = thumb.offsetWidth;
+    var maxLeft = trackW - thumbW;
+    var maxScroll = biz.scrollWidth - biz.clientWidth;
+    var ratio = maxLeft > 0 ? maxScroll / maxLeft : 0;
+    biz.scrollLeft = Math.max(0, Math.min(maxScroll, _startScroll + dx * ratio));
+  }
+  function onDragEnd() {
+    _drag = false;
+    thumb.style.transition = '';
+    document.body.style.userSelect = '';
+  }
+
+  // マウス
+  thumb.addEventListener('mousedown', function(e) { e.preventDefault(); onDragStart(e.clientX); });
+  document.addEventListener('mousemove', function(e) { onDragMove(e.clientX); });
+  document.addEventListener('mouseup', onDragEnd);
+
+  // タッチ
+  thumb.addEventListener('touchstart', function(e) { onDragStart(e.touches[0].clientX); }, {passive:true});
+  document.addEventListener('touchmove', function(e) { if(_drag) { e.preventDefault(); onDragMove(e.touches[0].clientX); } }, {passive:false});
+  document.addEventListener('touchend', onDragEnd, {passive:true});
+
+  // 初期表示
+  setTimeout(updateThumb, 100);
 }
 
 // 年ドットを生成（renderEventsStrip後に呼ぶ）
