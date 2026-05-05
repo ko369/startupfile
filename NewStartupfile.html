@@ -2176,6 +2176,9 @@ button:focus-visible,
 @media (hover: none) {
   .event-card-link { opacity: 0.85; }
   .tmc { opacity: 0.85; }
+  /* タッチ後にhoverが残留して::afterが見えてしまうのを防ぐ */
+  .cocard.ch-nav-card::after,
+  .cocard.ch-nav-card::before { display: none; }
 }
 </style>
 
@@ -2865,6 +2868,22 @@ function buildMainChart(company, range) {
         msg.className = 'chart-empty';
         msg.style.cssText = 'color:var(--text3);font-size:12px;padding:40px;text-align:center';
         msg.textContent = '社員数データ未収録';
+        wrapper.appendChild(msg);
+      }
+    }
+    return;
+  }
+  // データが1点のみの場合もグラフは描けない（ベタ塗りになる）→ メッセージ表示
+  if (filtered.length === 1) {
+    const canvas = document.getElementById('mainChart');
+    if (canvas) {
+      canvas.style.display = 'none';
+      const wrapper = canvas.closest('.chart-wrap');
+      if (wrapper && !wrapper.querySelector('.chart-empty')) {
+        const msg = document.createElement('div');
+        msg.className = 'chart-empty';
+        msg.style.cssText = 'color:var(--text3);font-size:12px;padding:40px;text-align:center';
+        msg.textContent = `${filtered[0].year}年: ${(filtered[0].count||0).toLocaleString('ja-JP')}人（データが1件のため推移グラフを表示できません）`;
         wrapper.appendChild(msg);
       }
     }
