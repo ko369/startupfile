@@ -295,7 +295,12 @@ h1.company-title, .company-title {
   font-weight: 500;
   color: var(--text);
   line-height: var(--lh-tight);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+.company-title:focus, .company-title:focus-visible { outline: none; border: none; }
 .company-subtitle {
   font-family: var(--font-sans);
   font-size: 10px;
@@ -1963,6 +1968,7 @@ button:focus-visible,
 .cocard.ch-nav-card::after {
   content: '→ 詳細を見る';
   position: absolute;
+  z-index: 1;
   top: 0; left: 0; right: 0;
   padding: 8px 14px;
   background: linear-gradient(180deg, rgba(255,255,255,0.96) 70%, transparent);
@@ -2320,9 +2326,9 @@ button:focus-visible,
     <div class="main-header">
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-  <h2 class="company-title" id="main-title" aria-live="polite">データ読込中…</h2>
-  <button type="button" class="copy-url-btn" id="copy-url-btn" onclick="copyCompanyUrl()" aria-label="企業ページURLをコピー">URLコピー</button>
-</div>
+          <h2 class="company-title" id="main-title" aria-live="polite">データ読込中…</h2>
+          <button type="button" class="copy-url-btn" id="copy-url-btn" onclick="copyCompanyUrl()" aria-label="企業ページURLをコピー">URLコピー</button>
+        </div>
         <div class="company-subtitle" id="main-sub">企業データを読み込んでいます</div>
         <div class="main-mission" id="main-mission"></div>
       </div>
@@ -2505,7 +2511,7 @@ button:focus-visible,
     <div class="sbsec">
       <div class="sbsl">期間</div>
       <div class="pbtns" id="sb-period">
-        <span style="font-size:9px;color:var(--text3);font-family:var(--font-mono)">年次データ</span>
+        <span style="font-size:9px;color:var(--text3);font-family:var(--font-sans)">年次データ</span>
         
       </div>
     </div>
@@ -3838,7 +3844,7 @@ function renderSidebar() {
       </div>
       <div class="sidebar-body">
         <div class="company-card active">
-          <div class="company-name">データをデータ未収録</div>
+          <div class="company-name">企業データなし</div>
           <div class="company-summary-line">${emptyLabel}</div>
         </div>
       </div>`;
@@ -4044,7 +4050,7 @@ function copyCompanyUrl() {
   const url = location.href;
   if (navigator.clipboard) {
     navigator.clipboard.writeText(url).then(() => {
-      const btn = document.querySelector('.copy-url-btn');
+      const btn = document.getElementById('copy-url-btn');
       if (btn) { btn.textContent = '✓ コピー済'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'URLコピー'; btn.classList.remove('copied'); }, 2000); }
     }).catch(() => {
       try { document.execCommand('copy'); showCopied(); } catch(_) {}
@@ -5032,6 +5038,10 @@ function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-n
 
 function renderRankList(id,key){
   const el=document.getElementById(id);if(!el)return;
+  if(!COMPANIES.length){
+    el.innerHTML='<div style="color:var(--text3);font-size:11px;padding:12px 0;text-align:center">データを読み込み中…</div>';
+    return;
+  }
   let pool=buildChPool();
   // サイドバーフィルターをランキングにも適用
   if(typeof activeFilter!=='undefined'&&activeFilter&&activeFilter!=='すべて')
