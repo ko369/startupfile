@@ -1319,9 +1319,15 @@ canvas { transition: opacity 0.3s; }
 .topics-unified-inner.is-dragging{cursor:grabbing;scroll-behavior:auto}
 .unified-year-col{flex:0 0 260px;min-width:260px;display:flex;flex-direction:column;gap:6px}
 .unified-year-head{font-size:13px;font-weight:500;color:var(--text2);font-family:var(--font-mono);padding:4px 0 6px;border-bottom:2px solid var(--company-accent,var(--slate));margin-bottom:2px;letter-spacing:.03em}
-.unified-sec-label{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:2px 0;margin-top:4px;display:flex;align-items:center;gap:4px}
-.unified-sec-label::after{content:'';flex:1;height:1px;background:var(--line)}
-.unified-sec-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.unified-sec-label{display:none} /* D案により廃止 */
+.unified-sec-dot{display:none}
+/* D案：色線セパレーター */
+.unified-sep {
+  height: 3px;
+  border-radius: 2px;
+  margin-bottom: 6px;
+  opacity: 0.7;
+}
 .topics-edge-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;box-shadow:0 1px 6px rgba(0,0,0,.12);flex-shrink:0;background:var(--bg);border:1px solid var(--line2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .12s}
 .topics-edge-btn:hover{background:var(--bg3)}
 .topics-edge-btn:disabled{opacity:.25;cursor:default}
@@ -3096,10 +3102,13 @@ function renderEventsStrip(company) {
     const orgCards = (orgByYear[yr] || []).map(e => buildCard(e, yr)).join('');
     const hasBiz = bizCards.length > 0;
     const hasOrg = orgCards.length > 0;
+    // D案：色線セパレーターのみ（テキストなし）
+    const bizSep = hasBiz ? `<div class="unified-sep" style="background:#3A8BD4" title="事業づくり"></div>` : '';
+    const orgSep = hasOrg ? `<div class="unified-sep" style="background:#3A7A6A;margin-top:${hasBiz?'8px':'0'}" title="組織づくり"></div>` : '';
     return `<div class="unified-year-col" data-year="${yr}" style="--company-accent:${accentColor}">
       <div class="unified-year-head">${yr}</div>
-      ${hasBiz ? `<div class="unified-sec-label"><span class="unified-sec-dot" style="background:#3A8BD4"></span>事業づくり</div>${bizCards}` : ''}
-      ${hasOrg ? `<div class="unified-sec-label"><span class="unified-sec-dot" style="background:#3A7A6A"></span>組織づくり</div>${orgCards}` : ''}
+      ${bizSep}${bizCards}
+      ${orgSep}${orgCards}
     </div>`;
   }).join('');
 
@@ -5837,7 +5846,10 @@ function renderGroupCards(type){const pool=buildChPool();const defs=buildSectorD
 
 function renderSelectedCards(type){const pool=buildChPool();const outputId=type==='area'?'area-selected-cards':'series-selected-cards';const activeGroup=type==='area'?chActiveAreaGroup:chActiveSeriesGroup;const accentColor=type==='area'?(buildSectorDefs(pool).find(s=>s.name===activeGroup)||{color:'#3A4A5C'}).color:(chSeriesColors[activeGroup]||'#3A4A5C');const {r,g,b}=parseHex(accentColor);const cos=type==='area'?pool.filter(c=>c.sector===activeGroup):pool.filter(c=>c.series===activeGroup);const sorted=[...cos].sort((a,b2)=>chGlobalMetric==='funding'?b2.funding-a.funding:b2.hcGrowth-a.hcGrowth).slice(0,15);const el=document.getElementById(outputId);if(!el)return;el.innerHTML=`<div class="sel-label" style="border-left-color:${accentColor};background:rgba(${r},${g},${b},0.07);color:${accentColor}"><span style="width:8px;height:8px;background:${accentColor};border-radius:50%;display:inline-block;flex-shrink:0"></span>${escapeHtml(activeGroup)} — トップ${sorted.length}企業<div class="switch-bar"><div class="swbtn sel-sw${chGlobalMetric==='funding'?' active':''}" data-sm="funding" data-group="${activeGroup}" data-type="${type}" style="${chGlobalMetric==='funding'?'background:'+accentColor+';border-color:'+accentColor+';color:#fff':''}">調達額順</div><div class="swbtn sel-sw${chGlobalMetric==='growth'?' active':''}" data-sm="growth" data-group="${activeGroup}" data-type="${type}" style="${chGlobalMetric==='growth'?'background:'+accentColor+';border-color:'+accentColor+';color:#fff':''}">社員数順</div></div></div><div class="cocards" id="${type}-cards-inner">${sorted.length>0?sorted.map((c,i)=>chCoCardHtml(c,i)).join(''):'<div class="empty-hint">企業データ未収録</div>'}</div>`;el.querySelectorAll('.sel-sw').forEach(btn=>{btn.addEventListener('click',function(){const m=this.dataset.sm;const gname=this.dataset.group;const t=this.dataset.type;const pool2=buildChPool();const allCos=t==='area'?pool2.filter(c=>c.sector===gname):pool2.filter(c=>c.series===gname);const resorted=[...allCos].sort((a,b2)=>m==='funding'?b2.funding-a.funding:b2.hcGrowth-a.hcGrowth).slice(0,15);el.querySelectorAll('.sel-sw').forEach(b=>{b.classList.remove('active');b.style.background='';b.style.borderColor='';b.style.color='';});this.classList.add('active');this.style.background=accentColor;this.style.borderColor=accentColor;this.style.color='#fff';const inner=document.getElementById(t+'-cards-inner');if(inner)inner.innerHTML=resorted.map((c,i)=>chCoCardHtml(c,i)).join('');});});}
 
-function renderDynamicTopicsChu(){const allTopics=[];Object.entries(EVENTS||{}).forEach(([coId, evList])=>{const co=findCompany(coId, coId);(evList||[]).forEach(t=>allTopics.push({...t,coName:co?co.name:coId,coColor:co?co.color:'#5A6A80',coId:coId}));});allTopics.sort((a,b)=>b.year-a.year||(b.date||'').localeCompare(a.date||''));const bizTopics=allTopics.filter(t=>/prd|biz|product|service|プロダクト|事業|調達|funding|award|受賞|partner|パートナー/i.test(t.type));const orgTopics=allTopics.filter(t=>/org|workstyle|culture|hiring|採用|組織|カルチャー|環境/i.test(t.type));function topicHtml(t){return `<div class="ev-item" style="border-left:2px solid ${t.coColor}"><div style="display:flex;gap:6px;align-items:center;margin-bottom:3px"><span style="font-size:9px;background:${t.coColor}20;color:${t.coColor};padding:1px 6px;border-radius:10px;font-weight:500">${escapeHtml(t.coName)}</span><span style="font-size:9px;color:var(--text3)">${t.date||t.year+'年'}</span><span style="font-size:9px;color:var(--text3)">${escapeHtml(t.type)}</span></div><div style="font-size:11px;font-weight:500;line-height:1.4">${t.url?'<a href="'+escapeHtml(t.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+escapeHtml(t.title)+'</a>':escapeHtml(t.title)}</div>${t.desc?'<div style="font-size:10px;color:var(--text2);margin-top:2px">'+escapeHtml(t.desc)+'</div>':''}</div>`;}const bizEl=document.getElementById('biz-topics');const orgEl=document.getElementById('org-topics');if(bizEl)bizEl.innerHTML=bizTopics.length?bizTopics.slice(0,10).map(topicHtml).join(''):'<div class="events-empty">事業トピックスデータなし</div>';if(orgEl)orgEl.innerHTML=orgTopics.length?orgTopics.slice(0,10).map(topicHtml).join(''):'<div class="events-empty">組織トピックスデータなし</div>';}
+function renderDynamicTopicsChu(){const allTopics=[];Object.entries(EVENTS||{}).forEach(([coId, evList])=>{const co=findCompany(coId, coId);(evList||[]).forEach(t=>allTopics.push({...t,coName:co?co.name:coId,coColor:co?co.color:'#5A6A80',coId:coId}));});allTopics.sort((a,b)=>b.year-a.year||(b.date||'').localeCompare(a.date||''));
+// ※ biz-topics / org-topics はトップページ専用のため、ここでは更新しない
+// (refreshTopPage → renderTopicsDynamic が担当)
+}
 
 function refreshChumokuPage(){
   _chPoolCache = null; _topPoolCache = null; _sectorDefsCache = null; // フィルター変更時にキャッシュをリセット
