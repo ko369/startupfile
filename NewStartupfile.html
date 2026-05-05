@@ -181,7 +181,7 @@ body.sidebar-collapsed {
   height: calc(100vh - var(--header-h));
   overflow-y: auto;
   align-self: start;
-  transition: width .18s ease, padding .18s ease;
+  transition: width var(--transition-base) ease, padding var(--transition-base) ease;
 
   overscroll-behavior: contain;
   will-change: transform;
@@ -2023,7 +2023,7 @@ button:focus-visible,
   }
   .main-header {
     padding: 16px 0;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid var(--line);
   }
   .company-title { font-size: 20px !important; }
   .metric-row {
@@ -2155,7 +2155,7 @@ button:focus-visible,
 .company-summary-line { white-space: normal; }
 .salary-chart-scroll { overflow-x: auto; padding-bottom: 4px; }
 .salary-chart-scroll::-webkit-scrollbar { height: 6px; }
-.salary-chart-scroll::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 999px;
+.salary-chart-scroll::-webkit-scrollbar-thumb { background: var(--line2); border-radius: var(--r-pill);
 }
 
 /* URLコピーボタン */
@@ -2179,6 +2179,18 @@ button:focus-visible,
   .cocard.ch-nav-card::after,
   .cocard.ch-nav-card::before { display: none; }
 }
+
+/* アニメーション無効化（prefers-reduced-motion対応） */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .skeleton, .skeleton::after { animation: none !important; }
+}
+
+.search-mark { background: rgba(255,193,7,0.35); border-radius: 2px; padding: 0 1px; }
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
@@ -2761,23 +2773,53 @@ function renderEventsStrip(company) {
 
 // Color helper
 function buildSparklines() {
-  // Canvas2D直接描画（Chart.jsインスタンスを使わない）
-  COMPANIES.forEach((c, i) => {
-    const canvas = document.getElementById(`spark${i}`);
-    if (!canvas) return;
+  // IntersectionObserver で画面内に入ったcanvasのみ描画（パフォーマンス最適化）
+  const _drawCanvas = (canvas, c) => {
+    if (canvas._sparkDrawn) return;
+    canvas._sparkDrawn = true;
     canvas.setAttribute('role', 'img');
     canvas.setAttribute('aria-label', `${c.name}の社員数推移`);
     const rows = getCompanyData(c);
-    const latestYear = rows.length ? rows.at(-1).year : null;
-    const startYear = latestYear ? latestYear - 4 : null;
-    const filtered = startYear ? rows.filter(d => d.year >= startYear) : rows;
-    const counts = filtered.map(d => Number(d.count) || 0);
-    const color = c.color || '#5A6A80';
-    const colorDim = c.colorDim || color + '30';
-    drawSparkCanvas(canvas, counts, color, colorDim);
-  });
-}
+    if (!rows.length) return;
+    const latestYear = rows.at(-1).year;
+    const startYear = rows[0].year;
+    const range = latestYear - startYear;
+    const counts = rows.map(d => d.count);
+    drawSparkCanvas(canvas, counts, c.color || '#5A6A80', c.colorDim || 'rgba(90,106,128,0.15)');
+  };
 
+  if ('IntersectionObserver' in window) {
+    const _obs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const canvas = entry.target;
+        const idx = parseInt(canvas.id.replace('spark', ''), 10);
+        const co = COMPANIES[idx];
+        if (co) _drawCanvas(canvas, co);
+        _obs.unobserve(canvas);
+      });
+    }, { rootMargin: '200px' });
+
+    COMPANIES.forEach((c, i) => {
+      const canvas = document.getElementById(`spark${i}`);
+      if (!canvas) return;
+      _obs.observe(canvas);
+    });
+  } else {
+    // フォールバック: rAF で分散描画
+    let _idx = 0;
+    const _drawNext = () => {
+      const batch = 20;
+      for (let j = 0; j < batch && _idx < COMPANIES.length; j++, _idx++) {
+        const c = COMPANIES[_idx];
+        const canvas = document.getElementById(`spark${_idx}`);
+        if (canvas && c) _drawCanvas(canvas, c);
+      }
+      if (_idx < COMPANIES.length) requestAnimationFrame(_drawNext);
+    };
+    requestAnimationFrame(_drawNext);
+  }
+}
 function drawSparkCanvas(canvas, counts, color, colorDim) {
   if (!counts.length) return;
   const dpr = window.devicePixelRatio || 1;
@@ -3366,6 +3408,15 @@ function selectCompany(idx) {
   }
   // 前/次ボタンのdisabled状態を更新
   if (typeof updatePrevNextBtns === 'function') updatePrevNextBtns();
+  // 企業切り替え時にURLを更新（共有・ブラウザバック対応）
+  const _urlCo = COMPANIES[safeIdx];
+  if (_urlCo) {
+    const _newHash = '#company/' + _urlCo.id;
+    if (window.location.hash !== _newHash) {
+      history.replaceState({page:'company',id:_urlCo.id}, '', _newHash);
+      if (typeof PAGE_TITLES !== 'undefined') document.title = PAGE_TITLES.company(_urlCo.name);
+    }
+  }
 }
 
 function renderServiceSection(company) {
@@ -3532,7 +3583,7 @@ async function loadSiteData() {
       const si = document.getElementById('search-input');
       if (si) si.placeholder = `企業名・業種で検索… (${COMPANIES.length}社)`;
       // APIデータ取得成功時はバナーを非表示に + live-dot を緑にして最終更新時刻を表示
-      const mb = document.getElementById('mock-banner'); if(mb) mb.style.display='none';
+      const mb = document.getElementById('mock-banner'); if(mb) mb.style.display='none'; try{localStorage.setItem('sf_mock_dismissed','1');}catch(_){}
       const ld = document.getElementById('shared-live-dot');
       if (ld) { ld.style.background = '#2ea86e'; ld.title = 'データ取得完了 (' + new Date().toLocaleTimeString(JA) + ')'; }
       return; // 成功 → ループ終了
@@ -3982,6 +4033,13 @@ function showSkeletonCards(containerId, count=3){
 var _chPoolCache = null, _topPoolCache = null;
 
 window.addEventListener('DOMContentLoaded', async () => {
+  // モックバナーの非表示状態を復元
+  try {
+    if (localStorage.getItem('sf_mock_dismissed') === '1') {
+      const _mb = document.getElementById('mock-banner');
+      if (_mb) _mb.style.display = 'none';
+    }
+  } catch(_) {}
   try {
   // カード表示形式の復元
   try {
@@ -4071,6 +4129,14 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+function highlightMatch(text, query) {
+  if (!query || !text) return escapeHtml(text || '');
+  const escaped = escapeHtml(text);
+  const escapedQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escaped.replace(new RegExp(`(${escapedQ})`, 'gi'), '<mark class="search-mark">$1</mark>');
+}
+
 
 function getCompanyData(co) {
   return Array.isArray(co?.data) ? co.data : [];
