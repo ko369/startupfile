@@ -520,7 +520,6 @@ h1.company-title, .company-title {
 .topics-cards-wrap {
   padding: 0 32px;
   overflow: hidden;
-  overflow-x: visible;
 }
 .topics-cards-inner {
   display: flex;
@@ -566,11 +565,13 @@ h1.company-title, .company-title {
 
 .event-year-col {
   flex-shrink: 0;
+  flex-grow: 0;
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-width: 36px;
-  margin-right: 12px;
+  width: 260px;
+  min-width: 260px;
+  margin-right: 0;
 }
 .event-year-label {
   font-family: var(--font-mono);
@@ -582,6 +583,8 @@ h1.company-title, .company-title {
   margin-bottom: 8px;
   white-space: nowrap;
   transition: color var(--transition-base);
+
+  padding-left: 4px;
 }
 .event-year-col
 .event-cards-col {
@@ -1884,7 +1887,7 @@ button:focus-visible,
   .metric-block:last-child { grid-column: 1 / -1; }
   .metric-val, 
   .metric-note, .metric-change, .metric-label { font-size: 10px; }
-  .event-year-col { min-width: 54px; }
+  .event-year-col { width: 220px; min-width: 220px; }
   .event-cards-col { width: 240px; min-width: 240px; max-width: 240px; }
   .data-table-wrap { overflow: visible; }
   .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
@@ -2230,6 +2233,45 @@ button:focus-visible,
 }
 
 .search-mark { background: rgba(255,193,7,0.35); border-radius: 2px; padding: 0 1px; }
+
+/* ── トピックスカード横スクロールインジケーター ── */
+.topics-scroll-track {
+  height: 3px;
+  background: var(--line);
+  border-radius: var(--r-pill);
+  margin: 6px 32px 0;
+  position: relative;
+  overflow: hidden;
+}
+.topics-scroll-thumb {
+  height: 100%;
+  background: var(--line2);
+  border-radius: var(--r-pill);
+  position: absolute;
+  left: 0; top: 0;
+  transition: background 0.15s;
+  cursor: pointer;
+  min-width: 30px;
+}
+.topics-scroll-thumb:hover { background: var(--slate); }
+
+/* 横スクロールのヒント矢印 */
+.topics-scroll-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  margin: 3px 32px 0;
+  opacity: 0.7;
+}
+.topics-scroll-hint::after {
+  content: '← スクロール →';
+  letter-spacing: 0.05em;
+}
+/* 最後まで見たら非表示 */
+.topics-scroll-hint.at-end { opacity: 0; transition: opacity 0.3s; }
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
@@ -2718,6 +2760,7 @@ function renderEventsStrip(company) {
       if (el) el.innerHTML = cached[i] || '';
     });
     if (typeof bindSyncScroll === 'function') bindSyncScroll();
+  initScrollIndicator();
     return;
   }
   const BIZ_TYPES = ['business', 'award', 'turning', 'founder'];
@@ -2792,7 +2835,6 @@ function renderEventsStrip(company) {
     return allYears.map(yr => {
       const events = byYear[yr] || [];
       return `
-        <div style="flex-shrink:0;width:${36 + 12}px"></div>
         <div class="event-cards-col" data-year="${yr}">${events.map(e => buildCard(e, yr)).join('')}</div>`;
     }).join('');
   }
@@ -4086,6 +4128,56 @@ function showSkeletonCards(containerId, count=3){
 
 // メモ化キャッシュ変数（applyApiDataより前に宣言が必要）
 var _chPoolCache = null, _topPoolCache = null;
+
+
+// ── トピックスカードスクロールインジケーター ──
+function initScrollIndicator() {
+  const track = getEl('topics-scroll-track');
+  const thumb = getEl('topics-scroll-thumb');
+  const hint  = getEl('topics-scroll-hint');
+  const biz   = getEl('strip-biz');
+  if (!track || !thumb || !biz) return;
+
+  function updateThumb() {
+    const scrollW = biz.scrollWidth;
+    const clientW = biz.clientWidth;
+    if (scrollW <= clientW) { track.style.display = 'none'; if(hint) hint.style.display='none'; return; }
+    track.style.display = '';
+    const ratio = clientW / scrollW;
+    const thumbW = Math.max(30, track.clientWidth * ratio);
+    const maxScroll = scrollW - clientW;
+    const scrollRatio = biz.scrollLeft / maxScroll;
+    const maxLeft = track.clientWidth - thumbW;
+    thumb.style.width = thumbW + 'px';
+    thumb.style.left  = (scrollRatio * maxLeft) + 'px';
+    // スクロールヒント
+    if (hint) hint.classList.toggle('at-end', biz.scrollLeft >= maxScroll - 4);
+  }
+
+  biz.addEventListener('scroll', updateThumb, {passive: true});
+  window.addEventListener('resize', updateThumb, {passive: true});
+
+  // サムネイルドラッグでスクロール
+  let _dragging = false, _startX = 0, _startScroll = 0;
+  thumb.addEventListener('pointerdown', e => {
+    _dragging = true; _startX = e.clientX;
+    _startScroll = biz.scrollLeft;
+    thumb.setPointerCapture(e.pointerId);
+  });
+  thumb.addEventListener('pointermove', e => {
+    if (!_dragging) return;
+    const dx = e.clientX - _startX;
+    const scrollW = biz.scrollWidth;
+    const clientW = biz.clientWidth;
+    const trackW  = track.clientWidth;
+    const thumbW  = thumb.offsetWidth;
+    const ratio   = (scrollW - clientW) / (trackW - thumbW);
+    biz.scrollLeft = Math.max(0, _startScroll + dx * ratio);
+  });
+  thumb.addEventListener('pointerup', () => { _dragging = false; });
+
+  updateThumb();
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
   // モックバナーの非表示状態を復元
