@@ -3688,7 +3688,7 @@ function selectCompany(idx) {
   if (_urlCo) {
     const _newHash = '#company/' + _urlCo.id;
     if (window.location.hash !== _newHash) {
-      history.replaceState({page:'company',id:_urlCo.id}, '', _newHash);
+      _safeHistoryReplace({page:'company',id:_urlCo.id}, '', _newHash);
       if (typeof PAGE_TITLES !== 'undefined') document.title = PAGE_TITLES.company(_urlCo.name);
     }
   }
@@ -3823,7 +3823,10 @@ async function loadSiteData() {
       const _tid = setTimeout(() => _ctrl.abort(), TIMEOUT_MS);
       let res;
       try {
-        res = await fetch(`${API_URL}?t=${Date.now()}`, { cache:'no-store', redirect:'follow', signal:_ctrl.signal });
+        // AbortSignal は一部の環境（iframe等）でclone不可のため安全に渡す
+        const _fetchOpts = { cache:'no-store', redirect:'follow' };
+        try { _fetchOpts.signal = _ctrl.signal; } catch(_) {}
+        res = await fetch(`${API_URL}?t=${Date.now()}`, _fetchOpts);
       } finally { clearTimeout(_tid); }
 
       if (!res.ok) {
@@ -5158,7 +5161,7 @@ function showPage(page, companyId) {
       if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
     });
     document.getElementById('nav-top').classList.add('active');
-    history.pushState({page:'top', scrollY: window.scrollY}, '', '#top');
+    _safeHistoryPush({page:'top', scrollY: window.scrollY}, '', '#top');
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.title = PAGE_TITLES.top();
     activeFilter = 'すべて'; activeSeriesFilter = 'すべて'; activeFoundingFilter = 'すべて';
@@ -5198,7 +5201,7 @@ function showPage(page, companyId) {
             const origHTML = mainEl.innerHTML;
             mainEl.innerHTML = '<div style="padding:48px 32px;text-align:center;color:var(--text3)"><div style="font-size:28px;margin-bottom:10px">\uD83D\uDCCB</div><div style="font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px">データ未収録</div><div style="font-size:11px">この企業の詳細データはまだ登録されていません。</div><button type="button" onclick="showPage(\'top\')" style="margin-top:14px;padding:7px 18px;border:1px solid var(--line2);border-radius:999px;background:#fff;cursor:pointer;font-size:11px;color:var(--slate)">トップに戻る</button></div>';
           }
-          history.pushState({page:'company',id:companyId}, '', '#company/' + companyId);
+          _safeHistoryPush({page:'company',id:companyId}, '', '#company/' + companyId);
           return;
         }
       }
@@ -5212,7 +5215,7 @@ function showPage(page, companyId) {
       selectCompany(targetIdx);
     }
     const hash = companyId ? `#company/${companyId}` : '#company';
-    history.pushState({page:'company',id:companyId||null}, '', hash);
+    _safeHistoryPush({page:'company',id:companyId||null}, '', hash);
 
   } else if (page === 'chumoku') {
     const el = _pchEl;
@@ -5225,7 +5228,7 @@ function showPage(page, companyId) {
     (function() {
   const activeTab = document.querySelector('.sbi.active');
   const tabId = activeTab ? activeTab.dataset.tab : '';
-  history.pushState({page:'chumoku'}, '', '#chumoku' + (tabId ? '?tab='+tabId : ''));
+  _safeHistoryPush({page:'chumoku'}, '', '#chumoku' + (tabId ? '?tab='+tabId : ''));
 })();
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.title = PAGE_TITLES.chumoku();
@@ -5268,13 +5271,13 @@ window.addEventListener('scroll', function() {
   if (h.startsWith('#company')) {
     const parts = h.split('/');
     const id = parts[1] || null;
-    history.replaceState({page:'company',id:id}, '', h);
+    _safeHistoryReplace({page:'company',id:id}, '', h);
     showPage('company', id);
   } else if (h === '#chumoku') {
-    history.replaceState({page:'chumoku'}, '', '#chumoku');
+    _safeHistoryReplace({page:'chumoku'}, '', '#chumoku');
     showPage('chumoku');
   } else {
-    history.replaceState({page:'top'}, '', '#top');
+    _safeHistoryReplace({page:'top'}, '', '#top');
     showPage('top');
   }
 })();
