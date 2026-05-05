@@ -61,8 +61,6 @@
   --tag-note-bg:  #EFF6FF; --tag-note-c:  #2A5CA8; --tag-note-b:  #B8D0F0;
 
   /* ─ 後方互換（旧カラー参照を置き換え） ─ */
-  --color-funding:       #7a3fb5;
-  --color-funding-light: #b06adb;
   --amber:      #E8A020; /* グラフ・バー専用 - テキストには --amber-text を使うこと */
   --amber2:     #7A4A00; /* コントラスト比 5.5:1 WCAG AA ✅ (旧 #B87010 3.9:1) */
   --teal:       #1A8870; /* コントラスト比 4.8:1 WCAG AA ✅ (旧 #3BAA90 2.9:1) */
@@ -2483,7 +2481,7 @@ button:focus-visible,
       <div class="logo-grid" id="svc-clients-grid"></div>
     </div>
     <div class="svc-divider" id="svc-divider" class="is-hidden"></div>
-    <div class="svc-block" id="svc-patents-block" style="display:none; padding-top:12px">
+    <div class="svc-block" id="svc-patents-block" class="is-hidden" style="padding-top:12px">
       <div class="svc-block-label">知財・特許</div>
       <div class="patent-list" id="svc-patents-list"></div>
     </div>
@@ -2640,9 +2638,9 @@ const _HTML_CACHE_MAX = 50; // 最大キャッシュ企業数 // 企業別HTML�
 let _syncScrolling = false;
 
 function bindSyncScroll() {
-  const ax2  = document.getElementById('strip-axis');
-  const biz2 = document.getElementById('strip-biz');
-  const org2 = document.getElementById('strip-org');
+  const ax2  = getEl('strip-axis');
+  const biz2 = getEl('strip-biz');
+  const org2 = getEl('strip-org');
   if (!ax2 || !biz2 || !org2) return;
   // クローンで旧リスナーをクリア
   [ax2, biz2, org2].forEach(el => {
@@ -2650,9 +2648,9 @@ function bindSyncScroll() {
     el.parentNode.replaceChild(clone, el);
   });
   const all = [
-    document.getElementById('strip-axis'),
-    document.getElementById('strip-biz'),
-    document.getElementById('strip-org')
+    getEl('strip-axis'),
+    getEl('strip-biz'),
+    getEl('strip-org')
   ];
   all.forEach(src => {
     src.addEventListener('scroll', function() {
@@ -2708,7 +2706,7 @@ function renderEventsStrip(company) {
     </div>
     <div style="flex-shrink:0;width:${220 + 24}px"></div>`
   ).join('');
-  document.getElementById('strip-axis').innerHTML = axisHTML;
+  getEl('strip-axis').innerHTML = axisHTML;
 
   function formatEventDate(dateStr) {
     if (!dateStr) return '';
@@ -2761,12 +2759,12 @@ function renderEventsStrip(company) {
   const hasBiz = Object.keys(bizByYear).length > 0;
   const hasOrg = Object.keys(orgByYear).length > 0;
 
-  document.getElementById('strip-biz').innerHTML = buildCardsHTML(bizByYear, hasBiz);
-  document.getElementById('strip-org').innerHTML = buildCardsHTML(orgByYear, hasOrg);
+  getEl('strip-biz').innerHTML = buildCardsHTML(bizByYear, hasBiz);
+  getEl('strip-org').innerHTML = buildCardsHTML(orgByYear, hasOrg);
 
-  document.getElementById('strip-axis').scrollLeft = 0;
-  document.getElementById('strip-biz').scrollLeft = 0;
-  document.getElementById('strip-org').scrollLeft = 0;
+  getEl('strip-axis').scrollLeft = 0;
+  getEl('strip-biz').scrollLeft = 0;
+  getEl('strip-org').scrollLeft = 0;
   bindSyncScroll();
 }
 
@@ -2867,7 +2865,7 @@ function clearMainChart() {
     mainChart.destroy();
     mainChart = null;
   }
-  const canvas = document.getElementById('mainChart');
+  const canvas = getEl('mainChart');
   if (!canvas) return;
   // canvas を表示状態に戻す
   canvas.style.display = '';
@@ -2902,7 +2900,7 @@ function buildMainChart(company, range) {
   buildMainChart._retries = 0;
   const filtered = getFilteredData(company, range);
   if (!filtered.length) {
-    const canvas = document.getElementById('mainChart');
+    const canvas = getEl('mainChart');
     if (canvas) {
       canvas.style.display = 'none';
       const wrapper = canvas.closest('.chart-wrap');
@@ -2918,7 +2916,7 @@ function buildMainChart(company, range) {
   }
   // データが1点のみの場合もグラフは描けない（ベタ塗りになる）→ メッセージ表示
   if (filtered.length === 1) {
-    const canvas = document.getElementById('mainChart');
+    const canvas = getEl('mainChart');
     if (canvas) {
       canvas.style.display = 'none';
       const wrapper = canvas.closest('.chart-wrap');
@@ -2926,14 +2924,14 @@ function buildMainChart(company, range) {
         const msg = document.createElement('div');
         msg.className = 'chart-empty';
         msg.style.cssText = 'color:var(--text3);font-size:12px;padding:40px;text-align:center';
-        msg.textContent = `${filtered[0].year}年: ${(filtered[0].count||0).toLocaleString('ja-JP')}人（データが1件のため推移グラフを表示できません）`;
+        msg.textContent = `${filtered[0].year}年: ${(filtered[0].count||0).toLocaleString(JA)}人（データが1件のため推移グラフを表示できません）`;
         wrapper.appendChild(msg);
       }
     }
     return;
   }
 
-  const canvas = document.getElementById('mainChart');
+  const canvas = getEl('mainChart');
   if (!canvas) return;
   canvas.style.display = '';
   const ctx = canvas.getContext('2d');
@@ -3078,13 +3076,13 @@ function buildMainChart(company, range) {
 
   // 最新値ラベル更新
   const latestHc = filtered.at(-1);
-  const hcEl = document.getElementById('chart-latest-hc');
-  const yearEl = document.getElementById('chart-latest-year');
-  const labelEl = document.getElementById('chart-latest-label');
+  const hcEl = getEl('chart-latest-hc');
+  const yearEl = getEl('chart-latest-year');
+  const labelEl = getEl('chart-latest-label');
   if (hcEl) hcEl.textContent = latestHc.count.toLocaleString(JA);
   if (yearEl) yearEl.textContent = latestHc.year + '年';
   if (labelEl) labelEl.style.display = 'flex';
-  const dotEl = document.getElementById('chart-latest-dot');
+  const dotEl = getEl('chart-latest-dot');
   if (dotEl) dotEl.style.background = col;
 }
 
@@ -3099,7 +3097,7 @@ function updateTable(company) {
     const el = document.getElementById('data-table-body');
     if (el) { el.innerHTML = _htmlCache[_cid].table; bindTableEvents(); return; }
   }
-  const tbody = document.getElementById('data-tbody');
+  const tbody = getEl('data-tbody');
   // ソートキー/方向に従う
   let rows = [...getCompanyData(company)];
   if (_tableSortKey === 'count') {
@@ -3180,7 +3178,7 @@ function updateTable(company) {
     const _cKeys = Object.keys(_htmlCache);
     if (_cKeys.length >= _HTML_CACHE_MAX) delete _htmlCache[_cKeys[0]];
     _htmlCache[_cid] = _htmlCache[_cid] || {};
-    const _tbody = document.getElementById('data-tbody');
+    const _tbody = getEl('data-tbody');
     _htmlCache[_cid].table = _tbody ? _tbody.innerHTML : '';
     _htmlCache[_cid].tableSort = _sortKey;
   }
@@ -3194,15 +3192,15 @@ function updateTable(company) {
 }
 
 function updateMetrics(company) {
-  const titleEl = document.getElementById('main-title');
-  const subEl = document.getElementById('main-sub');
-  const missionEl = document.getElementById('main-mission');
-  const currentEl = document.getElementById('metric-current');
-  const peakEl = document.getElementById('metric-peak');
-  const peakYearEl = document.getElementById('metric-peak-year');
-  const changeEl = document.getElementById('metric-change');
-  const raisedEl = document.getElementById('metric-raised');
-  const roundsEl = document.getElementById('metric-rounds');
+  const titleEl = getEl('main-title');
+  const subEl = getEl('main-sub');
+  const missionEl = getEl('main-mission');
+  const currentEl = getEl('metric-current');
+  const peakEl = getEl('metric-peak');
+  const peakYearEl = getEl('metric-peak-year');
+  const changeEl = getEl('metric-change');
+  const raisedEl = getEl('metric-raised');
+  const roundsEl = getEl('metric-rounds');
 
   if (!company) {
     if (apiState.status === 'error') {
@@ -3285,13 +3283,13 @@ function updateMetrics(company) {
     roundsEl.textContent = '—';
   }
   // チャート最新値ラベル更新
-  const latestLbl = document.getElementById('chart-latest-label');
+  const latestLbl = getEl('chart-latest-label');
   if (latestLbl) {
     if (company && getCompanyData(company).length) {
       const latest = company.data[getCompanyData(company).length - 1];
-      const dot = document.getElementById('chart-latest-dot');
-      const hcEl = document.getElementById('chart-latest-hc');
-      const yrEl = document.getElementById('chart-latest-year');
+      const dot = getEl('chart-latest-dot');
+      const hcEl = getEl('chart-latest-hc');
+      const yrEl = getEl('chart-latest-year');
       if (dot) dot.style.background = company.color || 'var(--teal)';
       if (hcEl) hcEl.textContent = latest.count.toLocaleString(JA);
       if (hcEl) hcEl.style.color = company.color || 'var(--teal)';
@@ -3341,11 +3339,11 @@ function selectCompany(idx) {
   // mock-banner 閉じるボタン
   const mbClose = document.getElementById('mock-banner-close-btn');
   if (mbClose && !mbClose.dataset.bound) { mbClose.dataset.bound='1'; mbClose.addEventListener('click', function() {
-    const banner = document.getElementById('mock-banner');
+    const banner = getEl('mock-banner');
     if (banner) banner.style.display = 'none';
   }); }
 
-  if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
+  if (COMPANIES.length === 0) {
     updateMetrics(null);
     return;
   }
@@ -3370,7 +3368,7 @@ function selectCompany(idx) {
   // 選択した企業が表示範囲外なら再描画
   const activeCard = document.querySelector('.company-card[data-idx="'+safeIdx+'"]');
   if (!activeCard && typeof renderSidebarCards === 'function') {
-    renderSidebarCards(_sbQuery||'', Math.max(30, safeIdx+10));
+    renderSidebarCards(_sbQuery||'', Math.max(APP_CONFIG.SIDEBAR_LIMIT, safeIdx+10));
     // 再描画後にスクロール
     requestAnimationFrame(() => {
       const card = document.querySelector('.company-card[data-idx="'+safeIdx+'"]');
@@ -3487,9 +3485,10 @@ const APP_CONFIG = {
   RANK_TOP_N:    15,   // ランキング表示件数
   CARD_PAGE_SIZE:10,   // 企業カード初期表示件数
   TIMEOUT_MS:    30000,// APIタイムアウト（ミリ秒）
-  MAX_RETRY:     3,    // APIリトライ上限
+  MAX_RETRY:     3,
+  SIDEBAR_LIMIT: 30,   // サイドバー初期表示件数    // APIリトライ上限
 };
-const JA = 'ja-JP';  // ロケール定数
+const JA = JA;  // ロケール定数
 const delay = ms => new Promise(r => setTimeout(r, ms));
 const STORAGE_KEYS = { SIDEBAR: 'sf_sidebar_collapsed', FILTER: 'sf_active_filter', SERIES: 'sf_series_filter', FOUNDING: 'sf_founding_filter' };
 const FOUNDING_YEAR_FILTERS = {
@@ -3503,6 +3502,16 @@ const PAGE_TITLES = {
   company: name => `${name || ''} | StartupFile`,
 };
 const API_URL = APP_CONFIG.API_URL;  // shorthand
+// ── 汎用ヘルパー ──
+const getEl  = id  => document.getElementById(id); // getElementById短縮
+const showEl = (el, disp) => { if (el) el.style.display = disp || ''; }; // 要素表示
+const hideEl = el  => { if (el) el.style.display = 'none'; }; // 要素非表示
+
+// ── ページ全体再描画ヘルパー ──
+function refreshAllPages() {
+  refreshAllPages();
+}
+
 const apiState = {
   status: 'idle',
   error: '',
@@ -3529,7 +3538,7 @@ async function loadSiteData() {
         : `再試行中 (${attempt}/${MAX_RETRY})… GASサーバー起動待ち`;
       showLoadingState(msg);
       // main-titleにも進捗を反映
-      const titleEl = document.getElementById('main-title');
+      const titleEl = getEl('main-title');
       if (titleEl) titleEl.textContent = attempt === 1 ? 'データ読込中…' : `データ読込中… (${attempt}回目)`;
 
       const _ctrl = new AbortController();
@@ -3580,10 +3589,10 @@ async function loadSiteData() {
 
       showLoadingState('');
       // 検索プレースホルダーを実際の企業数で更新
-      const si = document.getElementById('search-input');
+      const si = getEl('search-input');
       if (si) si.placeholder = `企業名・業種で検索… (${COMPANIES.length}社)`;
       // APIデータ取得成功時はバナーを非表示に + live-dot を緑にして最終更新時刻を表示
-      const mb = document.getElementById('mock-banner'); if(mb) mb.style.display='none'; try{localStorage.setItem('sf_mock_dismissed','1');}catch(_){}
+      const mb = getEl('mock-banner'); if(mb) mb.style.display='none'; try{localStorage.setItem('sf_mock_dismissed','1');}catch(_){}
       const ld = document.getElementById('shared-live-dot');
       if (ld) { ld.style.background = '#2ea86e'; ld.title = 'データ取得完了 (' + new Date().toLocaleTimeString(JA) + ')'; }
       return; // 成功 → ループ終了
@@ -3616,7 +3625,7 @@ async function loadSiteData() {
       ['strip-biz','strip-org'].forEach(id=>{const el=document.getElementById(id);if(el){const e2=el.querySelector('.events-empty');if(e2)e2.textContent='データの取得に失敗しました';}});
       ['biz-topics','org-topics'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.innerHTML.trim())setEmpty(el,'データの取得に失敗しました','events-empty');});
       // canvasは保持しつつエラーメッセージを表示
-      const chartArea = document.getElementById('mainChart');
+      const chartArea = getEl('mainChart');
       if (chartArea) {
         const wrapper = chartArea.closest('.chart-wrap') || chartArea.parentElement;
         if (wrapper && !wrapper.querySelector('.chart-error-msg')) {
@@ -3818,8 +3827,8 @@ function makeColorDim(hex) {
 }
 
 function showLoadingState(msg) {
-  const stripBiz = document.getElementById('strip-biz');
-  const stripOrg = document.getElementById('strip-org');
+  const stripBiz = getEl('strip-biz');
+  const stripOrg = getEl('strip-org');
   if (msg) {
     const isError = msg.includes('エラー') || msg.includes('失敗');
     if (isError) {
@@ -3860,7 +3869,7 @@ function renderSidebarCards(query, limit) {
   const body = document.querySelector('#page-company .sidebar-body') || document.querySelector('.sidebar-body');
   if (!body) return;
   const q = (query||'').trim().toLowerCase();
-  const all = Array.isArray(COMPANIES) ? COMPANIES : [];
+  const all = COMPANIES;
   const filtered = q ? all.filter(c => (c.name||'').toLowerCase().includes(q) || (c.sector||'').toLowerCase().includes(q)) : all;
   const visible = filtered.slice(0, limit||30);
   const remaining = filtered.length - visible.length;
@@ -3929,7 +3938,7 @@ function renderSidebar() {
   const sidebar = document.querySelector('.sidebar');
   if (!sidebar) return;
 
-  if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
+  if (COMPANIES.length === 0) {
     const emptyLabel = apiState.status === 'error'
       ? `企業一覧を取得できませんでした: ${escapeHtml(apiState.error || '不明なエラー')}`
       : '企業データ未収録。上の検索ボックスから企業名を入力してください。';
@@ -4036,7 +4045,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // モックバナーの非表示状態を復元
   try {
     if (localStorage.getItem('sf_mock_dismissed') === '1') {
-      const _mb = document.getElementById('mock-banner');
+      const _mb = getEl('mock-banner');
       if (_mb) _mb.style.display = 'none';
     }
   } catch(_) {}
@@ -4072,7 +4081,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         updateMetrics(null);
   }
 
-  if (!Array.isArray(COMPANIES) || COMPANIES.length === 0) {
+  if (COMPANIES.length === 0) {
     // APIエラーでも個別企業ページを「エラー状態」に切り替える
     showLoadingState('');
     return;
@@ -4097,8 +4106,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   } else {
     selectCompany(Math.min(currentCompanyIndex, COMPANIES.length - 1));
   }
-  if (typeof refreshTopPage     === 'function') refreshTopPage();
-  if (typeof refreshChumokuPage === 'function') refreshChumokuPage();
+  refreshAllPages();
 });
 
 // ══════════════════════════════════════════════════════
@@ -4759,8 +4767,8 @@ function showPage(page, companyId) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.title = PAGE_TITLES.top();
     activeFilter = 'すべて'; activeSeriesFilter = 'すべて'; activeFoundingFilter = 'すべて';
-    const si = document.getElementById('search-input'); if(si) si.value = '';
-    const sr = document.getElementById('search-results'); if(sr) sr.innerHTML = '';
+    const si = getEl('search-input'); if(si) si.value = '';
+    const sr = getEl('search-results'); if(sr) sr.innerHTML = '';
     document.querySelectorAll('.sb-tag, .ftag').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.sb-tag:first-child, .ftag:first-child').forEach(t => t.classList.add('active'));
 
@@ -4772,7 +4780,7 @@ function showPage(page, companyId) {
     requestAnimationFrame(() => {
       el.classList.add('page-fade-in');
       // ページ遷移後フォーカスを個別企業見出しへ（アクセシビリティ）
-      const heading = document.getElementById('main-title');
+      const heading = getEl('main-title');
       if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); }
     });
     document.getElementById('nav-company').classList.add('active');
@@ -4853,7 +4861,7 @@ window.addEventListener('popstate', function(e) {
 
 // FABボタン: スクロール量に応じて表示/非表示
 window.addEventListener('scroll', function() {
-  const fab = document.getElementById('fab-top');
+  const fab = getEl('fab-top');
   if (fab) fab.classList.toggle('visible', window.scrollY > 300);
 }, { passive: true });
 
@@ -5149,7 +5157,7 @@ function buildChPool(){ if(_chPoolCache)return _chPoolCache; if(!Array.isArray(w
 
 function buildSectorDefs(pool){ const map={}; pool.forEach(c=>{const sec=c.sector||'その他';if(!map[sec])map[sec]={name:sec,funding:0,growth:0,count:0};map[sec].funding+=c.funding||0;map[sec].growth+=c.hcGrowth||0;map[sec].count+=1;}); const palette=['#3A5A8C','#3A7A6A','#5A4A8C','#7A4A6A','#3A6A7A','#7A5A3A','#4A7A4A','#6A4A5A','#4A5A7A','#6A6A3A','#5A7A5A','#7A7A7A']; let pi=0; return Object.values(map).sort((a,b)=>b.funding-a.funding).map(s=>({...s,color:palette[pi++%palette.length]})); }
 
-function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" role="button" tabindex="0" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding.toLocaleString('ja-JP')+'億円':'未公開'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString('ja-JP')+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${miniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString('ja-JP')+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':c.hcGrowth<0?c.hcGrowth+'人（減少）':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${miniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding.toLocaleString('ja-JP')+'億円':'未公開'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div></div>`;}
+function chCoCardHtml(c,i){const bg=c.color+'18';return `<div class="cocard ch-nav-card" data-name="${escapeHtml(c.name)}" data-id="${c.id}" role="button" tabindex="0" style="cursor:pointer;--card-accent:${c.color}"><div class="coch"><div class="cork" style="background:${bg};color:${c.color}">${i+1}</div><div class="codo" style="background:${c.color}"></div><div class="coname">${escapeHtml(c.name)}</div><div class="cosb">${escapeHtml(c.sector)}</div><div class="cometa">${c.founded?'設立 '+c.founded+'年':''}</div></div><div class="codesc">${escapeHtml(c.desc)}</div><div class="coig"><div class="coii"><div class="coil">累計調達額</div><div class="coiv">${c.funding>0?c.funding.toLocaleString(JA)+'億円':'未公開'}</div></div><div class="coii"><div class="coil">現シリーズ</div><div class="coiv">${escapeHtml(c.series)}</div></div><div class="coii"><div class="coil">現社員数</div><div class="coiv">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</div></div><div class="coii"><div class="coil">導入社数</div><div class="coiv">${c.smVal||'—'}</div></div><div class="coii"><div class="coil">サービス評価</div><div class="coiv">${c.svcVal||'—'}</div></div></div><div class="cogs"><div class="cogb"><div class="cogt">社員数推移</div><div class="mbars">${miniBarHtml(c.hc5y,c.color)}</div><div class="cogf"><span class="cogv">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</span><span class="cogd">${c.hcGrowth>0?'+'+c.hcGrowth+'人':c.hcGrowth<0?c.hcGrowth+'人（減少）':''}</span></div></div><div class="cogb"><div class="cogt">資金調達推移</div><div class="mbars">${miniBarHtml(c.f5y,c.color)}</div><div class="cogf"><span class="cogv">${c.funding>0?c.funding.toLocaleString(JA)+'億円':'未公開'}</span><span class="cogd">${c.funding>0?'累計':''}</span></div></div></div><div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bg3);display:flex;justify-content:flex-end"><span style="font-size:10px;color:${c.color};font-weight:500;cursor:pointer">個別ページで見る ›</span></div></div>`;}
 
 function renderRankList(id,key){
   const el=document.getElementById(id);if(!el)return;
