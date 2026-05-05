@@ -208,7 +208,6 @@ body.sidebar-collapsed {
   line-height: 1;
   cursor: pointer;
 }
-.sidebar-toggle:hover { background: var(--bg3); }
 body.sidebar-collapsed .sidebar-head {
   justify-content: center;
   padding: 0 0 8px;
@@ -240,7 +239,6 @@ body.sidebar-collapsed .sidebar-body {
   position: relative;
   min-width: 144px;
 }
-.company-card:hover { background: var(--bg3); }
 .company-card.active {
   background: var(--company-accent-bg, var(--bg2));
   border-left-color: var(--company-accent, var(--slate));
@@ -408,7 +406,6 @@ h1.company-title, .company-title {
   font-size: 11px;
 }
 .sortable-th { cursor: pointer; user-select: none; }
-.sortable-th:hover { background: var(--bg3); }
 .sort-icon { font-size: 9px; opacity: 0.5; }
 .sortable-th.asc .sort-icon::after { content: "↑"; }
 .sortable-th.desc .sort-icon::after { content: "↓"; }
@@ -989,8 +986,8 @@ canvas { transition: opacity 0.3s; }
 .ctab.active{background:var(--slate-dark);color:#fff;border-color:var(--slate-dark)}
 .co-cards-list{display:flex;flex-direction:column;gap:10px}
 .skeleton{
-  will-change: opacity;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--r-sm)}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}
+  will-change: opacity;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);animation:none;border-radius:var(--r-sm)}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 /* ─ ≤1100px ─ */
 /* 注目一覧：2カラムランキングの業種テキストを省略 */
   .rsec { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
@@ -1053,7 +1050,6 @@ canvas { transition: opacity 0.3s; }
 .sb-tag:hover:not(.active), .ftag:hover:not(.active) { opacity: 0.75; }
 .pb:hover:not(.active) { opacity: 0.8; }
 .mtab:hover:not(.active), .ctab:hover:not(.active) { opacity: 0.8; }
-.page-nav-btn:hover { background: var(--bg3); }
 .cocard-view-btn:hover { opacity: 0.8; }
 /* ════ ページ表示制御 ════ */
 
@@ -1222,11 +1218,9 @@ canvas { transition: opacity 0.3s; }
 .co-card[data-name] { cursor: pointer; }
 .co-card[data-name]:hover { border-color: var(--line2); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .cocard.ch-nav-card:hover { border-color: var(--line2); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-.ch-nav-row:hover { background: var(--bg3); }
 .fc[data-name] { cursor: pointer; }
 .fc[data-name]:hover { border-color: var(--line2); }
 .sr-row[data-name] { cursor: pointer; }
-.sr-row:hover { background: var(--bg3); }
 
 /* ── パンくずリスト ── */
 .breadcrumb {
@@ -2169,6 +2163,20 @@ button:focus-visible,
 .copy-url-btn { font-size:10px; padding:3px 10px; background:var(--bg2); border:1px solid var(--line2); border-radius:var(--r-pill); cursor:pointer; color:var(--text2); }
 .copy-url-btn:hover { background:var(--bg3); }
 .copy-url-btn.copied { color:var(--slate-dark); border-color:var(--slate-dark); }
+
+/* ホバー統合 */
+.sidebar-toggle:hover,
+.company-card:hover,
+.sortable-th:hover,
+.page-nav-btn:hover,
+.ch-nav-row:hover,
+.sr-row:hover { background: var(--bg3); }
+
+/* タッチデバイス: hover依存UIの代替 */
+@media (hover: none) {
+  .event-card-link { opacity: 0.85; }
+  .tmc { opacity: 0.85; }
+}
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
@@ -2478,8 +2486,8 @@ button:focus-visible,
         <thead>
           <tr>
             <th scope="col" style="width:54px">年</th>
-            <th scope="col" style="width:110px;cursor:pointer" id="th-count" class="sortable-th" title="クリックでソート">社員数 <span class="sort-icon">↕</span></th>
-            <th scope="col" style="width:130px;cursor:pointer" id="th-funding" class="sortable-th" title="クリックでソート">資金調達 <span class="sort-icon">↕</span></th>
+            <th scope="col" style="width:110px;cursor:pointer" id="th-count" class="sortable-th" data-sort="count" aria-sort="descending" title="クリックでソート">社員数 <span class="sort-icon">↕</span></th>
+            <th scope="col" style="width:130px;cursor:pointer" id="th-funding" class="sortable-th" data-sort="funding" aria-sort="none" title="クリックでソート">資金調達 <span class="sort-icon">↕</span></th>
             <th scope="col">ソース</th>
           </tr>
         </thead>
@@ -3105,6 +3113,13 @@ function updateTable(company) {
         </td>
       </tr>`;
   }).join('');
+  // aria-sort を現在のソート状態に合わせて更新
+  document.querySelectorAll('[data-sort]').forEach(th => {
+    th.setAttribute('aria-sort',
+      th.dataset.sort === _tableSortKey
+        ? (_tableSortDir === 'asc' ? 'ascending' : 'descending')
+        : 'none');
+  });
 }
 
 function updateMetrics(company) {
@@ -3266,7 +3281,7 @@ function selectCompany(idx) {
   const safeIdx = Math.max(0, Math.min(idx, COMPANIES.length - 1));
   currentCompanyIndex = safeIdx;
   // 企業切り替え時にスクロールをトップに戻す
-  const mainEl = document.getElementById('page-company')?.querySelector('.main');
+  const mainEl = _pcEl?.querySelector('.main');
   if (mainEl) mainEl.scrollTop = 0;
 
   // サイドバーのactive更新（DOM全再生成を避けて軽量更新）
@@ -4028,7 +4043,7 @@ function escapeHtml(str) {
 }
 
 function getCompanyData(co) {
-  return getCompanyData(co);
+  return Array.isArray(co?.data) ? co.data : [];
 }
 
 function formatBillion(n) {
@@ -4068,7 +4083,7 @@ function copyCompanyUrl() {
 
 function setEmpty(el, msg, cls) {
   if (!el) return;
-  el.innerHTML = `<div class="${cls||'empty-hint'}">${msg}</div>`;
+  el.innerHTML = `<div class="${cls||'empty-hint'}">${escapeHtml(String(msg||''))}</div>`;
 }
 
 function findCompany(id, name) {
@@ -4617,10 +4632,14 @@ function buildCharmScoreSection(company) {
 // showPage('company', '2') → LayerXの個別ページへ
 // showPage('company')           → 最後に見ていた企業へ
 function showPage(page, companyId) {
+  // ページ要素を先頭で一度だけ取得
+  const _ptEl  = document.getElementById('page-top');
+  const _pcEl  = document.getElementById('page-company');
+  const _pchEl = document.getElementById('page-chumoku');
   // すべて非表示
-  document.getElementById('page-top').style.display = 'none';
-  ['page-company', 'page-chumoku'].forEach(id => {
-    const el = document.getElementById(id);
+  if (_ptEl)  _ptEl.style.display  = 'none';
+  [_pcEl, _pchEl].forEach(el => {
+    if (!el) return;
     el.style.display = 'none';
     el.classList.remove('visible');
   });
@@ -4631,8 +4650,8 @@ function showPage(page, companyId) {
   });
 
   if (page === 'top') {
-    const ptEl = document.getElementById('page-top');
-    ptEl.style.display = 'block';
+    const ptEl = _ptEl;
+    if (ptEl) ptEl.style.display = 'block';
     ptEl.classList.remove('page-fade-in');
     requestAnimationFrame(() => {
       ptEl.classList.add('page-fade-in');
@@ -4650,8 +4669,8 @@ function showPage(page, companyId) {
     document.querySelectorAll('.sb-tag:first-child, .ftag:first-child').forEach(t => t.classList.add('active'));
 
   } else if (page === 'company') {
-    const el = document.getElementById('page-company');
-    el.style.display = 'grid';
+    const el = _pcEl;
+    if (el) el.style.display = 'grid';
     el.classList.add('visible');
     el.classList.remove('page-fade-in');
     requestAnimationFrame(() => {
@@ -4697,8 +4716,8 @@ function showPage(page, companyId) {
     history.pushState({page:'company',id:companyId||null}, '', hash);
 
   } else if (page === 'chumoku') {
-    const el = document.getElementById('page-chumoku');
-    el.style.display = 'grid';
+    const el = _pchEl;
+    if (el) el.style.display = 'grid';
     el.classList.add('visible');
     el.classList.remove('page-fade-in');
     requestAnimationFrame(() => el.classList.add('page-fade-in'));
