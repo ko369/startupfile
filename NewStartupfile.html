@@ -3488,7 +3488,7 @@ const APP_CONFIG = {
   MAX_RETRY:     3,
   SIDEBAR_LIMIT: 30,   // サイドバー初期表示件数    // APIリトライ上限
 };
-const JA = JA;  // ロケール定数
+const JA = 'ja-JP';  // ロケール定数
 const delay = ms => new Promise(r => setTimeout(r, ms));
 const STORAGE_KEYS = { SIDEBAR: 'sf_sidebar_collapsed', FILTER: 'sf_active_filter', SERIES: 'sf_series_filter', FOUNDING: 'sf_founding_filter' };
 const FOUNDING_YEAR_FILTERS = {
@@ -3496,16 +3496,16 @@ const FOUNDING_YEAR_FILTERS = {
   '2016〜2019': c => c.founded && c.founded >= 2016 && c.founded <= 2019,
   '2020〜':    c => c.founded && c.founded >= 2020,
 };
-const PAGE_TITLES = {
+var PAGE_TITLES = {
   top:     () => 'StartupFile — 日本のスタートアップ企業情報',
   chumoku: () => '注目一覧 | StartupFile',
   company: name => `${name || ''} | StartupFile`,
 };
-const API_URL = APP_CONFIG.API_URL;  // shorthand
+var   API_URL = APP_CONFIG.API_URL;  // shorthand
 // ── 汎用ヘルパー ──
-const getEl  = id  => document.getElementById(id); // getElementById短縮
-const showEl = (el, disp) => { if (el) el.style.display = disp || ''; }; // 要素表示
-const hideEl = el  => { if (el) el.style.display = 'none'; }; // 要素非表示
+var getEl  = function(id) { return document.getElementById(id); }; // getElementById短縮
+var showEl = function(el, disp) { if (el) el.style.display = disp || ''; }; // 要素表示
+var hideEl = function(el) { if (el) el.style.display = 'none'; }; // 要素非表示
 
 // ── ページ全体再描画ヘルパー ──
 function refreshAllPages() {
@@ -3642,7 +3642,7 @@ async function loadSiteData() {
   } // end retry loop
 }
 
-const _collator = new Intl.Collator('ja', { numeric: true, sensitivity: 'base' });
+var _collator = new Intl.Collator('ja', { numeric: true, sensitivity: 'base' });
 function naturalCompare(a, b) {
   return _collator.compare(a, b);
 }
