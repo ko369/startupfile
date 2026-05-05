@@ -158,17 +158,24 @@ body.sidebar-collapsed {
 .header-meta strong { color: var(--text2); font-weight: 400; }
 .header-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }
 .main-mission {
-  margin-top: 8px;
-  font-size: 11px;
+  margin-top: 10px;
+  font-size: 12px;
   color: var(--text2);
-  line-height: var(--lh-loose);
+  line-height: 1.7;
   width: 100%;
+  padding: 10px 14px;
+  background: var(--bg3);
+  border-left: 3px solid var(--line2);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   cursor: pointer;
+  transition: background var(--transition-base);
+  grid-column: 1 / -1;
 }
+.main-mission:hover { background: var(--bg2); }
 .main-mission.expanded {
   display: block;
   overflow: visible;
@@ -288,12 +295,19 @@ body.sidebar-collapsed .sidebar-body {
 
 /* Main header strip */
 .main-header {
-  padding: 16px 28px 12px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  padding: 16px 28px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: start;
+  gap: 0 20px;
   flex-shrink: 0;
   border-bottom: 1px solid var(--line);
+}
+/* ミッションはグリッド全幅 */
+.main-header .main-mission {
+  grid-column: 1 / -1;
+  margin-top: 12px;
 }
 .co-prev-next { display:flex; gap:6px; flex-shrink:0; }
 .co-prev-next-btn { font-size:11px; padding:4px 10px; border:1px solid var(--line2); border-radius:var(--r-sm); background:#fff; color:var(--text2); cursor:pointer; font-family:var(--font-mono); transition:background .12s,border-color .12s; }
@@ -1118,21 +1132,87 @@ canvas { transition: opacity 0.3s; }
 .co-graph-foot{display:flex;justify-content:space-between;margin-top:4px}
 .co-graph-val{font-size:10px;font-weight:500;color:var(--slate-dark)}
 .co-graph-delta{font-size:9px;color:var(--teal)}
-.nc-row{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color var(--transition-base);width:100%;margin-bottom:6px}
-.nc-row:hover{background:var(--bg3);border-color:var(--line2)}
-.nc-row:last-child{margin-bottom:0}
-.nc-date{font-size:9px;color:var(--text3);flex-shrink:0;width:36px;padding-top:2px;line-height: var(--lh-tight);text-align:center}
-.nc-date-m{font-size:9px;display:block}
-.nc-date-d{font-size:12px;font-weight:500;color:var(--text2);display:block}
-.nc-divider{width:1px;background:var(--line);align-self:stretch;flex-shrink:0}
-.nc-body{flex:1;min-width:0}
-.nc-meta{display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap}
-.nc-co{display:flex;align-items:center;gap:4px}
-.nc-co-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.nc-co-name{font-size:10px;font-weight:500}
-.nc-speaker{font-size:9px;color:var(--text3)}
-.nc-seg{font-size:9px;padding:1px 7px;border-radius:var(--r-pill);border:1px solid;flex-shrink:0}
-.nc-title{font-size:11px;font-weight:500;color:var(--text);line-height:1.5}
+/* ── トップページ トピックスカード ── */
+.nc-row {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 44px 1px 1fr;
+  align-items: stretch;
+  gap: 0 12px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s, background 0.15s;
+  width: 100%;
+  margin-bottom: 6px;
+  text-decoration: none;
+  color: inherit;
+}
+.nc-row:hover {
+  background: var(--bg3);
+  border-color: var(--slate);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.nc-row:last-child { margin-bottom: 0; }
+.nc-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 1px;
+  flex-shrink: 0;
+}
+.nc-date-m {
+  font-size: 9px;
+  color: var(--text3);
+  display: block;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+}
+.nc-date-d {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text2);
+  display: block;
+  line-height: 1.2;
+  font-family: var(--font-mono);
+}
+.nc-divider {
+  width: 1px;
+  background: var(--line);
+  align-self: stretch;
+  flex-shrink: 0;
+}
+.nc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.nc-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.nc-co { display: flex; align-items: center; gap: 5px; }
+.nc-co-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.nc-co-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.nc-speaker { font-size: 10px; color: var(--text3); }
+.nc-seg {
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  border: 1px solid;
+  flex-shrink: 0;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.nc-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.55;
+}
 
 
 /* ════ hover フィードバック（cursor:pointer 要素）════ */
@@ -1217,8 +1297,10 @@ canvas { transition: opacity 0.3s; }
 .mtab.active{color:var(--slate-dark);border-bottom-color:var(--slate-dark);font-weight:500}
 .tp{display:none;padding:16px 20px;min-height:400px}
 .tp.active{display:block}
-.sechdr{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sechdr{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px;font-weight:600}
 .sechdr::after{content:'';flex:1;height:1px;background:var(--line)}
+/* トピックスリストの間隔 */
+#biz-topics, #org-topics { display: flex; flex-direction: column; gap: 0; }
 .t15g{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
 .rb{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
 .rbt{font-size:10px;color:var(--text2);margin-bottom:8px}
@@ -1848,10 +1930,12 @@ button:focus-visible,
   /* メインエリア */
   .main-header {
     padding: 12px 16px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 10px;
   }
+  .main-header .metric-row { grid-column: 1; }
+  .main-header .main-mission { margin-top: 4px; }
   .company-title { font-size: 18px; }
   .metric-row {
     gap: 16px;
@@ -2398,12 +2482,19 @@ select:focus-visible {
   border-color: var(--slate-dark); transform: scale(1.05);
 }
 .topics-scroll-btn:disabled { opacity: 0.3; cursor: default; transform: none; }
-.topics-scroll-track-wrap { flex: 1; }
+.topics-scroll-track-wrap {
+  flex: 1;
+  /* タッチ操作しやすくするため上下のパディングを追加 */
+  padding: 8px 0;
+  margin: -8px 0;
+  cursor: pointer;
+}
 .topics-scroll-track {
-  width: 100%; height: 8px;
+  width: 100%; height: 6px;
   background: var(--line);
   border-radius: var(--r-pill);
-  position: relative; overflow: hidden; cursor: pointer;
+  position: relative;
+  cursor: pointer;
   touch-action: none;
 }
 .topics-scroll-thumb {
@@ -2411,11 +2502,13 @@ select:focus-visible {
   background: var(--slate);
   border-radius: var(--r-pill);
   position: absolute; left: 0; top: 0;
-  cursor: grab; min-width: 50px;
-  transition: background 0.15s;
+  cursor: grab; min-width: 60px;
+  transition: background 0.15s, transform 0.1s;
+  /* タッチ操作用：上下に擬似的な当たり判定を拡張 */
+  box-shadow: 0 0 0 8px transparent;
 }
-.topics-scroll-thumb:hover,
-.topics-scroll-thumb:active { background: var(--slate-dark); cursor: grabbing; }
+.topics-scroll-thumb:hover { background: var(--slate-dark); transform: scaleY(1.4); }
+.topics-scroll-thumb:active { background: var(--slate-dark); cursor: grabbing; transform: scaleY(1.6); }
 .topics-scroll-years {
   display: flex; padding: 4px 0 0; overflow: hidden;
 }
@@ -2556,7 +2649,7 @@ select:focus-visible {
         <div id="biz-topics" style="min-height:80px"></div>
       </div>
 
-      <div>
+      <div style="margin-top:24px">
         <div class="sechdr">組織づくりトピックス</div>
         <div id="org-topics" style="min-height:80px"></div>
       </div>
@@ -2593,7 +2686,6 @@ select:focus-visible {
           <button type="button" class="copy-url-btn" id="copy-url-btn" onclick="copyCompanyUrl()" aria-label="企業ページURLをコピー">URLコピー</button>
         </div>
         <div class="company-subtitle" id="main-sub">企業データを読み込んでいます</div>
-        <div class="main-mission" id="main-mission"></div>
       </div>
       <div class="metric-row">
         <div class="metric-block">
@@ -2612,6 +2704,8 @@ select:focus-visible {
           <div class="metric-note" id="metric-rounds">—</div>
         </div>
       </div>
+      <!-- ミッション: メトリクス行の下にフル幅で表示 -->
+      <div class="main-mission" id="main-mission"></div>
     </div>
 
     <!-- タブナビゲーション -->
