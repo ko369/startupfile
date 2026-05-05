@@ -287,6 +287,8 @@ body.sidebar-collapsed .sidebar-body {
 h1.company-title, .company-title {
   font-family: var(--font-sans);
   font-size: 24px;
+  word-break: break-word;
+  overflow-wrap: break-word;
   font-weight: 500;
   color: var(--text);
   line-height: var(--lh-tight);
@@ -587,11 +589,11 @@ h1.company-title, .company-title {
   flex-grow: 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  width: 220px;
-  min-width: 220px;
-  max-width: 220px;
-  margin-right: 24px;
+  gap: 6px;
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+  margin-right: 20px;
 }
 .event-card {
   padding: 8px 10px;
@@ -601,6 +603,25 @@ h1.company-title, .company-title {
   transition: border-color 0.15s, background 0.15s;
   position: relative;
   overflow: hidden;
+  min-height: 80px;
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+/* max-height超えの内容をfade-outで処理 */
+.event-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 36px;
+  background: linear-gradient(to bottom, transparent, var(--bg-card, #fff));
+  pointer-events: none;
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  transition: background 0.15s;
+}
+.event-card.has-url::after { height: 52px; }
+.event-card.has-url:hover::after {
+  background: linear-gradient(to bottom, transparent, var(--bg3));
 }
 .event-card
 .event-card.has-url:hover { border-color: var(--line2); background: var(--bg3); }
@@ -611,6 +632,7 @@ h1.company-title, .company-title {
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 2px;
+  z-index: 1;
   background: transparent;
   transition: background 0.15s;
 }
@@ -625,9 +647,10 @@ h1.company-title, .company-title {
 .event-card-header {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 5px;
-  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 .event-card-type {
   font-family: var(--font-mono);
@@ -657,28 +680,37 @@ h1.company-title, .company-title {
 .event-card-title {
   font-size: 11px;
   color: var(--text);
-  line-height: var(--lh-base);
+  line-height: 1.4;
   font-family: var(--font-sans);
   font-weight: 400;
-  overflow-wrap: break-word;
-  word-break: break-word;
   margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: calc(1.4em * 3); /* fallback for older browsers */
 }
 /* 発言者 */
 .event-card-speaker {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 10px;
   color: var(--text3);
   margin: 2px 0 3px;
-  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* 説明文 */
 .event-card-desc {
-  font-family: var(--font-mono);
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: 10px;
   color: var(--text3);
-  line-height: var(--lh-base);
+  line-height: 1.4;
   margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 /* リンク */
 .event-card-link {
@@ -1434,7 +1466,7 @@ button:focus-visible,
   .range-btn { min-width: 64px; }
   .chart-area { height: 216px; }
   .chart-wrap { height: 196px; }
-  .event-cards-col { width: 180px; min-width: 180px; max-width: 180px; }
+  .event-cards-col { width: 200px; min-width: 200px; max-width: 200px; }
   .data-table td { grid-template-columns: 58px minmax(0,1fr); gap: 8px; }
   .salary-chart-scroll > .salary-chart-canvas-wrap { min-width: 360px; }
 #page-top .funding-cards {
@@ -1853,7 +1885,7 @@ button:focus-visible,
   .metric-val, 
   .metric-note, .metric-change, .metric-label { font-size: 10px; }
   .event-year-col { min-width: 54px; }
-  .event-cards-col { width: 220px; min-width: 220px; max-width: 220px; }
+  .event-cards-col { width: 240px; min-width: 240px; max-width: 240px; }
   .data-table-wrap { overflow: visible; }
   .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
   .data-table thead { display: none; }
@@ -2012,6 +2044,10 @@ button:focus-visible,
   .sidebar-toggle,
   .page-nav,
   .co-prev-next,
+  .co-prev-next-wrap,
+  .search-wrap,
+  .cocard-view-toggle,
+  .skip-nav,
   #page-top,
   #page-chumoku {
     display: none !important;
@@ -2709,9 +2745,9 @@ function renderEventsStrip(company) {
     <div class="event-year-col" data-year="${yr}">
       <div class="event-year-label">${yr}</div>
     </div>
-    <div style="flex-shrink:0;width:${220 + 24}px"></div>`
+    <div style="flex-shrink:0;width:${240 + 20}px"></div>`
   ).join('');
-  getEl('strip-axis').innerHTML = axisHTML;
+  { const _el = getEl('strip-axis'); if (_el) _el.innerHTML = axisHTML; }
 
   function formatEventDate(dateStr) {
     if (!dateStr) return '';
@@ -2764,12 +2800,10 @@ function renderEventsStrip(company) {
   const hasBiz = Object.keys(bizByYear).length > 0;
   const hasOrg = Object.keys(orgByYear).length > 0;
 
-  getEl('strip-biz').innerHTML = buildCardsHTML(bizByYear, hasBiz);
-  getEl('strip-org').innerHTML = buildCardsHTML(orgByYear, hasOrg);
+  { const _el = getEl('strip-biz'); if (_el) _el.innerHTML = buildCardsHTML(bizByYear, hasBiz); }
+  { const _el = getEl('strip-org'); if (_el) _el.innerHTML = buildCardsHTML(orgByYear, hasOrg); }
 
-  getEl('strip-axis').scrollLeft = 0;
-  getEl('strip-biz').scrollLeft = 0;
-  getEl('strip-org').scrollLeft = 0;
+  [getEl('strip-axis'), getEl('strip-biz'), getEl('strip-org')].forEach(el => { if (el) el.scrollLeft = 0; });
   bindSyncScroll();
 }
 
@@ -3197,6 +3231,12 @@ function updateTable(company) {
 }
 
 function updateMetrics(company) {
+  // ローディング中はスケルトン表示
+  if (!company && apiState.status === 'loading') {
+    const titleEl = getEl('main-title');
+    if (titleEl) titleEl.textContent = 'データ読込中…';
+    return;
+  }
   const titleEl = getEl('main-title');
   const subEl = getEl('main-sub');
   const missionEl = getEl('main-mission');
@@ -3903,7 +3943,7 @@ function renderSidebarCards(query, limit) {
   moreBtn2.textContent=`さらに ${remaining} 社`;
   moreBtn2.dataset.query=q;
   moreBtn2.dataset.limit=String(limit+30);
-  moreBtn2.addEventListener('click',()=>renderSidebarCards(q,limit+30));
+  moreBtn2.addEventListener('click',()=>renderSidebarCards(q, limit + APP_CONFIG.SIDEBAR_LIMIT));
   body.appendChild(moreBtn2);
   }
 
@@ -3972,12 +4012,12 @@ function renderSidebar() {
     </div>
     <div class="sidebar-search-wrap"><input class="sidebar-search" id="sidebar-search" type="text" placeholder="企業名を検索…" aria-label="企業名を検索" autocomplete="off"/></div>
     <div class="sidebar-body"></div>`;
-  renderSidebarCards('', 30);
+  renderSidebarCards('', APP_CONFIG.SIDEBAR_LIMIT);
   const sbSearch = document.getElementById('sidebar-search');
   if (sbSearch) {
     sbSearch.addEventListener('input', function() {
       _sbQuery = this.value;
-      renderSidebarCards(this.value, 30);
+      renderSidebarCards(this.value, APP_CONFIG.SIDEBAR_LIMIT);
     });
   }
   updateSidebarToggle();
@@ -4769,7 +4809,7 @@ function showPage(page, companyId) {
       if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
     });
     document.getElementById('nav-top').classList.add('active');
-    history.pushState({page:'top'}, '', '#top');
+    history.pushState({page:'top', scrollY: window.scrollY}, '', '#top');
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.title = PAGE_TITLES.top();
     activeFilter = 'すべて'; activeSeriesFilter = 'すべて'; activeFoundingFilter = 'すべて';
@@ -4848,7 +4888,9 @@ function showPage(page, companyId) {
 window.addEventListener('popstate', function(e) {
   const state = e.state;
   if (state && state.page) {
-    if (state.page === 'company') showPage('company', state.id || null);
+    // スクロール位置を復元
+    const _sy = state.scrollY || 0;
+    if (state.page === 'company') { showPage('company', state.id || null); setTimeout(() => window.scrollTo({top:_sy,behavior:'instant'}), 60); }
     else if (state.page === 'chumoku') showPage('chumoku');
     else showPage('top');
   } else {
@@ -5074,7 +5116,7 @@ function renderSearch(query,sector){
       return bh-ah;
     });
   }
-  el.innerHTML=countHtml+filtered.slice(0, APP_CONFIG.SEARCH_LIMIT).map(c=>`<div class="sr-row" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細を見る"><span class="sr-dot" style="background:${c.color}"></span><span class="sr-name">${escapeHtml(c.name)}</span><span class="sr-sector">${escapeHtml(c.sector||'')}</span><span class="sr-series">${escapeHtml(c.series||'—')}</span><span class="sr-hc">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</span><span class="sr-arrow" style="color:var(--slate)">›</span></div>`).join('');
+  el.innerHTML=countHtml+filtered.slice(0, APP_CONFIG.SEARCH_LIMIT).map(c=>`<div class="sr-row" data-id="${c.id}" data-name="${escapeHtml(c.name)}" tabindex="0" role="button" aria-label="${escapeHtml(c.name)}の詳細を見る"><span class="sr-dot" style="background:${c.color}"></span><span class="sr-name">${highlightMatch(c.name, query)}</span><span class="sr-sector">${escapeHtml(c.sector||'')}</span><span class="sr-series">${escapeHtml(c.series||'—')}</span><span class="sr-hc">${c.headcount?c.headcount.toLocaleString(JA)+'人':'—'}</span><span class="sr-arrow" style="color:var(--slate)">›</span></div>`).join('');
   el.querySelectorAll('.sr-row').forEach(row=>{ const handler=()=>{ const co=findCompany(row.dataset.id, row.dataset.name); showPage('company',co?co.id:row.dataset.id); }; row.addEventListener('click',handler); row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handler();}}); });
   updateSidebarFilterBadges(pool,sector);
 }
