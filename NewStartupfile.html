@@ -534,24 +534,23 @@ h1.company-title, .company-title {
 /* Bottom bar */
 
 /* ── トピックス共通年軸＋カード列 ── */
+/* strip-axis は同期スクロール用に残すが非表示 */
 .topics-axis-wrap {
-  padding: 0 32px;
+  position: absolute;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 .topics-axis-inner {
   display: flex;
   align-items: flex-end;
-  gap: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line2) var(--bg3);
-  padding: 10px 0 4px;
+  scrollbar-width: none;
 }
-.topics-axis-inner::-webkit-scrollbar { height: 4px; }
-.topics-axis-inner::-webkit-scrollbar-track { background: var(--bg3); border-radius: var(--r-sm); }
-.topics-axis-inner::-webkit-scrollbar-thumb { background: var(--line2); border-radius: var(--r-sm); border: 2px solid var(--bg3); }
-.topics-axis-inner::-webkit-scrollbar-thumb:hover { background: var(--slate); }
+.topics-axis-inner::-webkit-scrollbar { display: none; }
 
 .topics-cards-wrap {
   padding: 0 32px;
@@ -1132,63 +1131,62 @@ canvas { transition: opacity 0.3s; }
 .co-graph-foot{display:flex;justify-content:space-between;margin-top:4px}
 .co-graph-val{font-size:10px;font-weight:500;color:var(--slate-dark)}
 .co-graph-delta{font-size:9px;color:var(--teal)}
-/* ── トップページ トピックスカード ── */
+/* ── トップページ トピックスカード（マガジン型）── */
 .nc-row {
   background: var(--bg);
-  border: 1px solid var(--line);
   border-radius: var(--r-md);
-  padding: 12px 14px;
+  padding: 0;
   display: grid;
-  grid-template-columns: 44px 1px 1fr;
+  grid-template-columns: 4px 1fr;
   align-items: stretch;
-  gap: 0 12px;
   cursor: pointer;
-  transition: box-shadow 0.15s, border-color 0.15s, background 0.15s;
+  transition: box-shadow 0.15s, transform 0.12s;
   width: 100%;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
+  overflow: hidden;
+  border: 1px solid var(--line);
   text-decoration: none;
   color: inherit;
 }
 .nc-row:hover {
-  background: var(--bg3);
-  border-color: var(--slate);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.09);
+  transform: translateY(-1px);
+  border-color: var(--line2);
 }
 .nc-row:last-child { margin-bottom: 0; }
+
+/* 左のカラーバー（企業カラー） */
 .nc-date {
+  background: var(--nc-accent, var(--slate));
+  width: 4px;
+  flex-shrink: 0;
+}
+/* 日付テキストは非表示（カラーバーに転用） */
+.nc-date-m, .nc-date-d { display: none; }
+
+/* 右の本文エリア */
+.nc-divider { display: none; }
+.nc-body {
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.nc-meta {
+  display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-top: 1px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nc-co {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   flex-shrink: 0;
 }
-.nc-date-m {
-  font-size: 9px;
-  color: var(--text3);
-  display: block;
-  line-height: 1.2;
-  letter-spacing: 0.03em;
-}
-.nc-date-d {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text2);
-  display: block;
-  line-height: 1.2;
-  font-family: var(--font-mono);
-}
-.nc-divider {
-  width: 1px;
-  background: var(--line);
-  align-self: stretch;
-  flex-shrink: 0;
-}
-.nc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.nc-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.nc-co { display: flex; align-items: center; gap: 5px; }
 .nc-co-dot {
-  width: 8px; height: 8px;
+  width: 7px; height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -1197,7 +1195,19 @@ canvas { transition: opacity 0.3s; }
   font-weight: 600;
   letter-spacing: -0.01em;
 }
-.nc-speaker { font-size: 10px; color: var(--text3); }
+/* 日付をバッジとして右側に配置 */
+.nc-date-badge {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+.nc-speaker {
+  font-size: 10px;
+  color: var(--text3);
+  font-style: italic;
+}
 .nc-seg {
   font-size: 9px;
   padding: 2px 8px;
@@ -1211,7 +1221,8 @@ canvas { transition: opacity 0.3s; }
   font-size: 12px;
   font-weight: 500;
   color: var(--text);
-  line-height: 1.55;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
 }
 
 
@@ -5587,7 +5598,9 @@ function ts(c) {
 }
 function renderTopics(id,topicsArr){ const el=document.getElementById(id); if(!el)return; if(!topicsArr||!topicsArr.length){setEmpty(el,'トピックスデータなし','events-empty');return;} const s=ts('#3A4A5C'); el.innerHTML=topicsArr.slice(0,10).map(t=>{ const _rawDate = t.date ? String(t.date).replace(/\s+\d+:\d+:\d+$/, '').trim() : String(t.year);
       const dateParts = _rawDate.split(/[-/]/); const m = dateParts.length >= 3 ? dateParts[1] : dateParts[0];
-      const d = dateParts.length >= 3 ? dateParts[2] : (dateParts[1] || ''); const safeId=escapeHtml(t.coId||''); const safeColor=escapeHtml(t.coColor||'#5A6A80'); return `<div class="nc-row cursor-pointer" data-co-id="${safeId}" role="button" tabindex="0"><div class="nc-date"><span class="nc-date-m">${escapeHtml(m)}${d?'月':''}</span><span class="nc-date-d">${escapeHtml(d)}</span></div><div class="nc-divider"></div><div class="nc-body"><div class="nc-meta"><div class="nc-co"><span class="nc-co-dot" style="background:${safeColor}"></span><span class="nc-co-name" data-co-id="${safeId}" style="cursor:pointer;color:${safeColor}" title="${escapeHtml(t.company||'')}の詳細を見る">${escapeHtml(t.company||'')} ↗</span></div>${t.speaker?`<span class="nc-speaker">· ${escapeHtml(t.speaker)}</span>`:''}<span class="nc-seg" style="color:${s.color};border-color:${s.border};background:${s.bg}">${escapeHtml(t.type||'')}</span></div><div class="nc-title">${t.url?`<a href="${escapeHtml(t.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${escapeHtml(t.title||'')}</a>`:escapeHtml(t.title||'')}</div></div></div>`; }).join(''); el.querySelectorAll('.nc-row[data-co-id]').forEach(row=>{ const handler=()=>{ const coId=row.dataset.coId; const co=findCompany(coId, coId); showPage('company',co?co.id:coId); }; row.addEventListener('click',handler); row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handler();}}); }); }
+      const d = dateParts.length >= 3 ? dateParts[2] : (dateParts[1] || ''); const safeId=escapeHtml(t.coId||''); const safeColor=escapeHtml(t.coColor||'#5A6A80');
+      const dateBadge = m ? `<span class="nc-date-badge">${escapeHtml(m)}${d?'月'+escapeHtml(d)+'日':''}</span>` : '';
+      return `<div class="nc-row cursor-pointer" data-co-id="${safeId}" role="button" tabindex="0" style="--nc-accent:${safeColor}"><div class="nc-date"></div><div class="nc-body"><div class="nc-meta"><div class="nc-co"><span class="nc-co-dot" style="background:${safeColor}"></span><span class="nc-co-name" data-co-id="${safeId}" style="cursor:pointer;color:${safeColor}" title="${escapeHtml(t.company||'')}の詳細を見る">${escapeHtml(t.company||'')} ↗</span></div>${t.speaker?`<span class="nc-speaker">― ${escapeHtml(t.speaker)}</span>`:''}<span class="nc-seg" style="color:${s.color};border-color:${s.border};background:${s.bg}">${escapeHtml(t.type||'')}</span>${dateBadge}</div><div class="nc-title">${t.url?`<a href="${escapeHtml(t.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${escapeHtml(t.title||'')}</a>`:escapeHtml(t.title||'')}</div></div></div>`; }).join(''); el.querySelectorAll('.nc-row[data-co-id]').forEach(row=>{ const handler=()=>{ const coId=row.dataset.coId; const co=findCompany(coId, coId); showPage('company',co?co.id:coId); }; row.addEventListener('click',handler); row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handler();}}); }); }
 
 function renderTopicsDynamic(){ const all=buildTopicPool(); const biz=all.filter(t=>/prd|biz|product|service|プロダクト|事業|調達|funding|award|受賞|partner|パートナー|turning|海外|founder/i.test(t.type)); const org=all.filter(t=>/org|workstyle|culture|hiring|採用|組織|カルチャー|環境|評価|制度/i.test(t.type)); const uncat=all.filter(t=>!biz.includes(t)&&!org.includes(t)); renderTopics('biz-topics',[...biz,...uncat].slice(0,10)); renderTopics('org-topics',org.slice(0,10)); }
 
