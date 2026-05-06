@@ -63,7 +63,7 @@
   --tag-note-bg:  #EFF6FF; --tag-note-c:  #2A5CA8; --tag-note-b:  #B8D0F0;
 
   /* ─ 後方互換（旧カラー参照を置き換え） ─ */
-  --amber:      #E8A020; /* グラフ・バー専用 - テキストには --amber-text を使うこと */
+  --amber:      #E8A020; /* グラフ・バー専用 - テキストには --amber2 を使うこと */
   --amber2:     #7A4A00; /* コントラスト比 5.5:1 WCAG AA ✅ (旧 #B87010 3.9:1) */
   --teal:       #1A8870; /* コントラスト比 4.8:1 WCAG AA ✅ (旧 #3BAA90 2.9:1) */
   --blue:       #2663AC; /* コントラスト比 5.1:1 WCAG AA ✅ (旧 #5B8FCC 3.4:1) */
@@ -91,9 +91,6 @@
   --z-sidebar:         90;
   --z-modal:           200;
   --z-fab:             110;
-  --color-funding:     var(--amber2); /* WCAG AA準拠 */
-  --color-funding-light: rgba(122,74,0,0.7); /* amber2ベース */
-  --amber-text:        var(--amber2);
   /* ─ 推算タグ（tag-est-c は既存、bg/b を補完） ─ */
   --tag-est-bg: #FFFBEB;
   --tag-est-b:  #F0D080;
@@ -205,7 +202,6 @@ body.sidebar-collapsed {
   transition: width var(--transition-base) ease, padding var(--transition-base) ease;
 
   overscroll-behavior: contain;
-  will-change: transform;
 }
 .sidebar-head {
   display: flex;
@@ -2549,8 +2545,8 @@ button:focus-visible,
         <div class="sec-hdr-row">
           <div class="sechdr" style="flex:1;margin-bottom:0">最新資金調達情報</div>
           <div class="funding-period-tabs">
-            <div class="pb active" data-fp="week">直近6件</div>
-            <div class="pb" data-fp="month">直近12件</div>
+            <div class="pb active" data-fp="week" data-n="6">直近6件</div>
+            <div class="pb" data-fp="month" data-n="12">直近12件</div>
           </div>
         </div>
         <div class="funding-cards" id="funding-cards" style="min-height:120px"></div>
@@ -2683,11 +2679,11 @@ button:focus-visible,
         </div>
       </div>
       <div class="chart-latest-item is-hidden" id="chart-latest-fund-wrap">
-        <div class="chart-latest-dot" style="background:var(--color-funding-light)"></div>
+        <div class="chart-latest-dot" style="background:rgba(122,74,0,0.7)"></div>
         <div>
           <div class="meta-hint" style="margin-bottom:2px">累計調達</div>
           <div class="flex-base-4">
-            <span class="chart-latest-val" id="chart-latest-fund" style="color:var(--color-funding-light)">—</span>
+            <span class="chart-latest-val" id="chart-latest-fund" style="color:rgba(122,74,0,0.7)">—</span>
             <span style="font-size:10px;color:var(--text3)">億円</span>
           </div>
         </div>
@@ -2884,8 +2880,7 @@ var _sidebarStateApplied = false;    // localStorage のサイドバー折り畳
 var currentCompanyIndex = 0;
 
 // フィルター状態（ブロック2でも宣言するが、ブロック1からも参照されるためここで初期化）
-var activeFilter = 'すべて';        // 後方互換（産業ドメインと連動）
-var activeDomainFilter = 'すべて';  // 産業ドメインフィルタ（新）
+var activeDomainFilter = 'すべて';  // 産業ドメインフィルタ
 var activeTechFilter = 'すべて';    // テック区分フィルタ（独立OR・新）
 var activeSeriesFilter = 'すべて';
 var activeFoundingFilter = 'すべて';
@@ -2898,39 +2893,7 @@ var _sbIndexCache = null; // renderSidebarCards用インデックスキャッシ
 var _htmlCache = {}; // 企業別HTMLキャッシュ
 const _HTML_CACHE_MAX = 50; // 最大キャッシュ企業数 // 企業別HTMLキャッシュ {id: {table, events, service}} // 仮想化canvas参照（_virtの正規化）
 
-// 連動スクロール — グローバルで1度だけ登録
-// ── トピックス：共通年軸スクロール連動 ──
-let _syncScrolling = false;
 
-function bindSyncScroll() {
-  const ax2  = getEl('strip-axis');
-  const biz2 = getEl('strip-biz');
-  const org2 = getEl('strip-org');
-  if (!ax2 || !biz2 || !org2) return;
-  // クローンで旧リスナーをクリア
-  [ax2, biz2, org2].forEach(el => {
-    const clone = el.cloneNode(true);
-    el.parentNode.replaceChild(clone, el);
-  });
-  const all = [
-    getEl('strip-axis'),
-    getEl('strip-biz'),
-    getEl('strip-org')
-  ];
-  all.forEach(src => {
-    src.addEventListener('scroll', function() {
-      if (_syncScrolling) return;
-      _syncScrolling = true;
-      const x = this.scrollLeft;
-      all.forEach(dst => { if (dst !== this) dst.scrollLeft = x; }, { passive: true });
-      // タッチ操作でのスクロール後もフラグを確実にリセット（rAF×2でフレーム確定後に解放）
-      requestAnimationFrame(() => requestAnimationFrame(() => { _syncScrolling = false; }));
-    }, { passive: true });
-    src.addEventListener('touchend', () => {
-      setTimeout(() => { _syncScrolling = false; }, APP_CONFIG.TIMING.TOUCH_DEBOUNCE);
-    }, { passive: true });
-  });
-}
 
 function renderEventsStrip(company) {
   const _cid = company?.id;
@@ -2966,15 +2929,6 @@ function renderEventsStrip(company) {
     ...Object.keys(bizByYear).map(Number),
     ...Object.keys(orgByYear).map(Number)
   ])].sort((a, b) => a - b);
-
-  function formatEventDate(dateStr) {
-    if (!dateStr) return '';
-    const s = String(dateStr).replace(/\s+\d+:\d+:\d+$/, '').trim();
-    const parts = s.split(/[-/]/);
-    if (parts.length >= 3) return Number(parts[1]) + '/' + String(Number(parts[2])).padStart(2,'0');
-    if (parts.length === 2) return parts[0] + '/' + String(Number(parts[1])).padStart(2,'0');
-    return s;
-  }
 
   function buildCard(e, yr) {
     const hasUrl = !!e.url;
@@ -3162,6 +3116,7 @@ function getFilteredData(company, range) {
 }
 
 function clearMainChart() {
+  buildMainChart._retries = 0;
   if (mainChart) {
     mainChart.destroy();
     mainChart = null;
@@ -4203,26 +4158,12 @@ function makeColorDim(hex) {
 }
 
 function showLoadingState(msg) {
-  const stripBiz = getEl('strip-biz');
-  const stripOrg = getEl('strip-org');
   if (msg) {
     const isError = msg.includes('エラー') || msg.includes('失敗');
     if (isError) {
-      const errorHtml = `<div class="data-error-card">
-        <div class="data-error-title">⚠ データの取得に失敗しました</div>
-        <div class="data-error-msg">${escapeHtml(msg)}</div>
-        <div class="data-error-actions">
-          <button class="data-error-btn primary" type="button" onclick="location.reload()" aria-label="ページを再読み込み">再読み込み</button>
-        </div>
-      </div>`;
-      if (stripBiz) stripBiz.innerHTML = errorHtml;
-      if (stripOrg) stripOrg.innerHTML = '';
-      // header meta も更新
+      // header meta を更新
       const metaEl = document.getElementById('shared-header-meta');
       if (metaEl) metaEl.innerHTML = '<span style="color:var(--error-text,#B85050)">データ取得エラー — 再読み込みしてください</span>';
-    } else {
-      setEmpty(stripBiz, msg, 'events-empty');
-      setEmpty(stripOrg, msg, 'events-empty');
     }
   }
 }
@@ -4529,11 +4470,16 @@ function buildYearDots(allYears) {
       onclick="document.getElementById('strip-unified').scrollTo({left:${x},behavior:'smooth'})"
     >${yr}</span>`;
   }).join('');
-  // ドラッグ連動でドットをアクティブに
+  // ドラッグ連動でドットをアクティブに（rAFでスロットリング）
+  let _ydRaf = null;
   el.addEventListener('scroll', function() {
-    yearsEl.querySelectorAll('.topics-year-dot').forEach(dot => {
-      const x = parseFloat(dot.dataset.x || 0);
-      dot.classList.toggle('active', el.scrollLeft >= x - 20 && el.scrollLeft < x + COL_W);
+    if (_ydRaf) return;
+    _ydRaf = requestAnimationFrame(() => {
+      yearsEl.querySelectorAll('.topics-year-dot').forEach(dot => {
+        const x = parseFloat(dot.dataset.x || 0);
+        dot.classList.toggle('active', el.scrollLeft >= x - 20 && el.scrollLeft < x + COL_W);
+      });
+      _ydRaf = null;
     });
   }, {passive: true});
 }
@@ -4644,6 +4590,15 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function formatEventDate(dateStr) {
+  if (!dateStr) return '';
+  const s = String(dateStr).replace(/\s+\d+:\d+:\d+$/, '').trim();
+  const parts = s.split(/[-/]/);
+  if (parts.length >= 3) return Number(parts[1]) + '/' + String(Number(parts[2])).padStart(2, '0');
+  if (parts.length === 2) return parts[0] + '/' + String(Number(parts[1])).padStart(2, '0');
+  return s;
+}
+
 function highlightMatch(text, query) {
   if (!query || !text) return escapeHtml(text || '');
   const escaped = escapeHtml(text);
@@ -4664,7 +4619,6 @@ function formatBillion(n) {
 
 function saveFilterState() {
   try {
-    localStorage.setItem(STORAGE_KEYS.FILTER,   activeFilter       || 'すべて'); // 後方互換
     localStorage.setItem(STORAGE_KEYS.DOMAIN,   activeDomainFilter || 'すべて');
     localStorage.setItem(STORAGE_KEYS.TECH,     activeTechFilter   || 'すべて');
     localStorage.setItem(STORAGE_KEYS.SERIES,   activeSeriesFilter || 'すべて');
@@ -4673,7 +4627,6 @@ function saveFilterState() {
 }
 
 function loadFilterState() {
-  try { const sf  = localStorage.getItem(STORAGE_KEYS.FILTER);   if (sf  && sf  !== 'すべて') { activeFilter = sf; activeDomainFilter = sf; } } catch(_) { /* intentional */ }
   try { const sd  = localStorage.getItem(STORAGE_KEYS.DOMAIN);   if (sd  && sd  !== 'すべて') activeDomainFilter  = sd;  } catch(_) { /* intentional */ }
   try { const stc = localStorage.getItem(STORAGE_KEYS.TECH);     if (stc && stc !== 'すべて') activeTechFilter    = stc; } catch(_) { /* intentional */ }
   try { const ss  = localStorage.getItem(STORAGE_KEYS.SERIES);   if (ss  && ss  !== 'すべて') activeSeriesFilter   = ss;  } catch(_) { /* intentional */ }
@@ -5267,7 +5220,7 @@ function showPage(page, companyId) {
     _safeHistoryPush({page:'top', scrollY: window.scrollY}, '', '#top');
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.title = PAGE_TITLES.top();
-    activeFilter = 'すべて'; activeDomainFilter = 'すべて'; activeTechFilter = 'すべて'; activeSeriesFilter = 'すべて'; activeFoundingFilter = 'すべて';
+    activeDomainFilter = 'すべて'; activeTechFilter = 'すべて'; activeSeriesFilter = 'すべて'; activeFoundingFilter = 'すべて';
     const si = getEl('search-input'); if(si) si.value = '';
     const sr = getEl('search-results'); if(sr) sr.innerHTML = '';
     document.querySelectorAll('.sb-tag, .ftag').forEach(t => t.classList.remove('active'));
@@ -5553,7 +5506,7 @@ function buildTopPool() {
       domain2:co.domain2||'',            // 産業ドメイン第2（新）
       tech1:co.tech1||'',               // テック区分（新）
       tech2:co.tech2||'',               // テック区分第2（新）
-      series:String(api.totalRounds||'—').trim()||'—', funding:totalFunding, hcGrowth,
+      series:String(api.series || api.fundingRound || api.totalRounds||'—').trim()||'—', funding:totalFunding, hcGrowth,
       founded:co.foundingYear||0, headcount, desc:api.mission||co.mission||'',
       hc5y:data.slice(-7).map(d=>d.count), f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),
       smVal:smItem?(smItem.value+(smItem.unit||'')):null,
@@ -5629,7 +5582,6 @@ function buildFilterTags() {
         qfEl.querySelectorAll('.ftag').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
         activeDomainFilter = this.textContent.trim();
-        activeFilter = activeDomainFilter; // 後方互換
         saveFilterState();
         syncSbTag('産業ドメイン', activeDomainFilter);
         const inp = document.getElementById('search-input');
@@ -5649,7 +5601,6 @@ function buildFilterTags() {
         mbDomEl.querySelectorAll('.ftag').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
         activeDomainFilter = this.textContent.trim();
-        activeFilter = activeDomainFilter;
         saveFilterState();
         syncSbTag('産業ドメイン', activeDomainFilter);
         syncQuickFilter(activeDomainFilter);
@@ -5675,7 +5626,7 @@ function buildFilterTags() {
         _coCardLimit = 10;
         renderCoCards(document.querySelector('.ctab.active')?.dataset.ct || 'funding');
         const inp = document.getElementById('search-input');
-        if (inp) renderSearch(inp.value, activeDomainFilter||activeFilter);
+        if (inp) renderSearch(inp.value, activeDomainFilter);
       });
     });
   }
@@ -5714,27 +5665,22 @@ function bindSbTags(container, groupLabel) {
       const ctMetric = document.querySelector('.ctab.active')?.dataset.ct || 'funding';
 
       if (groupLabel === '産業ドメイン' || groupLabel === '業種') {
-        // 産業ドメインフィルタ（新・旧共通）
         activeDomainFilter = label;
-        activeFilter = label; // 後方互換
         saveFilterState();
         syncQuickFilter(label);
         if (inp) renderSearch(inp.value, label);
         if (typeof renderCoCards === 'function') { _coCardLimit = 10; renderCoCards(ctMetric); }
 
       } else if (groupLabel === 'テック区分') {
-        // テック区分フィルタ（独立OR）
         activeTechFilter = label;
         saveFilterState();
-        // CODE-6: テック区分はトップページのカード絞り込みのみに効く
-        // 注目一覧ページのヒートマップ・産業ドメイン集計には影響しない（設計上の意図）
         if (typeof renderCoCards === 'function') { _coCardLimit = 10; renderCoCards(ctMetric); }
         _updateTechFilterNote(label);
 
       } else if (groupLabel === 'シリーズ') {
         activeSeriesFilter = label;
         saveFilterState();
-        if (inp) renderSearch(inp.value, activeFilter);
+        if (inp) renderSearch(inp.value, activeDomainFilter);
         if (typeof renderCoCards === 'function') { _coCardLimit = 10; renderCoCards(ctMetric); }
       }
 
@@ -5777,7 +5723,7 @@ function clearTechFilter() {
   const ctMetric = document.querySelector('.ctab.active')?.dataset.ct || 'funding';
   _coCardLimit = 10; renderCoCards(ctMetric);
   const inp = document.getElementById('search-input');
-  if (inp) renderSearch(inp.value, activeDomainFilter||activeFilter);
+  if (inp) renderSearch(inp.value, activeDomainFilter);
 }
 function syncSbTag(groupLabel, label) {
   document.querySelectorAll('.sb-tag').forEach(tag => {
@@ -5846,7 +5792,7 @@ var _coCardLimit = APP_CONFIG.CARD_PAGE_SIZE;
 function renderCoCards(metric,limit){
   let pool=buildTopPool();
   // 産業ドメインフィルタ（domain1 OR domain2）
-  const _domF = activeDomainFilter || activeFilter;
+  const _domF = activeDomainFilter;
   if (_domF && _domF !== 'すべて') {
     pool = pool.filter(c =>
       (c.domain1 && c.domain1 === _domF) ||
@@ -5948,8 +5894,8 @@ function renderTopics(id, topicsArr) {
   if (!el) return;
   if (!topicsArr || !topicsArr.length) { setEmpty(el, 'トピックスデータなし', 'events-empty'); return; }
   el.innerHTML = topicsArr.slice(0, 10).map(t => {
-    const _rawDate = t.date ? String(t.date).replace(/\s+\d+:\d+:\d+$/, '').trim() : String(t.year);
-    const dateParts = _rawDate.split(/[-/]/);
+    const _fmtDate = formatEventDate(t.date || String(t.year));
+    const dateParts = (t.date ? String(t.date).replace(/\s+\d+:\d+:\d+$/, '').trim() : String(t.year)).split(/[-/]/);
     const yr  = dateParts.length >= 3 ? dateParts[0] : '';
     const mon = dateParts.length >= 3 ? dateParts[1] : dateParts[0];
     const safeId    = escapeHtml(t.coId || '');
@@ -5995,7 +5941,7 @@ function bindFoundingYearFilter() {
       this.classList.add('active');
       activeFoundingFilter = this.textContent.trim(); saveFilterState();
       const inp = document.getElementById('search-input');
-      if (inp) renderSearch(inp.value, activeFilter);
+      if (inp) renderSearch(inp.value, activeDomainFilter);
       if(typeof renderCoCards==='function') renderCoCards(document.querySelector('.ctab.active')?.dataset.ct||'funding');
     });
   });
@@ -6102,7 +6048,7 @@ function refreshTopPage(){
       btn.addEventListener('click', function() {
         topPage.querySelectorAll('[data-fp]').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
-        renderFundingDynamic(12);
+        renderFundingDynamic(Number(this.dataset.n) || 6);
       });
     });
   }
@@ -6118,34 +6064,35 @@ if(searchInput){
     const val = this.value;
     if(searchClear) searchClear.style.display=val?'block':'none';
     clearTimeout(_searchTimer);
-    _searchTimer = setTimeout(()=>{ renderSearch(val, activeDomainFilter||activeFilter); }, (APP_CONFIG.TIMING && APP_CONFIG.TIMING.SEARCH_DEBOUNCE) || 150);
+    _searchTimer = setTimeout(()=>{ renderSearch(val, activeDomainFilter); }, (APP_CONFIG.TIMING && APP_CONFIG.TIMING.SEARCH_DEBOUNCE) || 150);
   });
   searchInput.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
       this.value='';
-      renderSearch('', activeDomainFilter||activeFilter);
+      renderSearch('', activeDomainFilter);
       if(searchClear) searchClear.style.display='none';
       this.blur();
     }
   });
-  // フォーカスが外れたら検索結果をクリア（200ms遅延でクリックイベントを先に処理）
-  searchInput.addEventListener('blur', function(){
-    setTimeout(function(){
-      const sr=document.getElementById('search-results');
-      if(sr) sr.innerHTML='';
-    }, 200);
+  // フォーカス外クリックで検索結果をクリア（pointerdownはclickより先に発火するためタッチでも確実に動作）
+  const _searchWrap = searchInput.closest('.search-box') || searchInput.parentElement;
+  document.addEventListener('pointerdown', function(e) {
+    if (_searchWrap && !_searchWrap.contains(e.target)) {
+      const sr = document.getElementById('search-results');
+      if (sr) sr.innerHTML = '';
+    }
   });
 }
 if(searchClear){
   searchClear.addEventListener('click',function(){
     if(searchInput){searchInput.value=''; searchInput.focus();}
-    renderSearch('', activeDomainFilter||activeFilter);
+    renderSearch('', activeDomainFilter);
     this.style.display='none';
   });
 }
 // 検索ボタンクリック
 const searchBtn=document.getElementById('search-btn');
-if(searchBtn)searchBtn.addEventListener('click',function(){renderSearch(searchInput?searchInput.value:'', activeDomainFilter||activeFilter);});
+if(searchBtn)searchBtn.addEventListener('click',function(){renderSearch(searchInput?searchInput.value:'', activeDomainFilter);});
 // ══════════════════════════════════════════════════════════════
 //  注目一覧ページ — 完全動的版 (COMPANIES / EVENTS から生成)
 // ══════════════════════════════════════════════════════════════
@@ -6164,9 +6111,8 @@ function buildChPool(){ if(_chPoolCache)return _chPoolCache; if(!Array.isArray(w
       domain2:co.domain2||'',          // 産業ドメイン第2（新）
       tech1:co.tech1||'',             // テック区分（新）
       tech2:co.tech2||'',             // テック区分第2（新）
-      series:String(api.totalRounds||'—').trim()||'—',
+      series:String(api.series || api.fundingRound || api.totalRounds||'—').trim()||'—',
       funding:totalFunding||0, fundingNull:totalFunding===null, hcGrowth,
-      founded:co.foundingYear||0, headcount, desc:api.mission||co.mission||'',
       hc5y:data.slice(-7).map(d=>d.count),
       f5y:funding.slice(-7).map(f=>typeof f.amount==='number'?f.amount:0),
       smVal:smItem?(smItem.value+(smItem.unit||'')):null,
@@ -6216,7 +6162,7 @@ function renderRankList(id, key) {
   }
   let pool = buildChPool();
   // UX-8/CODE-3: 産業ドメインフィルタを _matchDomain で適用
-  const _domF = activeDomainFilter || activeFilter;
+  const _domF = activeDomainFilter;
   if (_domF && _domF !== 'すべて') pool = pool.filter(c => _matchDomain(c, _domF));
   if (activeSeriesFilter && activeSeriesFilter !== 'すべて') pool = pool.filter(c => (c.series||'').includes(activeSeriesFilter));
   const sorted=[...pool].sort((a,b)=>key==='funding'?b.funding-a.funding:b.hcGrowth-a.hcGrowth);const mx=sorted.length?(key==='funding'?sorted[0].funding:sorted[0].hcGrowth):1;if(!sorted.length){el.innerHTML='<div style="padding:12px;color:var(--text3);font-size:11px">データを準備しています…</div>';return;}el.innerHTML=sorted.slice(0,15).map((c,i)=>{const val=key==='funding'?c.funding:c.hcGrowth;const pct=Math.round(val/Math.max(mx,1)*100);const disp=key==='funding'?(val>0?(Number.isInteger(val)?val:val.toFixed(1))+'億円':val===null?'非公開':'—'):(val>0?'+'+val+'人':val<0?val+'人':'±0人');return `<div class="rrow ch-nav-row cursor-pointer" data-name="${escapeHtml(c.name)}" data-id="${c.id}" role="button" tabindex="0"><span class="rn">${i+1}</span><span class="rd" style="background:${c.color}"></span><span class="rname">${escapeHtml(c.name)}</span>${c.headcount ? '<span style="font-size:10px;color:var(--text3);margin-left:6px">'+c.headcount.toLocaleString(JA)+'人</span>' : ''}<span class="rsec">${escapeHtml(c.sector)}</span><div class="rbw"><div class="rbar" style="width:${pct}%;background:${c.color}"></div></div><span class="rv">${disp}</span><span style="font-size:9px;color:var(--text3);margin-left:4px">›</span></div>`;}).join('');el.querySelectorAll('.ch-nav-row').forEach(row=>{
