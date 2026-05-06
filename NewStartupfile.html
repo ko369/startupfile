@@ -2600,54 +2600,6 @@ button:focus-visible,
   .compare-modal { max-height: 90vh; border-radius: var(--r-lg) var(--r-lg) 0 0; }
 }
 
-/* ════ トースト通知（alert代替） UX-5 ════ */
-#sf-toast {
-  position: fixed; bottom: 80px; left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  background: var(--slate-dark); color: #fff;
-  font-size: 12px; font-family: var(--font-sans);
-  padding: 9px 18px; border-radius: var(--r-pill);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-  z-index: 9999; pointer-events: none;
-  opacity: 0; transition: opacity 0.18s, transform 0.18s;
-  white-space: nowrap;
-}
-#sf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* ════ タッチデバイス：矢印ボタンのタップ領域を拡大 UX-3 ════ */
-.topics-edge-btn { min-width: 44px !important; min-height: 44px !important; }
-
-/* ════ トピックスヒント UX-3 ════ */
-#topics-swipe-hint {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 40px 0;
-  font-size: 10px; color: var(--text3);
-  font-family: var(--font-mono); letter-spacing: 0.04em;
-  transition: opacity 0.5s;
-}
-#topics-swipe-hint.hidden { display: none; }
-
-/* ════ モバイルサイドバードロワー UX-2 ════ */
-@media (max-width: 768px) {
-  #page-company .sidebar {
-    position: fixed !important;
-    top: var(--header-h); left: -100%;
-    width: min(280px, 85vw) !important;
-    height: calc(100vh - var(--header-h));
-    z-index: var(--z-modal);
-    transition: left 0.22s ease;
-    box-shadow: 4px 0 16px rgba(0,0,0,0.12);
-    overflow-y: auto;
-  }
-  #page-company .sidebar.drawer-open { left: 0 !important; }
-  #sidebar-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.35);
-    z-index: calc(var(--z-modal) - 1);
-  }
-  #sidebar-overlay.active { display: block; }
-}
-
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
@@ -2942,8 +2894,6 @@ button:focus-visible,
     </div>
     <!-- 年ドットナビ -->
     <div class="topics-scroll-years" id="topics-scroll-years" style="padding:6px 40px 0"></div>
-    <!-- UX-3: スワイプヒント（初回訪問時のみ） -->
-    <div id="topics-swipe-hint" class="hidden">← → スワイプまたはドラッグで年代を移動できます</div>
 
     <!-- 隠しシンク用（initScrollIndicator互換） -->
     <div class="topics-axis-wrap"><div class="topics-axis-inner" id="strip-axis"></div></div>
@@ -3023,7 +2973,12 @@ button:focus-visible,
     </div>
   </div>
 
-  <!-- モバイル用ナビバー: mtabは .mtabs コンテナに統合済み（重複削除 CODE-1） -->
+  <!-- モバイル用ナビバー（768px以下でサイドバーの代替） -->
+  <div id="chumoku-mobile-filter" class="is-hidden">
+    <div class="mtab active" data-tab="companies" style="white-space:nowrap;font-size:11px;padding:6px 12px;border:1px solid var(--line2);border-radius:var(--r-pill);cursor:pointer">注目企業一覧</div>
+    <div class="mtab" data-tab="areas" style="white-space:nowrap;font-size:11px;padding:6px 12px;border:1px solid var(--line2);border-radius:var(--r-pill);cursor:pointer">産業ドメイン別一覧</div>
+    <div class="mtab" data-tab="series" style="white-space:nowrap;font-size:11px;padding:6px 12px;border:1px solid var(--line2);border-radius:var(--r-pill);cursor:pointer">シリーズ別</div>
+  </div>
   <div class="ch-main">
     <div class="pghdr">
       <div>
@@ -4107,12 +4062,12 @@ async function loadSiteData() {
   for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
     try {
       const msg = attempt === 1
-        ? '企業データを準備しています（初回は少し時間がかかります）…'
-        : `接続を再試行しています… (${attempt} / ${MAX_RETRY})`;
+        ? 'GAS APIからデータを取得しています…'
+        : `再試行中 (${attempt}/${MAX_RETRY})… GASサーバー起動待ち`;
       showLoadingState(msg);
       // main-titleにも進捗を反映
       const titleEl = getEl('main-title');
-      if (titleEl) titleEl.textContent = attempt === 1 ? 'データ読込中…' : `データ読込中… (${attempt}/${MAX_RETRY})`;
+      if (titleEl) titleEl.textContent = attempt === 1 ? 'データ読込中…' : `データ読込中… (${attempt}回目)`;
 
       const _ctrl = new AbortController();
       const _tid = setTimeout(() => _ctrl.abort(), TIMEOUT_MS); // TIMEOUT_MS は APP_CONFIG から
@@ -4185,11 +4140,11 @@ async function loadSiteData() {
       apiState.status = 'error';
       try { const _rw=document.getElementById('retry-wrap'); if(_rw) _rw.style.display='flex'; } catch(_e){}
       if (isTimeout) {
-        apiState.error = `データの読み込みに時間がかかっています。しばらく待ってから再読み込みください。（${MAX_RETRY}回試行・計${Math.round(MAX_RETRY * TIMEOUT_MS/1000)}秒）`;
+        apiState.error = `接続タイムアウト（${MAX_RETRY}回試行・計${Math.round(MAX_RETRY * TIMEOUT_MS/1000)}秒）。GASサーバーが起動していない可能性があります。しばらく待ってから再読み込みしてください。`;
         ['co-cards-list','funding-cards','biz-topics','org-topics'].forEach(id=>{
           const el=document.getElementById(id);
           if(el&&el.querySelector&&el.querySelector('.skeleton')){
-            setEmpty(el, '読み込みに時間がかかっています。再読み込みをお試しください。');
+            setEmpty(el, '読み込みタイムアウト（GASサーバー起動待ち）');
           }
         });
       } else {
@@ -4230,57 +4185,60 @@ function normalizeList(items, mapFn) {
 
 function normalizeServiceMetrics(items) {
   return normalizeList(items, m => {
-    const label = m.label || '';
+    const label = m.label || m['指標ラベル'] || '';
     return label ? {
       label,
-      value: m.value != null ? String(m.value) : '',
-      unit:  m.unit  || '',
-      time:  m.time  || m.note || ''
+      value: m.value != null ? String(m.value) : (m['値'] != null ? String(m['値']) : ''),
+      unit:  m.unit  || m['単位']  || '',
+      time:  m.time  || m['時点']  || m.note || ''
     } : null;
   });
 }
 function normalizeClients(items) {
   return normalizeList(items, c => {
-    const name = c.name || '';
-    return name ? { name, listed: c.listed || 'FALSE' } : null;
+    const name = c.name || c['取引先名'] || '';
+    return name ? { name, listed: c.listed || c['上場企業フラグ'] || 'FALSE' } : null;
   });
 }
 
 // ── 7_サービス評判 ────────────────────────
 function normalizeServiceScores(items) {
   return normalizeList(items, s => {
-    const platform = s.platform || '';
+    const platform = s.platform || s['プラットフォーム'] || '';
     if (!platform) return null;
+    const rawTotal   = s.total    ?? s['総合スコア'];
+    const rawMax     = s.maxScore ?? s['最大スコア'];
+    const rawReviews = s.reviews  ?? s['レビュー件数'];
     return {
       platform,
-      total:    s.total    != null ? Number(s.total)    : null,
-      maxScore: s.maxScore != null ? Number(s.maxScore) : null,
-      reviews:  s.reviews  != null ? Number(s.reviews)  : null,
-      url:      s.url || ''
+      total:    rawTotal   != null ? Number(rawTotal)   : null,
+      maxScore: rawMax     != null ? Number(rawMax)     : null,
+      reviews:  rawReviews != null ? Number(rawReviews) : null,
+      url:      s.url || s['URL'] || ''
     };
   });
 }
 function normalizePatents(items) {
   return normalizeList(items, p => {
-    const num   = p.num   || '';
-    const title = p.title || '';
-    return (num || title) ? { num, title, date: p.date || '' } : null;
+    const num   = p.num   || p['特許番号'] || '';
+    const title = p.title || p['タイトル'] || '';
+    return (num || title) ? { num, title, date: p.date || p['登録日'] || '' } : null;
   });
 }
 function normalizeEnvScores(items) {
   return normalizeList(items, s => {
-    const platform = s.platform || '';
+    const platform = s.platform || s['プラットフォーム'] || '';
     if (!platform) return null;
-    const n = (key) => { const v = s[key]; return v != null ? Number(v) : 0; };
+    const n = (key, fb) => { const v = s[key] ?? s[fb]; return v != null ? Number(v) : 0; };
     return {
       platform,
-      total:      n('total'),
-      reviews:    n('reviews'),
-      workLife:   n('workLife'),
-      culture:    n('culture'),
-      growth:     n('growth'),
-      management: n('management'),
-      url:        s.url || ''
+      total:      n('total',      '総合スコア'),
+      reviews:    n('reviews',    '口コミ件数'),
+      workLife:   n('workLife',   'ワークライフバランス'),
+      culture:    n('culture',    '社風・カルチャー'),
+      growth:     n('growth',     '成長・やりがい'),
+      management: n('management', '経営陣'),
+      url:        s.url || s['URL'] || ''
     };
   });
 }
@@ -4403,7 +4361,7 @@ function normalizeTopics(items) {
   })).filter(t => t.year).sort((a, b) => a.year - b.year);
 }
 
-// parseHex: 第1ブロックにも配置（makeColorDim/buildMainChart から第2ブロック前に呼ばれるため）
+// parseHex: block1に配置（makeColorDim/buildMainChartがblock2読み込み前に呼ぶため）
 function parseHex(hex) {
   const h = (hex || '#5A6A80').replace('#', '');
   return {
@@ -4452,7 +4410,6 @@ function showLoadingState(msg) {
 
 // サイドバー検索フィルタ状態
 var _sbQuery='';
-var _sbFilterCache = null; // クエリ→フィルタ結果キャッシュ（PERF-4）
 
 function renderSidebarCards(query, limit) {
   if (!COMPANIES.length) return;
@@ -4787,23 +4744,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   try { if (localStorage.getItem('sf_mock_dismissed') === '1') { const _mb = getEl('mock-banner'); if (_mb) _mb.style.display = 'none'; } } catch(_) {}
   try { const _sv = localStorage.getItem('sf_card_view'); if (_sv && typeof setCoCardView === 'function') setCoCardView(_sv); } catch(_) {}
   loadFilterState(); // LocalStorageからフィルタ状態を復元
-
-  // UX-3: スワイプヒント（初回訪問時のみ表示）
-  try {
-    if (!localStorage.getItem('sf_swipe_hint_seen')) {
-      var _hintEl = document.getElementById('topics-swipe-hint');
-      if (_hintEl) {
-        _hintEl.classList.remove('hidden');
-        setTimeout(function() { _hintEl.classList.add('hidden'); try { localStorage.setItem('sf_swipe_hint_seen', '1'); } catch(_){} }, 4000);
-      }
-    }
-  } catch(_) {}
-
-  // UX-2: 画面幅変化でモバイルドロワーを閉じる
-  window.addEventListener('resize', function() {
-    if (window.innerWidth > 768) closeMobileSidebar();
-  }, { passive: true });
-
   // data-page属性を持つ要素のキーボードナビゲーション
   document.querySelectorAll('[data-page]').forEach(el => {
     el.addEventListener('keydown', e => {
@@ -4875,42 +4815,6 @@ function switchMainTab(id, btn) {
 // ══════════════════════════════════════════════════════
 
 
-// ── トースト通知（alert代替 UX-5） ──
-var _toastTimer = null;
-function showToast(msg, durationMs) {
-  var toast = document.getElementById('sf-toast');
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.classList.add('show');
-  if (_toastTimer) clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(function() {
-    toast.classList.remove('show');
-    _toastTimer = null;
-  }, durationMs || 2500);
-}
-
-// ── モバイル用サイドバードロワー制御（UX-2） ──
-function toggleMobileSidebar() {
-  var sidebar = document.querySelector('#page-company .sidebar');
-  var overlay = document.getElementById('sidebar-overlay');
-  if (!sidebar) { showPage('company'); return; }
-  var isOpen = sidebar.classList.contains('drawer-open');
-  if (isOpen) {
-    closeMobileSidebar();
-  } else {
-    sidebar.classList.add('drawer-open');
-    if (overlay) overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-}
-function closeMobileSidebar() {
-  var sidebar = document.querySelector('#page-company .sidebar');
-  var overlay = document.getElementById('sidebar-overlay');
-  if (sidebar) sidebar.classList.remove('drawer-open');
-  if (overlay) overlay.classList.remove('active');
-  document.body.style.overflow = '';
-}
-
 // ── 文字列エスケープヘルパー ──
 function escapeHtml(str) {
   return String(str ?? '')
@@ -4936,7 +4840,7 @@ function getCompanyData(co) {
 function formatBillion(n) {
   if (n == null || isNaN(Number(n))) return '—';
   const v = Number(n);
-  if (v === 0) return '—'; // 0は未公開として表示
+  if (v === 0) return '0億円';
   return (v >= 100 ? Math.round(v) : v.toFixed(1)) + '億円';
 }
 
@@ -5539,12 +5443,13 @@ function showPage(page, companyId) {
   });
 
   if (page === 'top') {
-    if (!_ptEl) return;
-    _ptEl.style.display = 'block';
-    _ptEl.classList.remove('page-fade-in');
+    const ptEl = _ptEl;
+    if (!ptEl) return;
+    ptEl.style.display = 'block';
+    ptEl.classList.remove('page-fade-in');
     requestAnimationFrame(() => {
-      _ptEl.classList.add('page-fade-in');
-      const h = _ptEl.querySelector('h1, h2, [role="heading"]') || _ptEl;
+      ptEl.classList.add('page-fade-in');
+      const h = ptEl.querySelector('h1, h2, [role="heading"]') || ptEl;
       if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
     });
     document.getElementById('nav-top').classList.add('active');
@@ -5677,9 +5582,10 @@ window.addEventListener('scroll', function() {
 (function warmUpGAS() {
   if (typeof APP_CONFIG === 'undefined') return;
   try {
-    // no-cors モードで CORS エラーなしに GAS へ到達（レスポンスは opaque で破棄）
-    fetch(APP_CONFIG.API_URL + '?ping=1&t=' + Date.now(), { method: 'GET', mode: 'no-cors', cache: 'no-store' })
-      .catch(() => { /* intentional: warmup only */ });
+    // fetch だと CORS/redirect が絡むので img ping で代替
+    const _img = new Image();
+    _img.onerror = () => { if (typeof DEBUG !== 'undefined' && DEBUG) console.warn('[warmUpGAS] ping failed'); };
+    _img.src = APP_CONFIG.API_URL + '?ping=1&t=' + Date.now();
   } catch(_) { /* intentional */ }
 })();
 
@@ -5697,7 +5603,7 @@ function toggleCompare(companyId, cb) {
     if (cb) cb.checked = false;
   } else {
     if (_compareSet.size >= COMPARE_MAX) {
-      showToast('比較できる企業は最大' + COMPARE_MAX + '社です');
+      alert('比較できる企業は最大' + COMPARE_MAX + '社です');
       if (cb) cb.checked = false;
       return;
     }
@@ -5725,7 +5631,7 @@ function openCompareModal() {
   var wrap = document.getElementById('compare-table-wrap');
   if (!overlay || !wrap) return;
   var companies = Array.from(_compareSet).map(id => COMPANIES.find(c => c.id === id)).filter(Boolean);
-  if (companies.length < 2) { showToast('2社以上選択してください'); return; }
+  if (companies.length < 2) { alert('2社以上選択してください'); return; }
 
   // テーブル生成
   var colStyle = companies.map(co => 'style="--company-accent:' + (co.color||'#5A6A80') + '"').join('');
@@ -6608,10 +6514,7 @@ function refreshChumokuPage(){
   const co=findCompany(card.dataset.id, card.dataset.name);
   showPage('company',co?co.id:(card.dataset.id||card.dataset.name));
   }}});
-  chPage.addEventListener('click',function(e){
-  // UX-4: カード内のリンク・ボタンクリックは親カードのnavigationをキャンセル
-  if(e.target.closest('a[href]')||e.target.closest('button')||e.target.closest('input')) return;
-  const card=e.target.closest('.ch-nav-card');
+  chPage.addEventListener('click',function(e){const card=e.target.closest('.ch-nav-card');
   if(card){const co=findCompany(card.dataset.id, card.dataset.name);
   showPage('company',co?co.id:(card.dataset.id||card.dataset.name));
   }});
@@ -6646,12 +6549,8 @@ function refreshChumokuPage(){
   <span style="font-size:12px;color:var(--text2)">データの読み込みに失敗しました</span>
   <button type="button" onclick="document.getElementById('retry-wrap').style.display='none';loadSiteData();" style="font-size:11px;padding:4px 12px;background:var(--slate-dark);color:#fff;border:none;border-radius:var(--r-pill);cursor:pointer">再試行</button>
 </div>
-<!-- トースト通知（alert代替 UX-5） -->
-<div id="sf-toast" role="status" aria-live="polite"></div>
-<!-- モバイルサイドバー用オーバーレイ（UX-2） -->
-<div id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 <div class="fab-wrap">
-  <button id="fab-companies" class="fab-btn" type="button" aria-label="企業一覧を開く" title="企業一覧" onclick="toggleMobileSidebar()" style="font-size:11px;display:none">企業</button>
+  <button id="fab-companies" class="fab-btn" type="button" aria-label="企業一覧を開く" title="企業一覧" onclick="if(document.getElementById('page-company').classList.contains('visible')){toggleSidebar();}else{showPage('company');}" style="font-size:11px;display:none">企業</button>
   <button id="fab-top" class="fab-btn" type="button" aria-label="ページトップへスクロール">↑</button>
 </div>
 </body>
