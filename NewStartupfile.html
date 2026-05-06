@@ -4476,6 +4476,16 @@ function normalizeTopics(items) {
   })).filter(t => t.year).sort((a, b) => a.year - b.year);
 }
 
+// parseHex: 第1ブロックに配置（makeColorDim / buildMainChart から呼ばれるため第2ブロック前に必要）
+function parseHex(hex) {
+  const h = (hex || '#5A6A80').replace('#', '');
+  return {
+    r: parseInt(h.slice(0,2), 16),
+    g: parseInt(h.slice(2,4), 16),
+    b: parseInt(h.slice(4,6), 16)
+  };
+}
+
 function makeColorDim(hex) {
   const m = String(hex || '').trim().match(/^#?([0-9a-fA-F]{6})$/);
   if (!m) return 'rgba(136,135,128,0.15)';
