@@ -9,22 +9,24 @@
 <meta property="og:title" content="StartupFile — 日本のスタートアップ企業情報">
 <meta property="og:description" content="社員数推移・資金調達・給与・採用情報を横断的に確認できるスタートアップデータベース">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://ko369.github.io/startupfile/NewStartupfile.html">
+<meta property="og:url" content="https://ko369.github.io/startupfile/">
 <meta property="og:site_name" content="StartupFile">
 <meta property="og:image" content="https://ko369.github.io/startupfile/ogp.png">
 <meta name="twitter:description" content="社員数推移・資金調達・給与・採用情報を横断的に比較できる日本のスタートアップデータベース">
 <meta name="twitter:image" content="https://ko369.github.io/startupfile/ogp.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://ko369.github.io/startupfile/NewStartupfile.html">
+<link rel="canonical" href="https://ko369.github.io/startupfile/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%233A4A5C'/><text x='16' y='22' font-family='sans-serif' font-size='14' font-weight='700' fill='white' text-anchor='middle'>SF</text></svg>">
 <meta name="twitter:title" content="StartupFile — 日本のスタートアップ企業情報">
 <meta name="theme-color" content="#3A4A5C">
+<link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;StartupFile&quot;,&quot;short_name&quot;:&quot;SF&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;theme_color&quot;:&quot;%233A4A5C&quot;,&quot;background_color&quot;:&quot;%23ffffff&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%233A4A5C'/%3E%3Ctext x='96' y='130' font-family='sans-serif' font-size='80' font-weight='700' fill='white' text-anchor='middle'%3ESF%3C/text%3E%3C/svg%3E&quot;,&quot;sizes&quot;:&quot;192x192&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
+
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap">
-<!-- フォント: display=swap でFOIT防止、必要ウェイトのみ読み込み -->
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<!-- フォント: 非同期読み込みで初期レンダリングブロックを削除 -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400&display=swap"></noscript>
 <style>
 /* スキップナビゲーション */
 .skip-nav {
@@ -90,8 +92,8 @@
   --z-sidebar:         90;
   --z-modal:           200;
   --z-fab:             110;
-  --color-funding:     var(--amber);
-  --color-funding-light: rgba(232,160,32,0.75);
+  --color-funding:     var(--amber2); /* WCAG AA準拠 */
+  --color-funding-light: rgba(122,74,0,0.7); /* amber2ベース */
   --amber-text:        var(--amber2);
   /* ─ 推算タグ（tag-est-c は既存、bg/b を補完） ─ */
   --tag-est-bg: #FFFBEB;
@@ -115,7 +117,7 @@ body.sidebar-collapsed {
 
 /* ════ 累計調達額メトリクス ════ */
 #metric-raised {
-  color: var(--amber);
+  color: var(--amber2); /* WCAG AA準拠: テキストには--amber2を使用 */
   font-size: 22px;
   font-weight: 500;
   line-height: 1;
@@ -2505,11 +2507,121 @@ button:focus-visible,
 .topics-year-dot:hover,
 .topics-year-dot.active { color: var(--slate-dark); }
 /* 旧スライダー: 廃止済みのため削除 */
+
+/* ════ 企業比較機能 ════ */
+.compare-cb-wrap {
+  position: absolute; top: 8px; right: 8px;
+  width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.compare-cb {
+  width: 14px; height: 14px;
+  accent-color: var(--slate-dark);
+  cursor: pointer; flex-shrink: 0;
+}
+.compare-fab {
+  pointer-events: all;
+  position: fixed; bottom: 72px; right: 24px;
+  background: var(--slate-dark); color: #fff;
+  border: none; border-radius: var(--r-pill);
+  padding: 8px 16px; font-size: 11px; font-family: var(--font-sans);
+  cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  display: none; align-items: center; gap: 6px;
+  z-index: var(--z-modal); transition: opacity .15s, transform .15s;
+  white-space: nowrap;
+}
+.compare-fab.visible { display: flex; }
+.compare-fab:hover { background: var(--slate); }
+.compare-fab .compare-fab-count {
+  background: rgba(255,255,255,0.25); border-radius: var(--r-pill);
+  padding: 0 6px; font-size: 10px; font-weight: 500;
+}
+/* 比較モーダル */
+.compare-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: calc(var(--z-modal) + 10);
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+.compare-modal-overlay.open { display: flex; }
+.compare-modal {
+  background: var(--bg); border-radius: var(--r-lg);
+  width: 100%; max-width: 900px; max-height: 85vh;
+  overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.compare-modal-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.compare-modal-title { font-size: 14px; font-weight: 500; color: var(--text); }
+.compare-modal-close {
+  margin-left: auto; width: 28px; height: 28px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: #fff; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2); transition: background .12s;
+}
+.compare-modal-close:hover { background: var(--bg3); }
+.compare-modal-body {
+  overflow-x: auto; overflow-y: auto; flex: 1;
+  padding: 16px 20px;
+}
+.compare-table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--font-sans); font-size: 12px; min-width: 500px;
+}
+.compare-table th {
+  text-align: left; padding: 8px 12px;
+  border-bottom: 2px solid var(--line2);
+  font-size: 11px; color: var(--text3); font-weight: 500;
+  white-space: nowrap;
+}
+.compare-table th.co-head {
+  font-size: 13px; color: var(--text); font-weight: 500;
+  border-bottom-color: var(--company-accent, var(--slate));
+  border-bottom-width: 3px;
+}
+.compare-table td {
+  padding: 8px 12px; border-bottom: 1px solid var(--line);
+  vertical-align: middle; color: var(--text2);
+}
+.compare-table td:first-child { color: var(--text3); font-size: 11px; white-space: nowrap; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-chart-row td { padding: 4px 12px; }
+.compare-mini-bar-wrap { display: flex; align-items: flex-end; gap: 2px; height: 32px; }
+.compare-mini-bar { border-radius: 2px 2px 0 0; min-width: 4px; }
+@media (max-width: 768px) {
+  .compare-fab { bottom: 60px; right: 16px; }
+  .compare-modal-overlay { padding: 8px; align-items: flex-end; }
+  .compare-modal { max-height: 90vh; border-radius: var(--r-lg) var(--r-lg) 0 0; }
+}
+
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous" defer></script>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "StartupFile",
+  "url": "https://ko369.github.io/startupfile/",
+  "description": "日本のスタートアップ企業の社員数推移・資金調達・給与・採用情報を横断的に確認できるデータベース",
+  "publisher": {
+    "@type": "Organization",
+    "name": "StartupFile",
+    "url": "https://ko369.github.io/startupfile/"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://ko369.github.io/startupfile/#search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
 </head>
 
 
@@ -2681,7 +2793,7 @@ button:focus-visible,
         </div>
         <div class="metric-block">
           <div class="metric-label metric-top">累計調達額</div>
-          <div class="metric-val" id="metric-raised" style="color:var(--color-funding)">—</div>
+          <div class="metric-val" id="metric-raised">—</div>
           <div class="metric-note" id="metric-rounds">—</div>
         </div>
       </div>
@@ -2757,9 +2869,9 @@ button:focus-visible,
 
     <!-- 統合タイムライン（A案：年列を直接ドラッグ） -->
     <div class="topics-unified-wrap">
-      <button class="topics-scroll-btn topics-edge-btn" id="topics-scroll-left"  aria-label="左にスクロール">‹</button>
+      <button class="topics-scroll-btn topics-edge-btn" id="topics-scroll-left" type="button" aria-label="左にスクロール">‹</button>
       <div class="topics-unified-inner" id="strip-unified"></div>
-      <button class="topics-scroll-btn topics-edge-btn" id="topics-scroll-right" aria-label="右にスクロール">›</button>
+      <button class="topics-scroll-btn topics-edge-btn" id="topics-scroll-right" type="button" aria-label="右にスクロール">›</button>
     </div>
     <!-- 年ドットナビ -->
     <div class="topics-scroll-years" id="topics-scroll-years" style="padding:6px 40px 0"></div>
@@ -2911,15 +3023,29 @@ button:focus-visible,
 </div>
 <script>
 
+// ── グローバルエラーハンドラー ──
+window.onerror = function(msg, src, line, col, err) {
+  if (typeof DEBUG !== 'undefined' && DEBUG) {
+    console.error('[Global Error]', msg, src, line, col, err);
+  }
+  return false; // ブラウザデフォルトのエラー表示を抑制しない
+};
+window.addEventListener('unhandledrejection', function(e) {
+  if (typeof DEBUG !== 'undefined' && DEBUG) {
+    console.warn('[Unhandled Promise Rejection]', e.reason);
+  }
+});
+
+
 var EVENTS = {};
 var COMPANIES = []; // 企業データ配列（applyApiData で初期化）
 
 // ── ブラウザ履歴操作ヘルパー（未定義バグ修正）──
 function _safeHistoryPush(state, title, url) {
-  try { history.pushState(state, title, url); } catch(_) { try { location.hash = url; } catch(__) {} }
+  try { history.pushState(state, title, url); } catch(_) { try { location.hash = url; } catch(__) { /* intentional: フォールバック */ } }
 }
 function _safeHistoryReplace(state, title, url) {
-  try { history.replaceState(state, title, url); } catch(_) {}
+  try { history.replaceState(state, title, url); } catch(_) { /* intentional: 一部環境でreplaceState不可 */ }
 }
 
 // ── サイドバー初期化フラグ ──
@@ -2971,7 +3097,7 @@ function bindSyncScroll() {
       requestAnimationFrame(() => requestAnimationFrame(() => { _syncScrolling = false; }));
     }, { passive: true });
     src.addEventListener('touchend', () => {
-      setTimeout(() => { _syncScrolling = false; }, 80);
+      setTimeout(() => { _syncScrolling = false; }, APP_CONFIG.TIMING.TOUCH_DEBOUNCE);
     }, { passive: true });
   });
 }
@@ -3229,14 +3355,14 @@ function clearMainChart() {
   try {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-  } catch(_) {}
+  } catch(_) { /* intentional: canvas未初期化時は無視 */ }
 }
 
 function buildMainChart(company, range) {
   if (typeof Chart === 'undefined') {
     buildMainChart._retries = (buildMainChart._retries || 0) + 1;
     if (buildMainChart._retries <= 5) {
-      setTimeout(() => buildMainChart(company, range), 200);
+      setTimeout(() => buildMainChart(company, range), APP_CONFIG.TIMING.CHART_RETRY);
     } else {
       if(DEBUG) console.warn('[Chart] Chart.js failed to load after 5 retries');
       buildMainChart._retries = 0;
@@ -3855,7 +3981,15 @@ const APP_CONFIG = {
   CARD_PAGE_SIZE:10,   // 企業カード初期表示件数
   TIMEOUT_MS:    12000,// APIタイムアウト（ミリ秒）※12秒×3回=最大36秒
   MAX_RETRY:     3,
-  SIDEBAR_LIMIT: 30,   // サイドバー初期表示件数    // APIリトライ上限
+  SIDEBAR_LIMIT: 30,   // サイドバー初期表示件数
+  // タイミング定数（setTimeout の魔法の数字を一元管理）
+  TIMING: {
+    TOUCH_DEBOUNCE:   80,   // タッチ操作後のフラグリセット
+    SCROLL_INDICATOR: 100,  // スクロールインジケーター初期化待機
+    CHART_RETRY:      200,  // Chart.js ロード待機リトライ間隔
+    SEARCH_DEBOUNCE:  150,  // 検索デバウンス
+    RETRY_WAIT:       2000, // API再試行待機
+  },
 };
 const JA = 'ja-JP';  // ロケール定数
 const delay = ms => new Promise(r => setTimeout(r, ms));
@@ -3894,7 +4028,7 @@ async function loadSiteData() {
   apiState.status = 'loading';
   apiState.error = '';
   apiState.loaded = false;
-  try { const _rw=document.getElementById('retry-wrap'); if(_rw) _rw.style.display='none'; } catch(_e){}
+  try { const _rw=document.getElementById('retry-wrap'); if(_rw) _rw.style.display='none'; } catch(_e){ /* intentional */ }
   apiState.payload = null;
   // スケルトンUIを即時表示（データ取得前からUXを向上）
   showSkeletonCards('co-cards-list', 3);
@@ -3915,7 +4049,7 @@ async function loadSiteData() {
       if (titleEl) titleEl.textContent = attempt === 1 ? 'データ読込中…' : `データ読込中… (${attempt}回目)`;
 
       const _ctrl = new AbortController();
-      const _tid = setTimeout(() => _ctrl.abort(), TIMEOUT_MS);
+      const _tid = setTimeout(() => _ctrl.abort(), TIMEOUT_MS); // TIMEOUT_MS は APP_CONFIG から
       let res;
       try {
         // AbortSignal は一部の環境（iframe等）でclone不可のため安全に渡す
@@ -3978,7 +4112,7 @@ async function loadSiteData() {
       // 最終試行でなければ再試行（タイムアウトの場合のみリトライ）
       if (attempt < MAX_RETRY && (isTimeout || e instanceof TypeError)) {
         if(DEBUG) console.warn(`loadSiteData attempt ${attempt} timed out, retrying...`);
-        await delay(2000); // 2秒待ってから再試行
+        await delay(APP_CONFIG.TIMING.RETRY_WAIT); // 再試行待機
         continue;
       }
       // 全試行失敗 or タイムアウト以外のエラー → エラー表示
@@ -4269,7 +4403,8 @@ function renderSidebarCards(query, limit) {
     div.className = 'company-card' + (isActive ? ' active' : '');
     div.style.cssText = `--company-accent:${accent};--company-accent-bg:${accentBg}`;
     div.dataset.idx = idx;
-    div.innerHTML = `<div class="company-name">${escapeHtml(c.name||'—')}<span class="company-badge">${sector}</span>${isActive?'<span class="company-now-badge">表示中</span>':''}</div><div class="company-summary-line">${latestStr}${founded?' · '+escapeHtml(founded):''}</div><div class="sparkline-wrap"><canvas class="spark" id="spark${idx}"></canvas></div>`;
+    var isChecked = _compareSet.has(c.id);
+    div.innerHTML = `<div class="company-name">${escapeHtml(c.name||'—')}<span class="company-badge">${sector}</span>${isActive?'<span class="company-now-badge">表示中</span>':''}</div><div class="company-summary-line">${latestStr}${founded?' · '+escapeHtml(founded):''}</div><div class="sparkline-wrap"><canvas class="spark" id="spark${idx}"></canvas></div><div class="compare-cb-wrap" title="比較に追加"><input type="checkbox" class="compare-cb" data-id="${c.id}" ${isChecked?'checked':''} aria-label="${escapeHtml(c.name||'')}を比較に追加" onclick="event.stopPropagation();toggleCompare('${c.id}',this)"></div>`;
     _frag.appendChild(div);
   });
   body.innerHTML = '';
@@ -4519,7 +4654,7 @@ function initScrollIndicator() {
   document.addEventListener('touchmove', function(e) { if(_drag) onDragMove(e.touches[0].clientX); }, {passive:true, signal: sig});
   document.addEventListener('touchend', onDragEnd, {passive:true, signal: sig});
 
-  setTimeout(updateThumb, 100);
+  setTimeout(updateThumb, APP_CONFIG.TIMING.SCROLL_INDICATOR);
 }
 
 // 年ドットを生成（renderEventsStrip後に呼ぶ）
@@ -5379,6 +5514,129 @@ window.addEventListener('scroll', function() {
   });
 }, { passive: true });
 
+// ── GAS ウォームアップ ping（コールドスタート緩和）──
+// ページ読み込み直後に軽量リクエストを1本送ってGASをウォーム状態にする
+(function warmUpGAS() {
+  if (typeof APP_CONFIG === 'undefined') return;
+  try {
+    // fetch だと CORS/redirect が絡むので img ping で代替
+    const _img = new Image();
+    _img.src = APP_CONFIG.API_URL + '?ping=1&t=' + Date.now();
+  } catch(_) { /* intentional */ }
+})();
+
+
+// ══════════════════════════════════════════════════════
+// 企業比較機能
+// ══════════════════════════════════════════════════════
+var _compareSet = new Set(); // 比較対象の企業IDセット（最大4社）
+var COMPARE_MAX = 4;
+
+function toggleCompare(companyId, cb) {
+  if (!companyId) return;
+  if (_compareSet.has(companyId)) {
+    _compareSet.delete(companyId);
+    if (cb) cb.checked = false;
+  } else {
+    if (_compareSet.size >= COMPARE_MAX) {
+      alert('比較できる企業は最大' + COMPARE_MAX + '社です');
+      if (cb) cb.checked = false;
+      return;
+    }
+    _compareSet.add(companyId);
+    if (cb) cb.checked = true;
+  }
+  updateCompareFab();
+  // サイドバー内の同じ企業のチェックボックスも同期
+  document.querySelectorAll('.compare-cb[data-id="' + companyId + '"]').forEach(el => {
+    el.checked = _compareSet.has(companyId);
+  });
+}
+
+function updateCompareFab() {
+  var fab = document.getElementById('compare-fab');
+  var cnt = document.getElementById('compare-fab-count');
+  if (!fab) return;
+  var n = _compareSet.size;
+  fab.classList.toggle('visible', n >= 2);
+  if (cnt) cnt.textContent = n;
+}
+
+function openCompareModal() {
+  var overlay = document.getElementById('compare-modal-overlay');
+  var wrap = document.getElementById('compare-table-wrap');
+  if (!overlay || !wrap) return;
+  var companies = Array.from(_compareSet).map(id => COMPANIES.find(c => c.id === id)).filter(Boolean);
+  if (companies.length < 2) { alert('2社以上選択してください'); return; }
+
+  // テーブル生成
+  var colStyle = companies.map(co => 'style="--company-accent:' + (co.color||'#5A6A80') + '"').join('');
+  var html = '<table class="compare-table"><thead><tr><th>指標</th>';
+  companies.forEach(co => {
+    html += '<th class="co-head" style="--company-accent:' + escapeHtml(co.color||'#5A6A80') + '">' + escapeHtml(co.name||'') + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  // 行データ
+  var rows = [
+    { label: '業種', fn: co => escapeHtml(co.sector || '—') },
+    { label: '設立年', fn: co => co.foundingYear ? co.foundingYear + '年' : '—' },
+    { label: '最新社員数', fn: co => { var d = getCompanyData(co); return d.length ? d.at(-1).count.toLocaleString('ja-JP') + '人 (' + d.at(-1).year + '年)' : '—'; } },
+    { label: '社員数ピーク', fn: co => { var d = getCompanyData(co); if (!d.length) return '—'; var p = d.reduce((a,b)=>b.count>a.count?b:a,d[0]); return p.count.toLocaleString('ja-JP') + '人 (' + p.year + '年)'; } },
+    { label: '累計調達額', fn: co => { var f = co.api && co.api.totalFunding; return f != null ? '約' + Number(f).toLocaleString('ja-JP') + '億円' : '—'; } },
+    { label: '調達ラウンド数', fn: co => { var r = co.api && co.api.totalRounds; return r != null ? String(r) : '—'; } },
+    { label: '本社所在地', fn: co => escapeHtml((co.api && co.api.location) || '—') },
+  ];
+
+  rows.forEach(row => {
+    html += '<tr><td>' + row.label + '</td>';
+    companies.forEach(co => { html += '<td>' + row.fn(co) + '</td>'; });
+    html += '</tr>';
+  });
+
+  // 社員数推移ミニグラフ行
+  html += '<tr class="compare-chart-row"><td>社員数推移</td>';
+  companies.forEach(co => {
+    var d = getCompanyData(co);
+    var counts = d.map(r => r.count);
+    var mx = Math.max(...counts, 1);
+    var bars = counts.map(v => {
+      var h = Math.max(2, Math.round(v/mx*32));
+      return '<div class="compare-mini-bar" style="height:' + h + 'px;background:' + escapeHtml(co.color||'#5A6A80') + ';opacity:0.8"></div>';
+    }).join('');
+    html += '<td><div class="compare-mini-bar-wrap">' + (bars || '<span style="color:var(--text3);font-size:10px">データなし</span>') + '</div>';
+    if (d.length >= 2) {
+      var first = d[0], last = d.at(-1);
+      var growthPct = first.count > 0 ? Math.round((last.count - first.count) / first.count * 100) : 0;
+      html += '<div style="font-size:10px;color:var(--text3);margin-top:3px">' + first.year + '→' + last.year + ' <span style="color:' + (growthPct>=0?'var(--teal)':'var(--tag-press-c)') + '">' + (growthPct>=0?'+':'') + growthPct + '%</span></div>';
+    }
+    html += '</td>';
+  });
+  html += '</tr>';
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Escキーで閉じる
+  overlay._keyClose = function(e) { if (e.key === 'Escape') closeCompareModal(); };
+  document.addEventListener('keydown', overlay._keyClose);
+}
+
+function closeCompareModal() {
+  var overlay = document.getElementById('compare-modal-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  if (overlay._keyClose) { document.removeEventListener('keydown', overlay._keyClose); overlay._keyClose = null; }
+}
+
+// オーバーレイクリックで閉じる
+document.addEventListener('DOMContentLoaded', function() {
+  var overlay = document.getElementById('compare-modal-overlay');
+  if (overlay) overlay.addEventListener('click', function(e) { if (e.target === overlay) closeCompareModal(); });
+});
+
 // 初期ページ判定（#company/layerx 形式にも対応）
 (function(){
   const h = location.hash;
@@ -5711,7 +5969,7 @@ if(searchInput){
     const val = this.value;
     if(searchClear) searchClear.style.display=val?'block':'none';
     clearTimeout(_searchTimer);
-    _searchTimer = setTimeout(()=>{ renderSearch(val, activeFilter); }, 150);
+    _searchTimer = setTimeout(()=>{ renderSearch(val, activeFilter); }, (APP_CONFIG.TIMING && APP_CONFIG.TIMING.SEARCH_DEBOUNCE) || 150);
   });
   searchInput.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
@@ -5885,6 +6143,24 @@ function refreshChumokuPage(){
   
 </script>
 
+
+
+<!-- ═══ 企業比較モーダル ═══ -->
+<div class="compare-modal-overlay" id="compare-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
+  <div class="compare-modal">
+    <div class="compare-modal-head">
+      <span class="compare-modal-title" id="compare-modal-title">企業比較</span>
+      <button class="compare-modal-close" type="button" onclick="closeCompareModal()" aria-label="比較モーダルを閉じる">✕</button>
+    </div>
+    <div class="compare-modal-body">
+      <div id="compare-table-wrap"></div>
+    </div>
+  </div>
+</div>
+<!-- 比較FABボタン -->
+<button class="compare-fab" id="compare-fab" type="button" onclick="openCompareModal()" aria-label="選択した企業を比較">
+  比較する <span class="compare-fab-count" id="compare-fab-count">0</span>
+</button>
 
 <div id="retry-wrap" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;background:var(--bg);border:1px solid var(--line2);border-radius:var(--r-pill);padding:10px 20px;box-shadow:0 4px 12px rgba(0,0,0,0.12);gap:10px;align-items:center">
   <span style="font-size:12px;color:var(--text2)">データの読み込みに失敗しました</span>
