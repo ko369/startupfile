@@ -38,7 +38,6 @@
 }
 .skip-nav:focus { top: 8px; }
 
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -291,7 +290,6 @@ body.sidebar-collapsed .sidebar-body {
 /* mini sparkline canvas */
 .spark { width: 100%; height: 16px; opacity: 0.7; }
 
-
 /* Main */
 .main {
   overflow-y: visible; overflow-x: hidden; display: flex; flex-direction: column; min-width: 0; }
@@ -314,7 +312,6 @@ body.sidebar-collapsed .sidebar-body {
 }
 .co-prev-next { display:flex; gap:6px; flex-shrink:0; }
 .co-prev-next-btn { font-size:11px; padding:4px 10px; border:1px solid var(--line2); border-radius:var(--r-sm); background:#fff; color:var(--text2); cursor:pointer; font-family:var(--font-mono); transition:background .12s,border-color .12s; }
-.co-prev-next-btn { min-height: 32px; }
 .co-prev-next-btn:hover { background:var(--bg3); border-color:var(--line2); }
 .co-prev-next-btn:disabled { opacity:0.35; cursor:default; pointer-events:none; }
 h1.company-title, .company-title {
@@ -547,47 +544,6 @@ h1.company-title, .company-title {
   scrollbar-width: none;
 }
 .topics-axis-inner::-webkit-scrollbar { display: none; }
-
-.topics-cards-wrap {
-  padding: 0 32px;
-  overflow: hidden;
-  background: var(--bg2);
-  border-radius: var(--r-md);
-  margin: 4px 0;
-}
-.topics-cards-inner {
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-  overflow-x: scroll;
-  overflow-y: visible;
-  padding: 10px 0 12px;
-  scroll-behavior: smooth;
-}
-/* biz/org は年軸スクロールバーで操作するため自身のバーは非表示 */
-.topics-cards-inner::-webkit-scrollbar { display: none; }
-
-/* ── 小見出し（事業づくり / 組織づくり） ── */
-.subsec-head { display: flex; align-items: center; gap: 8px; padding: 8px 32px 6px; flex-wrap: nowrap; }
-.subsec-label {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-.subsec-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--line);
-}
-.subsec-rule { flex: 1; height: 1px; background: var(--line); }
-.subsec-divider { height: 1px; background: var(--bg3); margin: 4px 32px; }
 
 /* ── 連動スクロール用ラッパー ── */
 
@@ -1004,7 +960,6 @@ canvas { transition: opacity 0.3s; }
 
 /* スコアグリッド */
 
-
 @media (max-width: 900px) {
   .main-header { gap: 14px; }
   .metric-row { width: 100%; gap: 14px; }
@@ -1014,7 +969,6 @@ canvas { transition: opacity 0.3s; }
 /* ══ トップページ追加CSS ══ */
 
 .hmeta strong{color:var(--text2);font-weight:400}
-.hnb:hover{border-color:var(--line2);color:var(--text)}
 .tp-sidebar{border-right:1px solid var(--line);background:#fff;padding:14px 0}
 .sbl{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:0 12px 6px}
 
@@ -1091,7 +1045,6 @@ canvas { transition: opacity 0.3s; }
 .tbl-th-cell{text-align:left;padding:8px 6px;color:var(--text3);font-weight:500}
 .empty-hint{padding:16px;color:var(--text3);font-size:11px}
 
-
 .co-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;cursor:pointer;transition:border-color .15s}
 .co-card:hover{border-color:var(--line2)}
 .co-card-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -1142,10 +1095,8 @@ canvas { transition: opacity 0.3s; }
   width: 5px;
   flex-shrink: 0;
 }
-.nc-date-m, .nc-date-d { display: none; }
 
 /* 本文エリア */
-.nc-divider { display: none; }
 .nc-body {
   padding: 9px 13px 10px;
   display: flex;
@@ -1169,7 +1120,6 @@ canvas { transition: opacity 0.3s; }
   min-width: 0;
   overflow: hidden;
 }
-.nc-co-dot { display: none; } /* カラーバーで代替 */
 .nc-co-name {
   font-size: 11px;
   font-weight: 600;
@@ -1206,7 +1156,6 @@ canvas { transition: opacity 0.3s; }
   line-height: 1.55;
   letter-spacing: -0.01em;
 }
-
 
 /* ════ hover フィードバック（cursor:pointer 要素）════ */
 .sb-tag:hover:not(.active), .ftag:hover:not(.active) { opacity: 0.75; }
@@ -1247,7 +1196,6 @@ canvas { transition: opacity 0.3s; }
 #page-top     { display:block; grid-column:1/-1; }
 #page-company { display:none; }
 
-
 /* 個別企業ページ: グリッド */
 #page-company.visible {
   display:grid;
@@ -1258,7 +1206,6 @@ canvas { transition: opacity 0.3s; }
 /* ══ 注目一覧ページ追加CSS ══ */
 
 .li span{color:#fff;font-size:9px;font-weight:500}
-.hnb.active{background:var(--slate-dark);color:#fff;border-color:var(--slate-dark)}
 .ch-sidebar{border-right:1px solid var(--line);background:#fff;padding:14px 0}
 .sidebar-search-wrap{padding:6px 10px 2px}
 .sidebar-search{width:100%;border:1px solid var(--line2);border-radius:var(--r-sm);padding:5px 9px;font-size:10px;color:var(--text);background:#fff;font-family:inherit;outline:none}
@@ -1294,8 +1241,6 @@ canvas { transition: opacity 0.3s; }
 .topics-unified-inner.is-dragging{cursor:grabbing;scroll-behavior:auto}
 .unified-year-col{flex:0 0 260px;min-width:260px;display:flex;flex-direction:column;gap:6px}
 .unified-year-head{font-size:13px;font-weight:500;color:var(--text2);font-family:var(--font-mono);padding:4px 0 6px;border-bottom:2px solid var(--company-accent,var(--slate));margin-bottom:2px;letter-spacing:.03em}
-.unified-sec-label{display:none}
-.unified-sec-dot{display:none}
 /* D案：色線セパレーター */
 .unified-sep {
   height: 3px;
@@ -1513,7 +1458,6 @@ button:focus-visible,
 @keyframes page-fade-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 .page-fade-in { animation: page-fade-in 0.2s ease; }
 
-
 /* ════ 仮データバナー ════ */
 .mock-banner {
   display: none;
@@ -1587,17 +1531,7 @@ button:focus-visible,
 
   .data-table-wrap { padding: 0 12px; }
 
-  
-
-  
-
-  
-
   .salary-chart-canvas-wrap { height: 180px; padding-left: 38px; }
-
-  
-  
-
 
 .header { padding: 8px 12px; gap: 6px; }
   .logo { font-size: 12px; }
@@ -1659,7 +1593,6 @@ button:focus-visible,
 }
 
 /* ════ データ未収録ツールチップ ════ */
-
 
 /* ════ 数値強調色の統一 ════ */
 /* 社員数: teal */
@@ -1899,7 +1832,6 @@ button:focus-visible,
   font-family: var(--font-mono);
 }
 
-
 @media (max-width: 768px) {
 #fab-companies { display: flex !important; }
 #tp-mobile-filter-bar { display: flex !important; }
@@ -1930,8 +1862,6 @@ button:focus-visible,
   .sidebar::-webkit-scrollbar { display: none; }
   .sidebar-label { display: none; }
   
-  
-
   .company-card.active {
     background: var(--company-accent-bg, var(--bg2));
     border-left-color: transparent;
@@ -1986,24 +1916,6 @@ button:focus-visible,
 
   .data-table td.count { font-size: 11px; }
 
-  
-  
-
-  
-
-  
-  
-  
-  
-
-  
-
-  
-
-  
-  
-
-  
   /* 給与チャート */
   .salary-chart-canvas-wrap { height: 200px; padding-left: 44px; }
 
@@ -2011,7 +1923,6 @@ button:focus-visible,
   .pt-sec-head { padding: 8px 10px; }
 
   /* 各セクション見出し */
-
 
   .header-right { order: 2; margin-left: auto; }
   .sidebar-head { padding: 0 12px 8px; min-width: max-content; }
@@ -2183,7 +2094,6 @@ button:focus-visible,
   .sidebar-toggle,
   .page-nav,
   .co-prev-next,
-  .co-prev-next-wrap,
   .search-wrap,
   .cocard-view-toggle,
   .skip-nav,
@@ -2236,22 +2146,6 @@ button:focus-visible,
 .mb-0 { margin-bottom: 0; }
 .flex-base-4 { display: flex; align-items: baseline; gap: 4px; }
 
-/* ════ トピックスタイムライン 凡例タグ ════ */
-.ttag {
-  font-size: 9px;
-  padding: 1px 5px;
-  border-radius: var(--r-sm);
-  font-family: var(--font-mono);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.ttag-biz     { background: var(--tag-note-bg); color: var(--tag-note-c); border: 1px solid var(--tag-note-b); }
-.ttag-jitsu   { background: rgba(176,106,219,.1); color: var(--slate-dark); border: 1px solid rgba(176,106,219,.2); }
-.ttag-tenki   { background: var(--tag-press-bg); color: var(--tag-press-c); border: 1px solid var(--tag-press-b); }
-.ttag-sogyosha{ background: var(--tag-ok-bg);    color: var(--tag-ok-c);   border: 1px solid var(--tag-ok-b); }
-.ttag-org     { background: var(--bg3);  color: var(--slate-dark); border: 1px solid var(--line2); }
-.ttag-work    { background: rgba(59,170,144,.1); color: var(--teal);       border: 1px solid rgba(59,170,144,.25); }
-
 /* ════ トピックス行 クリック可能スタイル ════ */
 .nc-row[onclick] {
   transition: border-color .15s, background .12s;
@@ -2267,7 +2161,6 @@ button:focus-visible,
 }
 
 /* ════ 期間ボタン データ未収録 ════ */
-
 
 /* ════ live-dot ツールチップ ════ */
 .live-dot:hover::after {
@@ -2285,7 +2178,6 @@ button:focus-visible,
   pointer-events: none;
   z-index: var(--z-fab);
 }
-
 
 .sec-hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .cursor-pointer{cursor:pointer}
@@ -2330,7 +2222,6 @@ button:focus-visible,
 
 /* ════ border-radius 設計トークン ════ */
 
-
 .metric-block { min-width: 92px; }
 .metric-note, .metric-change { white-space: nowrap; }
 
@@ -2363,7 +2254,6 @@ button:focus-visible,
   .cocard.ch-nav-card::before { display: none; }
 }
 
-
 /* :focus-visible → 上部で統一定義済み */
 /* アニメーション無効化（prefers-reduced-motion対応） */
 @media (prefers-reduced-motion: reduce) {
@@ -2378,45 +2268,7 @@ button:focus-visible,
 .search-mark { background: rgba(255,193,7,0.35); border-radius: 2px; padding: 0 1px; }
 
 /* ── カード右端のフェードアウト（続きがあることを示す）── */
-.topics-cards-wrap-outer {
-  position: relative;
-}
-.topics-cards-wrap-outer::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 80px;
-  background: linear-gradient(to right, transparent, var(--bg2));
-  pointer-events: none;
-  z-index: 2;
-}
-
 /* ── スクロールインジケーター 刷新 ── */
-.topics-scroll-wrap {
-  margin: 8px 32px 4px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.topics-scroll-label {
-  font-size: 10px;
-  color: var(--text3);
-  font-family: var(--font-mono);
-  white-space: nowrap;
-  flex-shrink: 0;
-  letter-spacing: 0.05em;
-}
-
-.ch-nav-card-link {
-  font-size: 10px;
-  color: var(--slate);
-  margin-top: 8px;
-  font-weight: 500;
-  opacity: 0.6;
-  display: block;
-}
-.cocard.ch-nav-card:hover .ch-nav-card-link { opacity: 1; }
-
 .main-sub {
   font-size: 14px;
   color: var(--text2);
@@ -2428,23 +2280,10 @@ button:focus-visible,
 @media (max-height: 500px) and (orientation: landscape) {
   .header { padding: 4px 12px; min-height: 40px; }
   .logo-icon { width: 28px; height: 28px; font-size: 11px; }
-  .logo-w { font-size: 13px; }
-  .logo-sub { display: none; }
   .sidebar { top: 40px; max-height: calc(100vh - 40px); }
   .main { padding-top: 40px; }
 }
 
-/* ══ トピックス横スクロールナビゲーター（上部・大型）══ */
-.topics-scroll-nav {
-  padding: 10px 32px 6px;
-  background: linear-gradient(to bottom, var(--bg2) 0%, #fff 100%);
-  border-bottom: 1px solid var(--line);
-}
-.topics-scroll-nav-inner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 .topics-scroll-btn {
   width: 32px; height: 32px;
   border-radius: 50%;
@@ -2464,14 +2303,6 @@ button:focus-visible,
   border-color: var(--slate-dark); transform: scale(1.05);
 }
 .topics-scroll-btn:disabled { opacity: 0.3; cursor: default; transform: none; }
-.topics-scroll-track-wrap {
-  flex: 1;
-  /* タッチ操作しやすくするため上下のパディングを追加 */
-  padding: 8px 0;
-  margin: -8px 0;
-  cursor: pointer;
-}
-.topics-scroll-track {
   width: 100%; height: 6px;
   background: var(--line);
   border-radius: var(--r-pill);
@@ -2621,7 +2452,6 @@ button:focus-visible,
 </script>
 </head>
 
-
 <body>
 <a href="#main-content" class="skip-nav">メインコンテンツへスキップ</a>
 
@@ -2683,8 +2513,6 @@ button:focus-visible,
       </div>
     </div>
     <div class="sdiv"></div>
-    
-    
     
   </div>
 
@@ -2768,7 +2596,6 @@ button:focus-visible,
 
   <!-- ═══ 個別企業ページ ═══ -->
 <div id="page-company">
-
 
   <!-- Sidebar（JS で動的生成） -->
   <aside class="sidebar"></aside>
@@ -2874,8 +2701,6 @@ button:focus-visible,
       </div>
     </div>
 
-    <!-- 旧スライダーナビ（統合レーン移行により廃止） -->
-
     <!-- 共通年軸＋スクロールバー -->
     <div class="topics-axis-wrap">
       <div class="topics-axis-inner" id="strip-axis"></div>
@@ -2889,13 +2714,6 @@ button:focus-visible,
     </div>
     <!-- 年ドットナビ -->
     <div class="topics-scroll-years" id="topics-scroll-years" style="padding:6px 40px 0"></div>
-
-    <!-- 隠しシンク用（initScrollIndicator互換） -->
-    <div class="topics-axis-wrap"><div class="topics-axis-inner" id="strip-axis"></div></div>
-    <!-- strip-biz / strip-org は JS互換のために残す（非表示） -->
-    <div style="display:none" id="strip-biz"></div>
-    <div style="display:none" id="strip-org"></div>
-
 
     <!-- サービスセクション（データが入るまで非表示） -->
     <div class="svc-metrics-grid is-hidden" id="svc-metrics-grid"></div>
@@ -2930,9 +2748,7 @@ button:focus-visible,
       </table>
     </div>
 
-
     </div><!-- /pane-headcount -->
-
 
     <!-- はたらく魅力タブ -->
     <div class="tab-pane" id="pane-charm">
@@ -3050,7 +2866,6 @@ window.addEventListener('unhandledrejection', function(e) {
   }
 });
 
-
 var EVENTS = {};
 var COMPANIES = []; // 企業データ配列（applyApiData で初期化）
 
@@ -3082,7 +2897,6 @@ var COMPANY_MAP = new Map();
 var _sbIndexCache = null; // renderSidebarCards用インデックスキャッシュ
 var _htmlCache = {}; // 企業別HTMLキャッシュ
 const _HTML_CACHE_MAX = 50; // 最大キャッシュ企業数 // 企業別HTMLキャッシュ {id: {table, events, service}} // 仮想化canvas参照（_virtの正規化）
-
 
 // 連動スクロール — グローバルで1度だけ登録
 // ── トピックス：共通年軸スクロール連動 ──
@@ -3255,7 +3069,6 @@ function _bindUnifiedArrows(el) {
   el.addEventListener('scroll', updateBtns, {passive:true});
   updateBtns();
 }
-
 
 // Color helper
 function buildSparklines() {
@@ -4330,7 +4143,6 @@ function applyApiData(payload) {
   if (typeof refreshChumokuPage === 'function') refreshChumokuPage();
 }
 
-
 function buildCompanySub(api) {
   const bits = [];
   if (api.foundingYear) bits.push(`設立 ${api.foundingYear}年`);
@@ -4414,7 +4226,6 @@ function showLoadingState(msg) {
     }
   }
 }
-
 
 // ══════════════════════════════════════════════════════
 // サイドバーを企業リストから動的生成
@@ -4594,7 +4405,6 @@ function toggleSidebar() {
 // 初期化
 // ══════════════════════════════════════════════════════
 
-
 // スケルトンカードHTML生成
 function skeletonCardHtml(){
   return `<div class="skeleton-card">
@@ -4615,7 +4425,6 @@ function showSkeletonCards(containerId, count=3){
 
 // メモ化キャッシュ変数（applyApiDataより前に宣言が必要）
 var _chPoolCache = null, _topPoolCache = null, _sectorDefsCache = null;
-
 
 // ── トピックスカードスクロールインジケーター ──
 var _scrollIndicatorAC = null;
@@ -4729,7 +4538,6 @@ function buildYearDots(allYears) {
   }, {passive: true});
 }
 
-
 var _swipeScrollAC = null;
 function initSwipeScroll() {
   if (_swipeScrollAC) _swipeScrollAC.abort();
@@ -4826,7 +4634,6 @@ function switchMainTab(id, btn) {
 // 給与・評価・求人タブのレンダリング
 // ══════════════════════════════════════════════════════
 
-
 // ── 文字列エスケープヘルパー ──
 function escapeHtml(str) {
   return String(str ?? '')
@@ -4843,7 +4650,6 @@ function highlightMatch(text, query) {
   const escapedQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return escaped.replace(new RegExp(`(${escapedQ})`, 'gi'), '<mark class="search-mark">$1</mark>');
 }
-
 
 function getCompanyData(co) {
   return Array.isArray(co?.data) ? co.data : [];
@@ -4943,7 +4749,6 @@ function uniqBy(items, keyFn) {
     return true;
   });
 }
-
 
 function renderCharmTab(idx) {
   const company = COMPANIES[idx];
@@ -5054,7 +4859,6 @@ function renderDynamicSalaryChart(area, rows) {
     plot.appendChild(t);
   });
 
-
   const groups = [];
   const map = new Map();
   rows.forEach(r => {
@@ -5115,7 +4919,6 @@ function renderDynamicSalaryChart(area, rows) {
     plot.appendChild(container);
   });
 }
-
 
 function buildSalarySection(company) {
   const api = company.api || {};
@@ -5195,7 +4998,6 @@ function buildSalarySection(company) {
   return sec;
 }
 
-
 function buildInfoCardsSection(company) {
   const topics = EVENTS[company.id] || EVENTS[company.name] || [];
   const orgWorkstyle = topics.filter(t => t.type && (t.type.includes('org') || t.type.includes('workstyle')));
@@ -5233,7 +5035,6 @@ function buildInfoCardsSection(company) {
   sec.appendChild(body);
   return sec;
 }
-
 
 function buildJobsSection(api) {
   const jobs = Array.isArray(api.jobs) ? api.jobs : [];
@@ -5303,7 +5104,6 @@ function buildJobsSection(api) {
   sec.appendChild(body);
   return sec;
 }
-
 
 function buildCharmScoreSection(company) {
   const api = company.api || {};
@@ -5431,7 +5231,6 @@ function buildCharmScoreSection(company) {
   sec.appendChild(el);
   return sec;
 }
-
 
 // ════ ページ切り替え（企業ID対応）════
 // showPage('company', '2') → LayerXの個別ページへ
@@ -5602,7 +5401,6 @@ window.addEventListener('scroll', function() {
     }).catch(() => { /* intentional: warmup失敗は無視 */ });
   } catch(_) { /* intentional */ }
 })();
-
 
 // ══════════════════════════════════════════════════════
 // 企業比較機能
@@ -6188,7 +5986,6 @@ function renderTopicsDynamic(){ const all=buildTopicPool(); const biz=all.filter
 
 // ── 検索 ──
 
-
 function bindFoundingYearFilter() {
   const el = document.getElementById('sb-founding-tags');
   if (!el) return;
@@ -6411,7 +6208,6 @@ function buildSectorDefs(pool) {
   );
 }
 
-
 function renderRankList(id, key) {
   const el = document.getElementById(id); if (!el) return;
   if (!COMPANIES.length) {
@@ -6542,7 +6338,6 @@ function refreshChumokuPage(){
   })();
   
 </script>
-
 
 <!-- ═══ 企業比較モーダル ═══ -->
 <div class="compare-modal-overlay" id="compare-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
