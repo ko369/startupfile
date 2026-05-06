@@ -42,6 +42,7 @@
 :root {
   color-scheme: light;
   /* ─ ベース ─ */
+  --header-h: 56px;
   --bg2:  #F8F9FA;
   --bg3:  #EEF1F5;
   --line: #E8E8E8;
@@ -154,7 +155,7 @@ body.sidebar-collapsed {
 .logo-icon { width:26px; height:26px; background:var(--slate-dark); border-radius: var(--r-sm); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-right:8px; }
 .logo-icon span { color:#fff; font-size:9px; font-weight:500; letter-spacing:0.02em; display:block; margin:0; }
 .header-divider { width: 1px; height: 24px; background: var(--line2); }
-.header-meta { font-family: var(--font-sans); font-size: 10px; color: var(--text3); letter-spacing: 0.02em; }
+.header-meta { font-family: var(--font-sans); font-size: 11px; color: var(--text3); letter-spacing: 0.02em; }
 .header-meta strong { color: var(--text2); font-weight: 400; }
 .header-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }
 .main-mission {
@@ -187,8 +188,8 @@ body.sidebar-collapsed {
   color: var(--text3);
   letter-spacing: 0.01em;
 }
-.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line2); }
-50%{opacity:0.4} }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line2); animation: live-dot-blink 1.4s ease-in-out infinite; }
+@keyframes live-dot-blink { 50%{opacity:0.4} }
 
 /* Sidebar */
 .sidebar {
@@ -196,8 +197,8 @@ body.sidebar-collapsed {
   padding: 12px 0;
   background: #fff;
   position: sticky;
-  top: var(--header-h);
-  height: calc(100vh - var(--header-h));
+  top: var(--header-h, 56px);
+  height: calc(100vh - var(--header-h, 56px));
   overflow-y: auto;
   align-self: start;
   transition: width var(--transition-base) ease, padding var(--transition-base) ease;
@@ -376,12 +377,6 @@ h1.company-title, .company-title {
   color: var(--teal);
   margin-top: 4px;
 }
-.metric-change {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  color: var(--teal);
-  margin-top: 4px;
-}
 
 /* Chart area */
 .chart-area {
@@ -506,8 +501,7 @@ h1.company-title, .company-title {
   white-space: nowrap;
   flex-shrink: 0;
 }
-.src-method-tag { }
-.src-method-tag { }
+
 .src-method-tag.press { border-color: var(--tag-press-b); color: var(--tag-press-c); background: var(--tag-press-bg); }
 .funding-round {
   display: inline-flex;
@@ -598,7 +592,7 @@ h1.company-title, .company-title {
 /* ── サービスセクション ── */
 .svc-metrics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; padding: 12px var(--page-pad-x) 14px; }
 .svc-m { background: var(--bg3); border-radius: var(--r-sm); padding: 10px 12px; }
-.svc-ml { font-size: 9px; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.04em; }
+.svc-ml { font-size: 11px; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.04em; }
 .svc-mv { font-size: 15px; font-weight: 500; color: var(--slate-dark); line-height: 1; }
 
 .svc-block { padding: 0 var(--page-pad-x) 14px; }
@@ -610,9 +604,9 @@ h1.company-title, .company-title {
 .patent-list { display: flex; flex-direction: column; }
 .patent-row { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .patent-row:last-child { border: none; }
-.patent-num { font-family: var(--font-mono); font-size: 9px; color: var(--text3); white-space: nowrap; flex-shrink: 0; margin-top: 2px; width: 72px; }
+.patent-num { font-family: var(--font-mono); font-size: 11px; color: var(--text3); white-space: nowrap; flex-shrink: 0; margin-top: 2px; width: 72px; }
 .patent-title { font-size: 10px; color: var(--text); flex: 1; line-height: var(--lh-base); }
-.patent-date { font-family: var(--font-mono); font-size: 9px; color: var(--text3); white-space: nowrap; flex-shrink: 0; }
+.patent-date { font-family: var(--font-mono); font-size: 11px; color: var(--text3); white-space: nowrap; flex-shrink: 0; }
 .svc-divider { height: 1px; background: var(--line); margin: 0 32px; }
 
 /* Events timeline */
@@ -676,10 +670,10 @@ h1.company-title, .company-title {
 .event-card.award     { border-left-color: #8B5CF6; background: rgba(139,92,246,0.04); }
 .event-card.turning   { border-left-color: #EF4444; background: rgba(239,68,68,0.03); }
 .event-card.has-url { cursor: pointer; }
-.event-card.has-url { cursor: pointer; }
 .event-card.has-url:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.10);
   transform: translateY(-2px);
+  border-color: var(--line2);
 }
 /* max-height超えの内容をfade-outで処理 */
 .event-card::after {
@@ -690,7 +684,7 @@ h1.company-title, .company-title {
   background: linear-gradient(to bottom, rgba(255,255,255,0), #fff);
   pointer-events: none;
 }
-.event-card.has-url:hover { border-color: var(--line2); }
+
 /* 左端のカラーバー */
 .event-card::before {
   content: '';
@@ -731,7 +725,6 @@ h1.company-title, .company-title {
 .event-card-type.founder   { background: #ECFDF5; color: #065F46; border: 1px solid #6EE7B7; }
 .event-card-type.business  { background: #FFFBEB; color: #92400E; border: 1px solid #FCD34D; }
 .event-card-type.turning   { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; }
-.event-card-type.award     { background: #F5F3FF; color: #5B21B6; border: 1px solid #C4B5FD; }
 .event-card-type.org       { background: var(--bg3); color: var(--slate-dark); border: 1px solid var(--line2); }
 .event-card-type.workstyle { background: rgba(59,170,144,0.1); color: var(--teal); border: 1px solid rgba(59,170,144,0.25); }
 .event-card-type.award     { background: rgba(176,106,219,0.1); color: var(--slate-dark); border: 1px solid rgba(176,106,219,0.2); }
@@ -739,7 +732,7 @@ h1.company-title, .company-title {
 .event-card-source,
 .event-card-date {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text3);
   flex-shrink: 0;
   opacity: 0.8;
@@ -1021,7 +1014,6 @@ canvas { transition: opacity 0.3s; }
 /* スコアグリッド */
 
 
-
 @media (max-width: 900px) {
   .main-header { gap: 14px; }
   .metric-row { width: 100%; gap: 14px; }
@@ -1032,15 +1024,13 @@ canvas { transition: opacity 0.3s; }
 
 .hmeta strong{color:var(--text2);font-weight:400}
 .hnb:hover{border-color:var(--line2);color:var(--text)}
-.hnb.active{background:var(--slate-dark);color:#fff;border-color:var(--slate-dark)}
 .tp-sidebar{border-right:1px solid var(--line);background:#fff;padding:14px 0}
 .sbl{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:0 12px 6px}
 
 .sbsl{font-size:10px;color:var(--text3);margin-bottom:5px;letter-spacing:0.06em}
-.sb-tag{font-size:10px;padding:5px 10px;border:1px solid var(--line);border-radius:var(--r-pill);background:var(--bg2);color:var(--text3);margin:2px 2px 0 0;display:inline-block;cursor:pointer}
+.sb-tag{font-size:10px;padding:5px 10px;border:1px solid var(--line);border-radius:var(--r-pill);background:var(--bg2);color:var(--text3);margin:2px 2px 0 0;display:inline-flex;align-items:center;gap:4px;position:relative;cursor:pointer}
 .sb-tag.active{background:var(--slate-dark);color:#fff;border-color:var(--slate-dark)}
 .tp-main{overflow:visible;background:var(--bg2);scroll-behavior:smooth}
-.pghdr{padding:14px 20px 12px;border-bottom:1px solid var(--line);background:var(--bg2)}
 
 .pgs{font-size:10px;color:var(--text3);margin-top:2px}
 .content{padding:16px 20px;display:flex;flex-direction:column;gap:20px;align-items:stretch}
@@ -1088,8 +1078,9 @@ canvas { transition: opacity 0.3s; }
 .ctab{font-size:10px;padding:5px 14px;border:1px solid var(--line2);border-radius:var(--r-pill);background:#fff;color:var(--text2);cursor:pointer;min-height:32px}
 .ctab.active{background:var(--slate-dark);color:#fff;border-color:var(--slate-dark)}
 .co-cards-list{display:flex;flex-direction:column;gap:10px}
+@keyframes skeleton-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skeleton{
-  will-change: opacity;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);animation:none;border-radius:var(--r-sm)}
+  will-change: transform;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:skeleton-shimmer 1.5s ease-in-out infinite;border-radius:var(--r-sm)}
 @media (max-width: 1100px) {
 /* 注目一覧：2カラムランキングの業種テキストを省略 */
   .rsec { max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
@@ -1265,12 +1256,6 @@ canvas { transition: opacity 0.3s; }
 #page-top     { display:block; grid-column:1/-1; }
 #page-company { display:none; }
 
-/* トップページ内グリッド */
-#page-top .tp-page {
-  display:grid;
-  grid-template-columns:var(--sidebar-w) 1fr;
-  min-height:calc(100vh - var(--header-h));
-}
 
 /* 個別企業ページ: グリッド */
 #page-company.visible {
@@ -1289,7 +1274,6 @@ canvas { transition: opacity 0.3s; }
 .sidebar-search:focus{border-color:var(--line2)}
 .sb-more-btn{width:calc(100% - 20px);margin:6px 10px;padding:7px;border:1px solid var(--line2);border-radius:var(--r-sm);background:#fff;color:var(--slate);font-size:11px;cursor:pointer;font-family:inherit}
 .sb-more-btn:hover{background:var(--bg3)}
-.sbl{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:0 12px 6px}
 .sbi{padding:7px 12px;font-size:11px;color:var(--text2);cursor:pointer;border-left:2px solid transparent}
 .sbi:hover{background:var(--bg3)}
 .sbi.active{background:var(--bg3);border-left-color:var(--slate-dark);color:var(--slate-dark);font-weight:500}
@@ -1319,7 +1303,7 @@ canvas { transition: opacity 0.3s; }
 .topics-unified-inner.is-dragging{cursor:grabbing;scroll-behavior:auto}
 .unified-year-col{flex:0 0 260px;min-width:260px;display:flex;flex-direction:column;gap:6px}
 .unified-year-head{font-size:13px;font-weight:500;color:var(--text2);font-family:var(--font-mono);padding:4px 0 6px;border-bottom:2px solid var(--company-accent,var(--slate));margin-bottom:2px;letter-spacing:.03em}
-.unified-sec-label{display:none} /* D案により廃止 */
+.unified-sec-label{display:none}
 .unified-sec-dot{display:none}
 /* D案：色線セパレーター */
 .unified-sep {
@@ -1529,8 +1513,8 @@ button:focus-visible,
 }
 
 /* ════ ページ切り替えフェードイン ════ */
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes page-fade-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+.page-fade-in { animation: page-fade-in 0.2s ease; }
 
 
 /* ════ 仮データバナー ════ */
@@ -1617,9 +1601,7 @@ button:focus-visible,
   
   
 
-  div[style*="padding:14px 32px 0"] {
-    padding: 10px 12px 0 !important;
-  }
+
 .header { padding: 8px 12px; gap: 6px; }
   .logo { font-size: 12px; }
   .main-header { padding: 12px; }
@@ -1840,7 +1822,7 @@ button:focus-visible,
 
 /* ════ サービス指標の出典ラベル ════ */
 .svc-ms {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text3);
   font-family: var(--font-mono);
   margin-top: 2px;
@@ -1855,7 +1837,6 @@ button:focus-visible,
 }
 
 /* ════ サイドバーフィルタ件数バッジ ════ */
-.sb-tag { position: relative; display: inline-flex; align-items: center; gap: 4px; }
 .sb-count {
   font-size: 9px;
   background: rgba(58,74,92,0.15);
@@ -1923,6 +1904,7 @@ button:focus-visible,
 
 
 @media (max-width: 768px) {
+#fab-companies { display: flex !important; }
 
 .cocards.grid-mode { grid-template-columns: 1fr; }
 .app {
@@ -2005,31 +1987,24 @@ button:focus-visible,
 
   .data-table td.count { font-size: 11px; }
 
-  /* ボトムバー */
   
   
 
-  /* 給与タブ */
   
 
-  /* 評価フロー：縦積みに */
   
   
   
   
 
-  /* 評価軸グリッド：1列に */
   
 
-  /* 等級グリッド：2列に */
   
 
-  /* 評価マトリクス：スクロール可 */
   
   
 
-  /* 求人テーブル */
-
+  
   /* 給与チャート */
   .salary-chart-canvas-wrap { height: 200px; padding-left: 44px; }
 
@@ -2037,9 +2012,7 @@ button:focus-visible,
   .pt-sec-head { padding: 8px 10px; }
 
   /* 各セクション見出し */
-  div[style*="padding:14px 32px 0"] {
-    padding: 12px 16px 0 !important;
-  }
+
 
   .header-right { order: 2; margin-left: auto; }
   .sidebar-head { padding: 0 12px 8px; min-width: max-content; }
@@ -2258,6 +2231,9 @@ button:focus-visible,
 
 /* ════ よく使うユーティリティ ════ */
 .meta-hint { font-size: 9px; color: var(--text3); }
+.sec-pad { padding: 14px 32px 0; }
+@media (max-width: 768px) { .sec-pad { padding: 12px 16px 0; } }
+@media (max-width: 480px) { .sec-pad { padding: 10px 12px 0; } }
 .mb-0 { margin-bottom: 0; }
 .flex-base-4 { display: flex; align-items: baseline; gap: 4px; }
 
@@ -2389,30 +2365,7 @@ button:focus-visible,
 }
 
 
-/* ── フォーカスリング（キーボードユーザー向け）── */
-:focus-visible {
-  outline: 2px solid var(--slate);
-  outline-offset: 2px;
-}
-button:focus-visible,
-[role="button"]:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 2px solid var(--slate);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-/* outline:none を持つ要素でもキーボード時は表示 */
-.nav-btn:focus-visible,
-.co-prev-next-btn:focus-visible,
-.range-btn:focus-visible,
-.tab-nav-btn:focus-visible,
-.ctab:focus-visible,
-.page-nav-btn:focus-visible {
-  outline: 2px solid var(--slate);
-  outline-offset: 2px;
-}
+/* :focus-visible → 上部で統一定義済み */
 /* アニメーション無効化（prefers-reduced-motion対応） */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -2454,8 +2407,6 @@ select:focus-visible {
   flex-shrink: 0;
   letter-spacing: 0.05em;
 }
-/* スクロールインジケーター（旧スタイル削除済み） */
-
 
 .ch-nav-card-link {
   font-size: 10px;
@@ -2553,9 +2504,7 @@ select:focus-visible {
 }
 .topics-year-dot:hover,
 .topics-year-dot.active { color: var(--slate-dark); }
-/* 旧スライダー非表示 */
-.topics-scroll-wrap { display: none !important; }
-.topics-scroll-hint { display: none !important; }
+/* 旧スライダー: 廃止済みのため削除 */
 </style>
 
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" as="script" crossorigin="anonymous">
@@ -2732,7 +2681,7 @@ select:focus-visible {
         </div>
         <div class="metric-block">
           <div class="metric-label metric-top">累計調達額</div>
-          <div class="metric-val" style="color:var(--color-funding);font-size:22px" id="metric-raised">—</div>
+          <div class="metric-val" id="metric-raised" style="color:var(--color-funding)">—</div>
           <div class="metric-note" id="metric-rounds">—</div>
         </div>
       </div>
@@ -2750,7 +2699,7 @@ select:focus-visible {
     <div class="tab-pane active" id="pane-headcount">
 
     <!-- 見出し：資金調達・社員数推移 -->
-    <div style="padding:14px 32px 0">
+    <div class="sec-pad">
       <div class="pt-sec-head mb-0">
         <span class="pt-sec-label">資金調達・社員数推移</span>
       </div>
@@ -2772,7 +2721,7 @@ select:focus-visible {
       <div class="chart-latest-item">
         <div class="chart-latest-dot" id="chart-latest-dot" style="background:var(--teal)"></div>
         <div>
-          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">最新社員数</div>
+          <div class="meta-hint" style="margin-bottom:2px">最新社員数</div>
           <div class="flex-base-4">
             <span class="chart-latest-val" id="chart-latest-hc">—</span>
             <span style="font-size:10px;color:var(--text3)">名</span>
@@ -2783,7 +2732,7 @@ select:focus-visible {
       <div class="chart-latest-item is-hidden" id="chart-latest-fund-wrap">
         <div class="chart-latest-dot" style="background:var(--color-funding-light)"></div>
         <div>
-          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">累計調達</div>
+          <div class="meta-hint" style="margin-bottom:2px">累計調達</div>
           <div class="flex-base-4">
             <span class="chart-latest-val" id="chart-latest-fund" style="color:var(--color-funding-light)">—</span>
             <span style="font-size:10px;color:var(--text3)">億円</span>
@@ -2793,7 +2742,7 @@ select:focus-visible {
     </div>
 
     <!-- 見出し：トピックス -->
-    <div style="padding:14px 32px 0">
+    <div class="sec-pad">
       <div class="pt-sec-head mb-0">
         <span class="pt-sec-label">トピックス</span>
       </div>
@@ -2822,13 +2771,7 @@ select:focus-visible {
     <div style="display:none" id="strip-org"></div>
 
 
-
     <!-- サービスセクション（データが入るまで非表示） -->
-    <div id="svc-section-header" style="padding:14px 32px 0;display:none">
-      <div class="pt-sec-head mb-0">
-        <span class="pt-sec-label">サービス</span>
-      </div>
-    </div>
     <div class="svc-metrics-grid is-hidden" id="svc-metrics-grid"></div>
     <div class="svc-block is-hidden" id="svc-clients-block">
       <div class="svc-block-label">導入企業（一部）</div>
@@ -2841,7 +2784,7 @@ select:focus-visible {
     </div>
 
     <!-- 見出し：参考ソース -->
-    <div style="padding:14px 32px 0">
+    <div class="sec-pad">
       <div class="pt-sec-head mb-0">
         <span class="pt-sec-label">参考ソース</span>
       </div>
@@ -3172,7 +3115,6 @@ function _bindUnifiedArrows(el) {
 }
 
 
-
 // Color helper
 function buildSparklines() {
   // IntersectionObserver で画面内に入ったcanvasのみ描画（パフォーマンス最適化）
@@ -3406,10 +3348,12 @@ function buildMainChart(company, range) {
       mainChart.options.scales.yFund.display = showFundingBars;
       if (showFundingBars) mainChart.options.scales.yFund.max = maxFund * 2.5;
       mainChart.update('none');
-      // chart-latest ラベルも更新
       _updateChartLatestLabel(company, filtered.at(-1));
-      return;
-    } catch(_) {}
+      return; // ✅ destroy/create を避けてupdateのみで完結
+    } catch(chartUpdateErr) {
+      if(DEBUG) console.warn('[Chart] update failed, rebuilding:', chartUpdateErr);
+      // updateが失敗した場合のみ再生成（例外的ケース）
+    }
   }
   clearMainChart();
   mainChart = new Chart(ctx, {
@@ -3658,7 +3602,7 @@ function updateMetrics(company) {
       subEl.textContent = apiState.error || '企業データの取得に失敗しました';
     } else {
       titleEl.textContent = 'データ読込中…';
-      subEl.textContent = 'GAS APIから企業データを取得しています（初回は20〜30秒かかる場合があります）';
+      subEl.textContent = 'データを読み込んでいます…';
     }
     if (missionEl) {
       missionEl.textContent = '';
@@ -3839,7 +3783,7 @@ function selectCompany(idx) {
   if (_urlCo) {
     const _newHash = '#company/' + _urlCo.id;
     if (window.location.hash !== _newHash) {
-      _safeHistoryReplace({page:'company',id:_urlCo.id}, '', _newHash);
+      _safeHistoryPush({page:'company',id:_urlCo.id,scrollY:0}, '', _newHash);
       if (typeof PAGE_TITLES !== 'undefined') document.title = PAGE_TITLES.company(_urlCo.name);
     }
   }
@@ -3952,6 +3896,9 @@ async function loadSiteData() {
   apiState.loaded = false;
   try { const _rw=document.getElementById('retry-wrap'); if(_rw) _rw.style.display='none'; } catch(_e){}
   apiState.payload = null;
+  // スケルトンUIを即時表示（データ取得前からUXを向上）
+  showSkeletonCards('co-cards-list', 3);
+  showSkeletonCards('funding-cards', 3);
 
   const MAX_RETRY = APP_CONFIG.MAX_RETRY;        // 最大3回試行
   const TIMEOUT_MS = APP_CONFIG.TIMEOUT_MS;   // 1回30秒（コールドスタート対応）
@@ -4285,7 +4232,6 @@ function showLoadingState(msg) {
 }
 
 
-
 // ══════════════════════════════════════════════════════
 // サイドバーを企業リストから動的生成
 // ══════════════════════════════════════════════════════
@@ -4307,7 +4253,9 @@ function renderSidebarCards(query, limit) {
   const visible = filtered.slice(0, limit||30);
   const remaining = filtered.length - visible.length;
 
-  body.innerHTML = visible.map((c, globalIdx) => {
+  // DocumentFragment で一括DOM構築（Reflow最小化）
+  const _frag = document.createDocumentFragment();
+  visible.forEach((c) => {
     const idx = companyIndexCache.get(c) ?? COMPANIES.indexOf(c);
     const rows = getCompanyData(c);
     const latest = rows.length ? rows.at(-1) : null;
@@ -4317,12 +4265,15 @@ function renderSidebarCards(query, limit) {
     const founded = c.foundingYear ? `設立 ${escapeHtml(c.foundingYear||'')}` : '';
     const sector = c.sector ? escapeHtml(c.sector) : '未分類';
     const isActive = idx === currentCompanyIndex;
-    return `<div class="company-card${isActive?' active':''}" style="--company-accent:${escapeHtml(accent)};--company-accent-bg:${escapeHtml(accentBg)}" data-idx="${idx}">
-      <div class="company-name">${escapeHtml(c.name||'—')}<span class="company-badge">${sector}</span>${isActive?'<span class="company-now-badge">表示中</span>':''}</div>
-      <div class="company-summary-line">${latestStr}${founded?' · '+escapeHtml(founded):''}</div>
-      <div class="sparkline-wrap"><canvas class="spark" id="spark${idx}"></canvas></div>
-    </div>`;
-  }).join('');
+    const div = document.createElement('div');
+    div.className = 'company-card' + (isActive ? ' active' : '');
+    div.style.cssText = `--company-accent:${accent};--company-accent-bg:${accentBg}`;
+    div.dataset.idx = idx;
+    div.innerHTML = `<div class="company-name">${escapeHtml(c.name||'—')}<span class="company-badge">${sector}</span>${isActive?'<span class="company-now-badge">表示中</span>':''}</div><div class="company-summary-line">${latestStr}${founded?' · '+escapeHtml(founded):''}</div><div class="sparkline-wrap"><canvas class="spark" id="spark${idx}"></canvas></div>`;
+    _frag.appendChild(div);
+  });
+  body.innerHTML = '';
+  body.appendChild(_frag);
 
   if (remaining > 0) {
     const moreBtn2=document.createElement('button');
@@ -4477,10 +4428,6 @@ function showSkeletonCards(containerId, count=3){
   if(el) el.innerHTML=[...Array(count)].map(skeletonCardHtml).join('');
 }
 
-// メモ化キャッシュ（複数scriptブロックからアクセスするためここで宣言）
-
-// メモ化キャッシュ（複数scriptブロックからアクセスするためここで宣言）
-
 // メモ化キャッシュ変数（applyApiDataより前に宣言が必要）
 var _chPoolCache = null, _topPoolCache = null, _sectorDefsCache = null;
 
@@ -4527,7 +4474,12 @@ function initScrollIndicator() {
     }
   }
 
-  biz.addEventListener('scroll', updateThumb, {passive: true, signal: sig});
+  var _scrollThrottleTick = false;
+  biz.addEventListener('scroll', function() {
+    if (_scrollThrottleTick) return;
+    _scrollThrottleTick = true;
+    requestAnimationFrame(function() { updateThumb(); _scrollThrottleTick = false; });
+  }, {passive: true, signal: sig});
   window.addEventListener('resize', updateThumb, {passive: true, signal: sig});
 
   const STEP = 260;
@@ -5672,7 +5624,6 @@ function renderTopicsDynamic(){ const all=buildTopicPool(); const biz=all.filter
 // ── 検索 ──
 
 
-
 function bindFoundingYearFilter() {
   const el = document.getElementById('sb-founding-tags');
   if (!el) return;
@@ -5939,6 +5890,9 @@ function refreshChumokuPage(){
   <span style="font-size:12px;color:var(--text2)">データの読み込みに失敗しました</span>
   <button type="button" onclick="document.getElementById('retry-wrap').style.display='none';loadSiteData();" style="font-size:11px;padding:4px 12px;background:var(--slate-dark);color:#fff;border:none;border-radius:var(--r-pill);cursor:pointer">再試行</button>
 </div>
-<div class="fab-wrap"><button id="fab-top" class="fab-btn" type="button" aria-label="ページトップへスクロール">↑</button></div>
+<div class="fab-wrap">
+  <button id="fab-companies" class="fab-btn" type="button" aria-label="企業一覧を開く" title="企業一覧" onclick="if(document.getElementById('page-company').classList.contains('visible')){toggleSidebar();}else{showPage('company');}" style="font-size:11px;display:none">企業</button>
+  <button id="fab-top" class="fab-btn" type="button" aria-label="ページトップへスクロール">↑</button>
+</div>
 </body>
 </html>
